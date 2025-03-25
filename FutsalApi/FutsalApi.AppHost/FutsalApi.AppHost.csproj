@@ -8,11 +8,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>45ab17b0-d16c-46db-99be-9bb158ff5ec5</UserSecretsId>
+    <UserSecretsId>76ae2d89-e2c4-4456-96c3-11a51a179488</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FutsalApi.ApiService\FutsalApi.ApiService.csproj" />
+    <ProjectReference Include="..\FutsalApi.Web\FutsalApi.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

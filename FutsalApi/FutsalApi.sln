@@ -1,10 +1,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35806.99 d17.13
+VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FutsalApi.AppHost", "FutsalApi.AppHost\FutsalApi.AppHost.csproj", "{7EFFE5A5-2761-440F-AB46-8D1E1E651FAB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FutsalApi.AppHost", "FutsalApi.AppHost\FutsalApi.AppHost.csproj", "{D948ACA7-3E74-4898-9CDE-DF78D45DB51B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FutsalApi.ServiceDefaults", "FutsalApi.ServiceDefaults\FutsalApi.ServiceDefaults.csproj", "{C8A7FE61-FCE0-F38E-7DF0-9C2F6108A6B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FutsalApi.ApiService", "FutsalApi.ApiService\FutsalApi.ApiService.csproj", "{615A241B-A299-1A54-37B2-7AAF7C81E5D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FutsalApi.Tests", "FutsalApi.Tests\FutsalApi.Tests.csproj", "{1E1C6814-9E8A-E7DF-AE5A-AE3CADC134D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,19 +16,27 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7EFFE5A5-2761-440F-AB46-8D1E1E651FAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7EFFE5A5-2761-440F-AB46-8D1E1E651FAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7EFFE5A5-2761-440F-AB46-8D1E1E651FAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7EFFE5A5-2761-440F-AB46-8D1E1E651FAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D948ACA7-3E74-4898-9CDE-DF78D45DB51B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D948ACA7-3E74-4898-9CDE-DF78D45DB51B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D948ACA7-3E74-4898-9CDE-DF78D45DB51B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D948ACA7-3E74-4898-9CDE-DF78D45DB51B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C8A7FE61-FCE0-F38E-7DF0-9C2F6108A6B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C8A7FE61-FCE0-F38E-7DF0-9C2F6108A6B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8A7FE61-FCE0-F38E-7DF0-9C2F6108A6B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8A7FE61-FCE0-F38E-7DF0-9C2F6108A6B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{615A241B-A299-1A54-37B2-7AAF7C81E5D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{615A241B-A299-1A54-37B2-7AAF7C81E5D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{615A241B-A299-1A54-37B2-7AAF7C81E5D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{615A241B-A299-1A54-37B2-7AAF7C81E5D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E1C6814-9E8A-E7DF-AE5A-AE3CADC134D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E1C6814-9E8A-E7DF-AE5A-AE3CADC134D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E1C6814-9E8A-E7DF-AE5A-AE3CADC134D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E1C6814-9E8A-E7DF-AE5A-AE3CADC134D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {3F5B76BF-8C6C-4ED1-AD09-D5E6FF3A7F76}
+		SolutionGuid = {8262BFEF-15E0-4278-85AA-B06C6ADB649F}
 	EndGlobalSection
 EndGlobal
