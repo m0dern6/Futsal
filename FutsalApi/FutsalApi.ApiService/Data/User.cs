@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FutsalApi.ApiService.Data;
 
-public class Roles : IdentityRole
+public class User : IdentityUser
 {
 
 }
