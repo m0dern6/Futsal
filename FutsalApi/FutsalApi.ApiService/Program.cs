@@ -2,8 +2,8 @@ using System.Reflection;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Repositories;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +34,7 @@ builder.Services.AddFluentValidationAutoValidation() // Enables automatic valida
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); // Scans & registers all validators
 
+builder.Services.AddScoped(typeof(IGenericrepository<>), typeof(GenericRepository<>));
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
