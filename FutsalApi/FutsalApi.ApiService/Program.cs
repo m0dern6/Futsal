@@ -35,6 +35,7 @@ builder.Services.AddFluentValidationAutoValidation() // Enables automatic valida
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); // Scans & registers all validators
 
 builder.Services.AddScoped(typeof(IGenericrepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
