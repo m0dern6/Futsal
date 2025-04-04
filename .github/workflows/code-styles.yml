@@ -1,0 +1,29 @@
+name: Code Style Check
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check and Install .NET if Not Installed
+        run: |
+          if ! dotnet --version | grep -q "9.0"; then
+            echo ".NET 9.0 is not installed. Installing .NET 9.0..."
+            wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh -O dotnet-install.sh
+            chmod +x dotnet-install.sh
+            ./dotnet-install.sh --channel 9.0
+            export PATH="$HOME/.dotnet:$PATH"
+          else
+            echo ".NET 9.0 is already installed."
+          fi
+      - name: Install dotnet format
+        run: dotnet tool install -g dotnet-format
+        env:
+          PATH: $HOME/.dotnet:$PATH
+      - name: Run dotnet format
+        run: dotnet format --check
+        env:
+          PATH: $HOME/.dotnet:$PATH
