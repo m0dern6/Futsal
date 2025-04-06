@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FutsalApi.ApiService\FutsalApi.ApiService.csproj" />
-    <ProjectReference Include="..\FutsalApi.Web\FutsalApi.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
