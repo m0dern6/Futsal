@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Data;
 
-public class AppDbContext : IdentityDbContext<User, Roles, string>
+public class AppDbContext : IdentityDbContext<User, Role, string>
 {
 
     public AppDbContext(DbContextOptions<AppDbContext> options)

@@ -9,16 +9,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["FutsalApi.ApiService.csproj", "."]
-RUN dotnet restore "./FutsalApi.ApiService.csproj"
+COPY ["FutsalApi.AppHost/FutsalApi.AppHost.csproj", "FutsalApi.AppHost/"]
+COPY ["FutsalApi.ApiService/FutsalApi.ApiService.csproj", "FutsalApi.ApiService/"]
+COPY ["FutsalApi.ServiceDefaults/FutsalApi.ServiceDefaults.csproj", "FutsalApi.ServiceDefaults/"]
+COPY ["FutsalApi.Tests/FutsalApi.Tests.csproj", "FutsalApi.Tests/"]
+COPY ["FutsalApi.sln", "."]
+RUN dotnet restore "FutsalApi.sln"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "./FutsalApi.ApiService.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build -c $BUILD_CONFIGURATION -o /app/build
 
 # Publish stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./FutsalApi.ApiService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish  -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Final stage (Production image)
 FROM base AS final
@@ -69,4 +73,4 @@ ENTRYPOINT ["/actions-runner/entrypoint.sh"]
 # docker build -t github-actions-runner .
 
 # Step 2: Run the container
-# docker run -d -e RUNNER_URL=https://github.com/<your-org-or-user>/<your-repo> -e RUNNER_TOKEN=<your-token> --name github-actions-runner github-actions-runner
+# docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=<your-token> --name github-actions-runner github-actions-runner
