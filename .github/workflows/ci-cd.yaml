@@ -12,7 +12,9 @@ jobs:
         run: |
           if ! dotnet --version | grep -q "9.0"; then
             echo ".NET 9.0 is not installed. Installing .NET 9.0..."
-            wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh -O dotnet-install.sh
+            sudo apt-get update
+            sudo apt-get install curl -y
+            curl -o dotnet-install.sh https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
             chmod +x dotnet-install.sh
             ./dotnet-install.sh --channel 9.0
             export PATH="$HOME/.dotnet:$PATH"
