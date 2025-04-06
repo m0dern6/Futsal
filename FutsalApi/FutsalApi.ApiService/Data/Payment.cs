@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FutsalApi.ApiService.Data;
 
@@ -17,6 +19,8 @@ public enum PaymentStatus
 
 public class Payment
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public int BookingId { get; set; }
     public PaymentMethod Method { get; set; }
@@ -24,5 +28,8 @@ public class Payment
     public decimal AmountPaid { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+
+    [ForeignKey(nameof(BookingId))]
+    public Booking Booking { get; set; } = null!;
 }
 

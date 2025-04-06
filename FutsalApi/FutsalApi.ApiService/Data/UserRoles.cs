@@ -4,20 +4,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FutsalApi.ApiService.Data;
 
-public class Review
+public class UserRoles
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public Guid UserId { get; set; }
-    public int GroundId { get; set; }
-    public int Rating { get; set; }
-    public string? Comment { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public bool Active { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = null;
 
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
-    [ForeignKey(nameof(GroundId))]
-    public FutsalGround Ground { get; set; } = null!;
 }
-
