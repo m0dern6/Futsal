@@ -1,5 +1,8 @@
 using System.Diagnostics;
+
+using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Repositories;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace FutsalApi.ApiService.Data;
+namespace FutsalApi.ApiService.Routes;
 
 /// <summary>
 /// Provides API endpoints for managing FutsalGround entities.
@@ -60,7 +63,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         {
             try
             {
-                var futsalGround = await repository.GetByIdAsync(id);
+                var futsalGround = await repository.GetByIdAsync(e => e.Id == id);
                 if (futsalGround is null)
                 {
                     logger.LogWarning("FutsalGround with ID {Id} not found.", id);
@@ -115,14 +118,14 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         {
             try
             {
-                var existingGround = await repository.GetByIdAsync(id);
+                var existingGround = await repository.GetByIdAsync(e => e.Id == id);
                 if (existingGround is null)
                 {
                     logger.LogWarning("FutsalGround with ID {Id} not found for update.", id);
                     return TypedResults.NotFound();
                 }
 
-                var result = await repository.UpdateAsync(id, updatedGround);
+                var result = await repository.UpdateAsync(e => e.Id == id, updatedGround);
                 logger.LogInformation("FutsalGround with ID {Id} updated successfully.", id);
                 return TypedResults.Ok(result);
             }
@@ -145,14 +148,14 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         {
             try
             {
-                var futsalGround = await repository.GetByIdAsync(id);
+                var futsalGround = await repository.GetByIdAsync(e => e.Id == id);
                 if (futsalGround is null)
                 {
                     logger.LogWarning("FutsalGround with ID {Id} not found for deletion.", id);
                     return TypedResults.NotFound();
                 }
 
-                var success = await repository.DeleteAsync(id);
+                var success = await repository.DeleteAsync(e => e.Id == id);
                 if (success)
                 {
                     logger.LogInformation("FutsalGround with ID {Id} deleted successfully.", id);
