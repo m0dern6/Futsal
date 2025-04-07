@@ -70,7 +70,7 @@ ENTRYPOINT ["/actions-runner/entrypoint.sh"]
 
 # Instructions for building and running the Docker container:
 # Step 1: Build the Docker image
-# docker build -t github-actions-runner .
+# docker build -t futsal-app .
 
 # Step 2: Run the container
-# docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=<your-token> --name github-actions-runner github-actions-runner
+# docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=<your-token> --name futsal-app futsal-app
