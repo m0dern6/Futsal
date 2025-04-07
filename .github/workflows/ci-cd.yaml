@@ -12,20 +12,36 @@ jobs:
         run: dotnet restore
         env:
           PATH: $HOME/.dotnet:$PATH
+
       - name: Run tests
         run: dotnet test --no-build --configuration Release
         env:
           PATH: $HOME/.dotnet:$PATH
 
+      # Install Docker
+      - name: Install Docker
+        run: |
+          apt-get update
+          apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+          curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg | apt-key add -
+          echo "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update
+          apt-get install -y docker-ce docker-ce-cli containerd.io
+          usermod -aG docker $USER
+          newgrp docker
+
       # Docker deployment steps
       - name: Build Docker image
         run: docker build -t futsal-app:latest .
+
       - name: Stop existing container (if running)
         run: |
           docker ps -q --filter "name=futsal-app" | grep -q . && docker stop futsal-app || echo "No container to stop"
+
       - name: Remove existing container (if exists)
         run: |
           docker ps -aq --filter "name=futsal-app" | grep -q . && docker rm futsal-app || echo "No container to remove"
+
       - name: Run Docker container
         run: |
           docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=${{ secrets.RUNNER_TOKEN }} --name futsal-app -p 8080:80 futsal-app:latest
