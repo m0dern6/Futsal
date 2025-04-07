@@ -5,22 +5,9 @@ on: [push]
 jobs:
   test-and-run-docker:
     runs-on: self-hosted
-
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:9.0 # Use a .NET 9.0 SDK image
     steps:
-      - uses: actions/checkout@v2
-      - name: Check and Install .NET if Not Installed
-        run: |
-          if ! dotnet --version | grep -q "9.0"; then
-            echo ".NET 9.0 is not installed. Installing .NET 9.0..."
-            apt-get update
-            apt-get install curl -y
-            curl -o dotnet-install.sh https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
-            chmod +x dotnet-install.sh
-            ./dotnet-install.sh --channel 9.0
-            export PATH="$HOME/.dotnet:$PATH"
-          else
-            echo ".NET 9.0 is already installed."
-          fi
       - name: Restore dependencies
         run: dotnet restore
         env:
