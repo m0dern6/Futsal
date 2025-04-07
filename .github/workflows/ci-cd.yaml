@@ -8,6 +8,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Check and Install .NET if Not Installed
         run: |
           if ! dotnet --version | grep -q "9.0"; then
@@ -15,14 +16,20 @@ jobs:
             curl -o dotnet-install.sh https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
             chmod +x dotnet-install.sh
             ./dotnet-install.sh --channel 9.0
-            export PATH="$HOME/.dotnet:$PATH"
           else
             echo ".NET 9.0 is already installed."
           fi
+        env:
+          PATH: $HOME/.dotnet:$PATH
+
+      - name: Setup .NET PATH
+        run: echo "$HOME/.dotnet" >> $GITHUB_PATH
+
       - name: Restore dependencies
         run: dotnet restore
         env:
           PATH: $HOME/.dotnet:$PATH
+
       - name: Run tests
         run: dotnet test --no-build --configuration Release
         env:
@@ -31,12 +38,15 @@ jobs:
       # Docker deployment steps
       - name: Build Docker image
         run: docker build -t futsal-app:latest .
+
       - name: Stop existing container (if running)
         run: |
           docker ps -q --filter "name=futsal-app" | grep -q . && docker stop futsal-app || echo "No container to stop"
+
       - name: Remove existing container (if exists)
         run: |
           docker ps -aq --filter "name=futsal-app" | grep -q . && docker rm futsal-app || echo "No container to remove"
+
       - name: Run Docker container
         run: |
           docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=${{ secrets.RUNNER_TOKEN }} --name futsal-app -p 8080:80 futsal-app:latest
