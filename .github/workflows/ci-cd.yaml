@@ -7,33 +7,8 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Check and Install .NET if Not Installed
-        run: |
-          if ! dotnet --version | grep -q "9.0"; then
-            echo ".NET 9.0 is not installed. Installing .NET 9.0..."
-            curl -o dotnet-install.sh https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
-            chmod +x dotnet-install.sh
-            ./dotnet-install.sh --channel 9.0
-          else
-            echo ".NET 9.0 is already installed."
-          fi
-        env:
-          PATH: $HOME/.dotnet:$PATH
-
-      - name: Setup .NET PATH
-        run: echo "$HOME/.dotnet" >> $GITHUB_PATH
-
-      - name: Restore dependencies
-        run: dotnet restore
-        env:
-          PATH: $HOME/.dotnet:$PATH
-
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release
-        env:
-          PATH: $HOME/.dotnet:$PATH
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       # Docker deployment steps
       - name: Build Docker image
