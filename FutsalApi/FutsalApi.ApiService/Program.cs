@@ -1,8 +1,12 @@
 using System.Reflection;
+
 using FluentValidation;
 using FluentValidation.AspNetCore;
+
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Repositories;
+using FutsalApi.ApiService.Routes;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,31 +53,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
-string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.MapIdentityApi<User>();
-
+app.MapAuthApi<User>();
+app.MapFutsalGroundApi();
+app.MapReviewApi();
 
 app.MapDefaultEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
