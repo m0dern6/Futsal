@@ -6,8 +6,14 @@ jobs:
   test-and-run-docker:
     runs-on: self-hosted
     container:
-      image: mcr.microsoft.com/dotnet/sdk:9.0 # Use a .NET 9.0 SDK image
+      image: docker:20.10.24-dind # Docker-in-Docker image
+    services:
+      docker:
+        image: docker:20.10.24-dind
     steps:
+      - name: Install .NET SDK
+        run: |
+          apk add dotnet-sdk-9.0 --update
       - name: Restore dependencies
         run: dotnet restore
         env:
