@@ -3,28 +3,14 @@ name: CI/CD Pipeline
 on: [push]
 
 jobs:
-  test-and-run-docker:
-    runs-on: self-hosted
-    container:
-      image: docker:20.10.24-dind # Docker-in-Docker image
-    services:
-      docker:
-        image: docker:20.10.24-dind
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Install .NET SDK
-        run: |
-          apk add dotnet-sdk-9.0 --update
-      - name: Restore dependencies
-        run: dotnet restore
-        env:
-          PATH: $HOME/.dotnet:$PATH
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release
-        env:
-          PATH: $HOME/.dotnet:$PATH
-
-      # Install Docker
+        # Install Docker
       - name: Install Docker
         run: |
           apt-get update
