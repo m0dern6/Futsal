@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on: [push]
 
 jobs:
-  build-and-deploy:
+  test-and-run-docker:
     runs-on: self-hosted
 
     steps:
@@ -12,8 +12,8 @@ jobs:
         run: |
           if ! dotnet --version | grep -q "9.0"; then
             echo ".NET 9.0 is not installed. Installing .NET 9.0..."
-            sudo apt-get update
-            sudo apt-get install curl -y
+            apt-get update
+            apt-get install curl -y
             curl -o dotnet-install.sh https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
             chmod +x dotnet-install.sh
             ./dotnet-install.sh --channel 9.0
