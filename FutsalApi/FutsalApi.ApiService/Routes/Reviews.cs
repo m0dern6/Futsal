@@ -1,4 +1,5 @@
 using FutsalApi.ApiService.Repositories;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -82,7 +83,7 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         {
             try
             {
-                var review = await repository.GetByIdAsync(id);
+                var review = await repository.GetByIdAsync(e => e.Id == id);
                 if (review is null)
                 {
                     logger.LogWarning("Review with ID {Id} not found.", id);
@@ -137,14 +138,14 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         {
             try
             {
-                var existingReview = await repository.GetByIdAsync(id);
+                var existingReview = await repository.GetByIdAsync(e => e.Id == id);
                 if (existingReview is null)
                 {
                     logger.LogWarning("Review with ID {Id} not found for update.", id);
                     return TypedResults.NotFound();
                 }
 
-                var result = await repository.UpdateAsync(id, updatedReview);
+                var result = await repository.UpdateAsync(e => e.Id == id, updatedReview);
                 logger.LogInformation("Review with ID {Id} updated successfully.", id);
                 return TypedResults.Ok(result);
             }
