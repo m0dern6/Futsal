@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,7 +9,7 @@ public class Review
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public Guid UserId { get; set; }
+    public required string UserId { get; set; }
     public int GroundId { get; set; }
     public int Rating { get; set; }
     public string? Comment { get; set; }
