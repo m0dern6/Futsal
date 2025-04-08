@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FutsalApi.ApiService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250406010504_InitialCreate")]
+    [Migration("20250408085416_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -54,10 +54,15 @@ namespace FutsalApi.ApiService.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GroundId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Bookings");
                 });
@@ -87,13 +92,16 @@ namespace FutsalApi.ApiService.Migrations
                     b.Property<TimeSpan>("OpenTime")
                         .HasColumnType("interval");
 
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<decimal>("PricePerHour")
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("FutsalGrounds");
                 });
@@ -116,10 +124,16 @@ namespace FutsalApi.ApiService.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
                 });
@@ -152,6 +166,8 @@ namespace FutsalApi.ApiService.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingId");
+
                     b.ToTable("Payments");
                 });
 
@@ -175,10 +191,15 @@ namespace FutsalApi.ApiService.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GroundId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
                 });
@@ -273,6 +294,21 @@ namespace FutsalApi.ApiService.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("FutsalApi.ApiService.Data.UserRole", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -345,21 +381,6 @@ namespace FutsalApi.ApiService.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("text");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
@@ -377,6 +398,92 @@ namespace FutsalApi.ApiService.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("FutsalApi.ApiService.Data.Booking", b =>
+                {
+                    b.HasOne("FutsalApi.ApiService.Data.FutsalGround", "Ground")
+                        .WithMany()
+                        .HasForeignKey("GroundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FutsalApi.ApiService.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ground");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FutsalApi.ApiService.Data.FutsalGround", b =>
+                {
+                    b.HasOne("FutsalApi.ApiService.Data.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("FutsalApi.ApiService.Data.Notification", b =>
+                {
+                    b.HasOne("FutsalApi.ApiService.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FutsalApi.ApiService.Data.Payment", b =>
+                {
+                    b.HasOne("FutsalApi.ApiService.Data.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+                });
+
+            modelBuilder.Entity("FutsalApi.ApiService.Data.Review", b =>
+                {
+                    b.HasOne("FutsalApi.ApiService.Data.FutsalGround", "Ground")
+                        .WithMany()
+                        .HasForeignKey("GroundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FutsalApi.ApiService.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ground");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FutsalApi.ApiService.Data.UserRole", b =>
+                {
+                    b.HasOne("FutsalApi.ApiService.Data.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FutsalApi.ApiService.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -399,21 +506,6 @@ namespace FutsalApi.ApiService.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("FutsalApi.ApiService.Data.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("FutsalApi.ApiService.Data.Role", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("FutsalApi.ApiService.Data.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
