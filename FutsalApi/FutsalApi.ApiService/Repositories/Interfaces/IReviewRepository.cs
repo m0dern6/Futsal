@@ -8,5 +8,5 @@ namespace FutsalApi.ApiService.Repositories;
 public interface IReviewRepository : IGenericrepository<Review>
 {
     Task<IEnumerable<Review>> GetReviewsByGroundIdAsync(int groundId, int page = 1, int pageSize = 10);
-    Task<bool> DeleteReviewByUserAsync(int reviewId, Guid userId);
+    Task<bool> DeleteReviewByUserAsync(int reviewId, string userId);
 }

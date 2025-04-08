@@ -1,4 +1,5 @@
 using FutsalApi.ApiService.Data;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
@@ -36,7 +37,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
     /// <summary>
     /// Deletes a review only if it belongs to the specified user.
     /// </summary>
-    public async Task<bool> DeleteReviewByUserAsync(int reviewId, Guid userId)
+    public async Task<bool> DeleteReviewByUserAsync(int reviewId, string userId)
     {
         var review = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId && r.UserId == userId);
         if (review == null)

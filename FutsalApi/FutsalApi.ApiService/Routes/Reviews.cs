@@ -170,10 +170,12 @@ public static class ReviewApiEndpointRouteBuilderExtensions
             {
                 // Extract UserId from the token (claims)
                 var userIdClaim = httpContext.User.Claims.FirstOrDefault(c => c.Type == "sub");
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
                 {
                     return TypedResults.Problem("User ID not found in token.", statusCode: 401);
                 }
+
+                var userId = userIdClaim.Value;
 
                 // var review = await repository.GetByIdAsync(id);
                 // if (review is null)
