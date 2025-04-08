@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
+
 using FutsalApi.ApiService.Data;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
@@ -32,13 +34,12 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
         return await _dbSet.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
-
     /// <summary>
     /// Retrieves a record of type T by its ID.
     /// </summary>
-    public async Task<T?> GetByIdAsync(int id)
+    public async Task<T?> GetByIdAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _dbSet.FindAsync(id);
+        return await _dbSet.FirstOrDefaultAsync(predicate);
     }
 
     /// <summary>
@@ -62,12 +63,12 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Updates an existing record of type T in the database.
     /// </summary>
-    public async Task<T> UpdateAsync(int id, T entity)
+    public async Task<T> UpdateAsync(Expression<Func<T, bool>> predicate, T entity)
     {
-        var existingEntity = await _dbSet.FindAsync(id);
+        var existingEntity = await _dbSet.FirstOrDefaultAsync(predicate);
         if (existingEntity == null)
         {
-            throw new KeyNotFoundException($"Entity of type {typeof(T).Name} with ID {id} not found.");
+            throw new KeyNotFoundException($"Entity of type {typeof(T).Name} not found.");
         }
 
         _dbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
@@ -78,9 +79,9 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Deletes a record of type T by its ID.
     /// </summary>
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate)
     {
-        var entity = await _dbSet.FindAsync(id);
+        var entity = await _dbSet.FirstOrDefaultAsync(predicate);
         if (entity == null)
         {
             return false;
