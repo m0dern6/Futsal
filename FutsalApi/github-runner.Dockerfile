@@ -1,5 +1,5 @@
 # Base image for GitHub Actions Runner
-FROM ubuntu:22.04
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -39,7 +39,7 @@ ENTRYPOINT ["/actions-runner/entrypoint.sh"]
 
 # Instructions for building and running the Docker container:
 # Step 1: Build the Docker image
-# docker build -t futsal-app .
+# docker build -t github-runner.Dockerfile github-runner .
 
 # Step 2: Run the container
 # docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=<token> --name github-runner github-runner:latest
