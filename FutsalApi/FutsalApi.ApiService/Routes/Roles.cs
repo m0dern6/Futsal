@@ -1,10 +1,14 @@
 using System;
+using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Routes;
 
@@ -20,21 +24,17 @@ public static class RolesApiEndpointRouteBuilderExtensions
     {
         var routeGroup = endpoints.MapGroup("/Roles").RequireAuthorization();
 
-        var repository = endpoints.ServiceProvider.GetRequiredService<IGenericrepository<Role>>();
         var logger = endpoints.ServiceProvider.GetRequiredService<ILogger>();
+        var roleManager = endpoints.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+        var userManager = endpoints.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-        // GET: /Roles (with pagination)
-        routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<Role>>, ProblemHttpResult>>
-            ([FromQuery] int page = 1, [FromQuery] int pageSize = 10) =>
+        // GET: /Roles
+        routeGroup.MapGet("/", async Task<Results<Ok<List<Role>>, ProblemHttpResult>>
+            () =>
         {
-            if (page <= 0 || pageSize <= 0)
-            {
-                return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: 400);
-            }
-
             try
             {
-                var roles = await repository.GetAllAsync(page, pageSize);
+                var roles = await roleManager.Roles.ToListAsync();
                 return TypedResults.Ok(roles);
             }
             catch (Exception ex)
@@ -44,22 +44,21 @@ public static class RolesApiEndpointRouteBuilderExtensions
             }
         })
         .WithName("GetAllRoles")
-        .WithSummary("Retrieves all roles with pagination.")
-        .WithDescription("Returns a paginated list of all roles available in the system.")
+        .WithSummary("Retrieves all roles.")
+        .WithDescription("Returns a list of all roles available in the system.")
         .Produces<IEnumerable<Role>>(200)
-        .ProducesProblem(400)
         .ProducesProblem(500);
 
-        // GET: /Roles/{id}
-        routeGroup.MapGet("/{id}", async Task<Results<Ok<Role>, NotFound, ProblemHttpResult>>
-            ([FromRoute] string id) =>
+        // GET: /Roles/{roleId}
+        routeGroup.MapGet("/{roleId}", async Task<Results<Ok<Role>, ProblemHttpResult>>
+            (string roleId) =>
         {
             try
             {
-                var role = await repository.GetByIdAsync(e => e.Id == id);
+                var role = await roleManager.FindByIdAsync(roleId);
                 if (role == null)
                 {
-                    return TypedResults.NotFound();
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
                 }
                 return TypedResults.Ok(role);
             }
@@ -70,8 +69,8 @@ public static class RolesApiEndpointRouteBuilderExtensions
             }
         })
         .WithName("GetRoleById")
-        .WithSummary("Retrieves a role by its ID.")
-        .WithDescription("Returns the details of a specific role based on its ID.")
+        .WithSummary("Retrieves a role by ID.")
+        .WithDescription("Returns the role with the specified ID.")
         .Produces<Role>(200)
         .ProducesProblem(404)
         .ProducesProblem(500);
@@ -82,8 +81,12 @@ public static class RolesApiEndpointRouteBuilderExtensions
         {
             try
             {
-                var createdRole = await repository.CreateAsync(role);
-                return TypedResults.Ok(createdRole);
+                var result = await roleManager.CreateAsync(role);
+                if (!result.Succeeded)
+                {
+                    return TypedResults.Problem($"Failed to create role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                }
+                return TypedResults.Ok(role);
             }
             catch (Exception ex)
             {
@@ -93,23 +96,30 @@ public static class RolesApiEndpointRouteBuilderExtensions
         })
         .WithName("CreateRole")
         .WithSummary("Creates a new role.")
-        .WithDescription("Creates a new role in the system.")
-        .Produces<Role>(200)
+        .WithDescription("Adds a new role to the system.")
+        .Produces<Role>(201)
         .ProducesProblem(400)
         .ProducesProblem(500);
 
-        // PUT: /Roles/{id}
-        routeGroup.MapPut("/{id}", async Task<Results<Ok<Role>, NotFound, ProblemHttpResult>>
-            ([FromRoute] string id, [FromBody] Role role) =>
+        // PUT: /Roles/{roleId}
+        routeGroup.MapPut("/{roleId}", async Task<Results<Ok<Role>, ProblemHttpResult>>
+            (string roleId, [FromBody] Role role) =>
         {
             try
             {
-                var updatedRole = await repository.UpdateAsync(e => e.Id == id, role);
-                if (updatedRole == null)
+                var existingRole = await roleManager.FindByIdAsync(roleId);
+                if (existingRole == null)
                 {
-                    return TypedResults.NotFound();
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
                 }
-                return TypedResults.Ok(updatedRole);
+
+                existingRole.Name = role.Name;
+                var result = await roleManager.UpdateAsync(existingRole);
+                if (!result.Succeeded)
+                {
+                    return TypedResults.Problem($"Failed to update role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                }
+                return TypedResults.Ok(existingRole);
             }
             catch (Exception ex)
             {
@@ -119,23 +129,30 @@ public static class RolesApiEndpointRouteBuilderExtensions
         })
         .WithName("UpdateRole")
         .WithSummary("Updates an existing role.")
-        .WithDescription("Updates the details of an existing role.")
+        .WithDescription("Modifies the details of an existing role identified by its ID.")
         .Produces<Role>(200)
+        .ProducesProblem(400)
         .ProducesProblem(404)
         .ProducesProblem(500);
 
-        // DELETE: /Roles/{id}
-        routeGroup.MapDelete("/{id}", async Task<Results<NoContent, NotFound, ProblemHttpResult>>
-            ([FromRoute] string id) =>
+        // DELETE: /Roles/{roleId}
+        routeGroup.MapDelete("/{roleId}", async Task<Results<Ok, ProblemHttpResult, NotFound>>
+            (string roleId) =>
         {
             try
             {
-                var deleted = await repository.DeleteAsync(e => e.Id == id);
-                if (!deleted)
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
                 {
-                    return TypedResults.NotFound();
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
                 }
-                return TypedResults.NoContent();
+
+                var result = await roleManager.DeleteAsync(role);
+                if (!result.Succeeded)
+                {
+                    return TypedResults.Problem($"Failed to delete role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                }
+                return TypedResults.Ok();
             }
             catch (Exception ex)
             {
@@ -145,8 +162,152 @@ public static class RolesApiEndpointRouteBuilderExtensions
         })
         .WithName("DeleteRole")
         .WithSummary("Deletes a role.")
-        .WithDescription("Deletes a specific role based on its ID.")
-        .Produces(204)
+        .WithDescription("Removes the role with the specified ID from the system.")
+        .Produces(200)
+        .ProducesProblem(400)
+        .ProducesProblem(404)
+        .ProducesProblem(500);
+
+        //Get: /Roles/{roleId}/Claims
+        routeGroup.MapGet("/{roleId}/Claims", async Task<Results<Ok<List<Claim>>, ProblemHttpResult>>
+            (string roleId) =>
+        {
+            try
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                {
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
+                }
+
+                var claims = await roleManager.GetClaimsAsync(role);
+                return TypedResults.Ok(claims.ToList());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while retrieving claims for the role.");
+                return TypedResults.Problem($"An error occurred while retrieving claims for the role: {ex.Message}");
+            }
+        })
+        .WithName("GetRoleClaims")
+        .WithSummary("Retrieves claims for a role.")
+        .WithDescription("Returns a list of claims associated with the specified role.")
+        .Produces<List<Claim>>(200)
+        .ProducesProblem(404)
+        .ProducesProblem(500);
+
+        // POST: /Roles/{roleId}/Claims
+        routeGroup.MapPost("/{roleId}/Claims", async Task<Results<Ok, ProblemHttpResult>>
+            (string roleId, [FromBody] ClaimModel claimModel) =>
+        {
+            try
+            {
+                var claim = new Claim(claimModel.Type, claimModel.Value);
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                {
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
+                }
+
+                var result = await roleManager.AddClaimAsync(role, claim);
+                if (!result.Succeeded)
+                {
+                    return TypedResults.Problem($"Failed to add claim: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                }
+                return TypedResults.Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while adding a claim to the role.");
+                return TypedResults.Problem($"An error occurred while adding a claim to the role: {ex.Message}");
+            }
+        })
+        .WithName("AddRoleClaim")
+        .WithSummary("Adds a claim to a role.")
+        .WithDescription("Associates a claim with the specified role.")
+        .Produces(200)
+        .ProducesProblem(400)
+        .ProducesProblem(404)
+        .ProducesProblem(500);
+
+        //PUT: /Roles/{roleId}/Claims
+        routeGroup.MapPut("/{roleId}/Claims", async Task<Results<Ok, ProblemHttpResult>>
+            (string roleId, [FromBody] ClaimModel claimModel) =>
+        {
+            try
+            {
+                var claim = new Claim(claimModel.Type, claimModel.Value);
+
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                {
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
+                }
+
+                var existingClaims = await roleManager.GetClaimsAsync(role);
+                if (existingClaims.Any(c => c.Type == claim.Type))
+                {
+                    var oldClaim = existingClaims.First(c => c.Type == claim.Type);
+                    var removeResult = await roleManager.RemoveClaimAsync(role, oldClaim);
+                    if (!removeResult.Succeeded)
+                    {
+                        return TypedResults.Problem($"Failed to remove old claim: {string.Join(", ", removeResult.Errors.Select(e => e.Description))}", statusCode: 400);
+                    }
+                }
+
+                var addResult = await roleManager.AddClaimAsync(role, claim);
+                if (!addResult.Succeeded)
+                {
+                    return TypedResults.Problem($"Failed to add new claim: {string.Join(", ", addResult.Errors.Select(e => e.Description))}", statusCode: 400);
+                }
+                return TypedResults.Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while updating a claim for the role.");
+                return TypedResults.Problem($"An error occurred while updating a claim for the role: {ex.Message}");
+            }
+        })
+        .WithName("UpdateRoleClaim")
+        .WithSummary("Updates a claim for a role.")
+        .WithDescription("Modifies an existing claim associated with the specified role.")
+        .Produces(200)
+        .ProducesProblem(400)
+        .ProducesProblem(404)
+        .ProducesProblem(500);
+
+        // DELETE: /Roles/{roleId}/Claims
+        routeGroup.MapDelete("/{roleId}/Claims", async Task<Results<Ok, ProblemHttpResult>>
+            (string roleId, [FromBody] ClaimModel claimModel) =>
+        {
+            try
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                {
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
+                }
+
+                var claim = new Claim(claimModel.Type, claimModel.Value);
+
+                var result = await roleManager.RemoveClaimAsync(role, claim);
+                if (!result.Succeeded)
+                {
+                    return TypedResults.Problem($"Failed to remove claim: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                }
+                return TypedResults.Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while removing a claim from the role.");
+                return TypedResults.Problem($"An error occurred while removing a claim from the role: {ex.Message}");
+            }
+        })
+        .WithName("RemoveRoleClaim")
+        .WithSummary("Removes a claim from a role.")
+        .WithDescription("Disassociates a claim from the specified role.")
+        .Produces(200)
+        .ProducesProblem(400)
         .ProducesProblem(404)
         .ProducesProblem(500);
 
