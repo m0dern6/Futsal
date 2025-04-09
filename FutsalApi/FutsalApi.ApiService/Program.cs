@@ -1,12 +1,11 @@
-using System.Reflection;
-
+﻿using System.Reflection;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
-
+using FutsalApi.ApiService.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,6 +32,14 @@ builder.Services.AddIdentity<User, Role>()
 // Add services to the container.
 builder.Services.AddProblemDetails();
 
+//Add Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddLogging(builder => builder.AddConsole());
+
+builder.Services.AddTransient<IEmailSender<User>, EmailSender>();
+
 builder.Services.AddFluentValidationAutoValidation() // Enables automatic validation
                 .AddFluentValidationClientsideAdapters(); // Enables client-side validation for MVC
 
@@ -51,11 +58,18 @@ app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.MapOpenApi();
+    app.MapGet("/", context =>
+    {
+        context.Response.Redirect("/swagger");
+        return Task.CompletedTask;
+    });
 }
-app.MapAuthApi<User>();
-app.MapFutsalGroundApi();
-app.MapReviewApi();
+app.MapAuthApi<User>().WithTags("User");
+app.MapFutsalGroundApi().WithTags("Futsal Grounds");
+app.MapReviewApi().WithTags("Reviews");
 
 app.MapDefaultEndpoints();
 
