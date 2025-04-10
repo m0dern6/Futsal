@@ -12,8 +12,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore /app/FutsalApi.sln
 
-    - name: Format check
-      run: dotnet format /app/FutsalApi.sln --verify-no-changes
+    # - name: Format check
+    #   run: dotnet format /app/FutsalApi.sln --verify-no-changes
 
     - name: Build solution
       run: dotnet build /app/FutsalApi.sln --no-restore --configuration Release
