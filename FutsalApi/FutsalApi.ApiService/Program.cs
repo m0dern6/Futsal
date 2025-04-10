@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+
 using FluentValidation;
 using FluentValidation.AspNetCore;
 
@@ -6,6 +7,7 @@ using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
 using FutsalApi.ApiService.Services;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,6 +49,7 @@ builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); // 
 
 builder.Services.AddScoped(typeof(IGenericrepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
