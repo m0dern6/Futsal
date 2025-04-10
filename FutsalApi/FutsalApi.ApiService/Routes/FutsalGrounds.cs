@@ -27,16 +27,15 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
     {
         var routeGroup = endpoints.MapGroup("/FutsalGround").RequireAuthorization();
 
-        var repository = endpoints.ServiceProvider.GetRequiredService<IGenericrepository<FutsalGround>>();
-        var logger = endpoints.ServiceProvider.GetRequiredService<ILogger>();
-
         // GET: /FutsalGround (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<FutsalGround>>, ProblemHttpResult>>
-            ([FromQuery] int page = 1, [FromQuery] int pageSize = 10) =>
+            ([FromServices] IGenericrepository<FutsalGround> repository,
+             [FromQuery] int page = 1,
+             [FromQuery] int pageSize = 10) =>
         {
             if (page <= 0 || pageSize <= 0)
             {
-                return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: 400);
+                return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
             }
 
             try
@@ -46,27 +45,28 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while retrieving futsal grounds.");
                 return TypedResults.Problem($"An error occurred while retrieving futsal grounds: {ex.Message}");
             }
         })
         .WithName("GetAllFutsalGround")
         .WithSummary("Retrieves all futsal grounds with pagination.")
         .WithDescription("Returns a paginated list of all futsal grounds available in the system.")
-        .Produces<IEnumerable<FutsalGround>>(200)
-        .ProducesProblem(400)
-        .ProducesProblem(500);
+        .Accepts<int>("page")
+        .Accepts<int>("pageSize")
+        .Produces<IEnumerable<FutsalGround>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // GET: /FutsalGround/{id}
         routeGroup.MapGet("/{id:int}", async Task<Results<Ok<FutsalGround>, NotFound, ProblemHttpResult>>
-            (int id) =>
+            ([FromServices] IGenericrepository<FutsalGround> repository,
+            int id) =>
         {
             try
             {
                 var futsalGround = await repository.GetByIdAsync(e => e.Id == id);
                 if (futsalGround is null)
                 {
-                    logger.LogWarning("FutsalGround with ID {Id} not found.", id);
                     return TypedResults.NotFound();
                 }
 
@@ -74,109 +74,107 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while retrieving the futsal ground with ID {Id}.", id);
                 return TypedResults.Problem($"An error occurred while retrieving the futsal ground: {ex.Message}");
             }
         })
         .WithName("GetFutsalGroundById")
         .WithSummary("Retrieves a futsal ground by ID.")
         .WithDescription("Returns the details of a specific futsal ground identified by its ID.")
-        .Produces<FutsalGround>(200)
-        .Produces(404)
-        .ProducesProblem(500);
+        .Accepts<int>("id")
+        .Produces<FutsalGround>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // POST: /FutsalGround
         routeGroup.MapPost("/", async Task<Results<Ok<FutsalGround>, ProblemHttpResult>>
-            ([FromBody] FutsalGround futsalGround) =>
+            ([FromServices] IGenericrepository<FutsalGround> repository,
+            [FromBody] FutsalGround futsalGround) =>
         {
             try
             {
                 var result = await repository.CreateAsync(futsalGround);
                 if (result is null)
                 {
-                    logger.LogWarning("Failed to create FutsalGround.");
-                    return TypedResults.Problem("Failed to create the futsal ground.");
+                    return TypedResults.Problem("Failed to create the futsal ground.", statusCode: StatusCodes.Status400BadRequest);
                 }
-                logger.LogInformation("FutsalGround with ID {Id} created successfully.", result.Id);
                 return TypedResults.Ok(result); // Changed to Ok for consistency
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while creating the futsal ground.");
                 return TypedResults.Problem($"An error occurred while creating the futsal ground: {ex.Message}");
             }
         })
         .WithName("CreateFutsalGround")
         .WithSummary("Creates a new futsal ground.")
         .WithDescription("Adds a new futsal ground to the system.")
-        .Produces<FutsalGround>(200)
-        .ProducesProblem(500);
+        .Accepts<FutsalGround>("application/json")
+        .Produces<FutsalGround>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // PUT: /FutsalGround/{id}
         routeGroup.MapPut("/{id:int}", async Task<Results<Ok<FutsalGround>, NotFound, ProblemHttpResult>>
-            (int id, [FromBody] FutsalGround updatedGround) =>
+            ([FromServices] IGenericrepository<FutsalGround> repository,
+            int id,
+            [FromBody] FutsalGround updatedGround) =>
         {
             try
             {
                 var existingGround = await repository.GetByIdAsync(e => e.Id == id);
                 if (existingGround is null)
                 {
-                    logger.LogWarning("FutsalGround with ID {Id} not found for update.", id);
                     return TypedResults.NotFound();
                 }
 
                 var result = await repository.UpdateAsync(e => e.Id == id, updatedGround);
-                logger.LogInformation("FutsalGround with ID {Id} updated successfully.", id);
                 return TypedResults.Ok(result);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while updating the futsal ground with ID {Id}.", id);
                 return TypedResults.Problem($"An error occurred while updating the futsal ground: {ex.Message}");
             }
         })
         .WithName("UpdateFutsalGround")
         .WithSummary("Updates an existing futsal ground.")
         .WithDescription("Modifies the details of an existing futsal ground identified by its ID.")
-        .Produces<FutsalGround>(200)
-        .Produces(404)
-        .ProducesProblem(500);
+        .Accepts<int>("id")
+        .Produces<FutsalGround>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // DELETE: /FutsalGround/{id}
         routeGroup.MapDelete("/{id:int}", async Task<Results<NoContent, NotFound, ProblemHttpResult>>
-            (int id) =>
+            ([FromServices] IGenericrepository<FutsalGround> repository,
+            int id) =>
         {
             try
             {
                 var futsalGround = await repository.GetByIdAsync(e => e.Id == id);
                 if (futsalGround is null)
                 {
-                    logger.LogWarning("FutsalGround with ID {Id} not found for deletion.", id);
                     return TypedResults.NotFound();
                 }
 
                 var success = await repository.DeleteAsync(e => e.Id == id);
                 if (success)
                 {
-                    logger.LogInformation("FutsalGround with ID {Id} deleted successfully.", id);
                     return TypedResults.NoContent();
                 }
 
-                logger.LogError("Failed to delete FutsalGround with ID {Id}.", id);
                 return TypedResults.Problem("Failed to delete the futsal ground.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while deleting the futsal ground with ID {Id}.", id);
                 return TypedResults.Problem($"An error occurred while deleting the futsal ground: {ex.Message}");
             }
         })
         .WithName("DeleteFutsalGround")
         .WithSummary("Deletes a futsal ground.")
         .WithDescription("Removes a futsal ground from the system identified by its ID.")
-        .Produces(204)
-        .Produces(404)
-        .ProducesProblem(500);
+        .Accepts<int>("id")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
 
         return routeGroup;
