@@ -1,31 +1,22 @@
-name: CI/CD Pipeline
+name: Build & Test with Solution
 
-on: [push]
+on:
+  push:
+    branches: [ main ]
 
 jobs:
-  format-and-test:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: self-hosted  
 
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Restore dependencies
+      run: dotnet restore /app/FutsalApi.sln
 
-      # Step 2: Setup .NET
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x' # Specify the .NET version
+    - name: Format check
+      run: dotnet format /app/FutsalApi.sln --verify-no-changes
 
-      # Step 3: Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore
+    - name: Build solution
+      run: dotnet build /app/FutsalApi.sln --no-restore --configuration Release
 
-      # Step 4: Run code formatting check
-      - name: Check code formatting
-        run: dotnet format --check
-        continue-on-error: true # Allow the workflow to continue even if formatting issues are found
-
-      # Step 5: Run unit tests
-      - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+    - name: Run tests
+      run: dotnet test /app/FutsalApi.sln --no-build --verbosity normal
