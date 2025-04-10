@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.ComponentModel.DataAnnotations;
@@ -51,7 +51,7 @@ public static class AuthApiEndpointRouteBuilderExtensions
         // We'll figure out a unique endpoint name based on the final route pattern during endpoint generation.
         string? confirmEmailEndpointName = null;
 
-        var routeGroup = endpoints.MapGroup("");
+        var routeGroup = endpoints.MapGroup("User");
 
         // NOTE: We cannot inject UserManager<TUser> directly because the TUser generic parameter is currently unsupported by RDG.
         // https://github.com/dotnet/aspnetcore/issues/47338
@@ -86,7 +86,15 @@ public static class AuthApiEndpointRouteBuilderExtensions
 
             await SendConfirmationEmailAsync(user, userManager, context, email);
             return TypedResults.Ok();
-        });
+        })
+        .WithName("RegisterUser")
+        .WithSummary("Registers a new user.")
+        .WithDescription("Creates a new user account with the provided email and password.")
+        .Accepts<RegisterRequest>("application/json")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
 
         routeGroup.MapPost("/login", async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>>
             ([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
@@ -118,7 +126,15 @@ public static class AuthApiEndpointRouteBuilderExtensions
 
             // The signInManager already produced the needed response in the form of a cookie or bearer token.
             return TypedResults.Empty;
-        });
+        })
+        .WithName("LoginUser")
+        .WithSummary("Logs in a user.")
+        .WithDescription("Authenticates a user with the provided email and password.")
+        .Accepts<LoginRequest>("application/json")
+        .Produces<Ok<AccessTokenResponse>>(StatusCodes.Status200OK)
+        .Produces<EmptyHttpResult>(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapPost("/refresh", async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>>
             ([FromBody] RefreshRequest refreshRequest, [FromServices] IServiceProvider sp) =>
@@ -138,7 +154,15 @@ public static class AuthApiEndpointRouteBuilderExtensions
 
             var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
             return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
-        });
+        })
+        .WithName("RefreshToken")
+        .WithSummary("Refreshes the access token using the refresh token.")
+        .WithDescription("Generates a new access token using the provided refresh token.")
+        .Accepts<RefreshRequest>("application/json")
+        .Produces<Ok<AccessTokenResponse>>(StatusCodes.Status200OK)
+        .Produces<UnauthorizedHttpResult>(StatusCodes.Status401Unauthorized)
+        .Produces<SignInHttpResult>(StatusCodes.Status200OK)
+        .Produces<ChallengeHttpResult>(StatusCodes.Status401Unauthorized);
 
         routeGroup.MapGet("/confirmEmail", async Task<Results<ContentHttpResult, UnauthorizedHttpResult>>
             ([FromQuery] string userId, [FromQuery] string code, [FromQuery] string? changedEmail, [FromServices] IServiceProvider sp) =>
@@ -184,12 +208,22 @@ public static class AuthApiEndpointRouteBuilderExtensions
 
             return TypedResults.Text("Thank you for confirming your email.");
         })
+        .WithName("ConfirmEmail")
+        .WithSummary("Confirms the user's email address.")
+        .WithDescription("Confirms the user's email address using the provided user ID and confirmation code.")
+        .Accepts<string>("UserId")
+        .Accepts<string>("Code")
+        .Accepts<string>("ChangedEmail")
+        .Produces<ContentHttpResult>(StatusCodes.Status200OK)
+        .Produces<UnauthorizedHttpResult>(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .Add(endpointBuilder =>
         {
             var finalPattern = ((RouteEndpointBuilder)endpointBuilder).RoutePattern.RawText;
             confirmEmailEndpointName = $"{nameof(MapAuthApi)}-{finalPattern}";
             endpointBuilder.Metadata.Add(new EndpointNameMetadata(confirmEmailEndpointName));
         });
+
 
         routeGroup.MapPost("/resendConfirmationEmail", async Task<Ok>
             ([FromBody] ResendConfirmationEmailRequest resendRequest, HttpContext context, [FromServices] IServiceProvider sp) =>
@@ -202,7 +236,14 @@ public static class AuthApiEndpointRouteBuilderExtensions
 
             await SendConfirmationEmailAsync(user, userManager, context, resendRequest.Email);
             return TypedResults.Ok();
-        });
+        })
+        .WithName("ResendConfirmationEmail")
+        .WithSummary("Resends the email confirmation link.")
+        .WithDescription("Resends the email confirmation link to the provided email address.")
+        .Accepts<ResendConfirmationEmailRequest>("application/json")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapPost("/forgotPassword", async Task<Results<Ok, ValidationProblem>>
             ([FromBody] ForgotPasswordRequest resetRequest, [FromServices] IServiceProvider sp) =>
@@ -221,7 +262,14 @@ public static class AuthApiEndpointRouteBuilderExtensions
             // Don't reveal that the user does not exist or is not confirmed, so don't return a 200 if we would have
             // returned a 400 for an invalid code given a valid user email.
             return TypedResults.Ok();
-        });
+        })
+        .WithName("ForgotPassword")
+        .WithSummary("Sends a password reset code to the user's email.")
+        .WithDescription("Sends a password reset code to the provided email address.")
+        .Accepts<ForgotPasswordRequest>("application/json")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapPost("/resetPassword", async Task<Results<Ok, ValidationProblem>>
             ([FromBody] ResetPasswordRequest resetRequest, [FromServices] IServiceProvider sp) =>
@@ -254,7 +302,14 @@ public static class AuthApiEndpointRouteBuilderExtensions
             }
 
             return TypedResults.Ok();
-        });
+        })
+        .WithName("ResetPassword")
+        .WithSummary("Resets the user's password.")
+        .WithDescription("Resets the user's password using the provided email, reset code, and new password.")
+        .Accepts<ResetPasswordRequest>("application/json")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         var accountGroup = routeGroup.MapGroup("/manage").RequireAuthorization();
 
@@ -330,7 +385,15 @@ public static class AuthApiEndpointRouteBuilderExtensions
                 IsTwoFactorEnabled = await userManager.GetTwoFactorEnabledAsync(user),
                 IsMachineRemembered = await signInManager.IsTwoFactorClientRememberedAsync(user),
             });
-        });
+        })
+        .WithName("TwoFactor")
+        .WithSummary("Enables or disables two-factor authentication (2FA) for the user.")
+        .WithDescription("Enables or disables two-factor authentication (2FA) for the user.")
+        .Accepts<TwoFactorRequest>("application/json")
+        .Produces<Ok<TwoFactorResponse>>(StatusCodes.Status200OK)
+        .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
+        .Produces<NotFound>(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         accountGroup.MapGet("/info", async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>>
             (ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp) =>
@@ -342,7 +405,15 @@ public static class AuthApiEndpointRouteBuilderExtensions
             }
 
             return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
-        });
+        })
+        .WithName("GetUserInfo")
+        .WithSummary("Retrieves the user's information.")
+        .WithDescription("Retrieves the user's information, including email and 2FA status.")
+        .Accepts<ClaimsPrincipal>("User")
+        .Produces<Ok<InfoResponse>>(StatusCodes.Status200OK)
+        .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
+        .Produces<NotFound>(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         accountGroup.MapPost("/info", async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>>
             (ClaimsPrincipal claimsPrincipal, [FromBody] InfoRequest infoRequest, HttpContext context, [FromServices] IServiceProvider sp) =>
@@ -384,7 +455,16 @@ public static class AuthApiEndpointRouteBuilderExtensions
             }
 
             return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
-        });
+        })
+        .WithName("UpdateUserInfo")
+        .WithSummary("Updates the user's information.")
+        .WithDescription("Updates the user's information, including email and password.")
+        .Accepts<ClaimsPrincipal>("User")
+        .Accepts<InfoRequest>("application/json")
+        .Produces<Ok<InfoResponse>>(StatusCodes.Status200OK)
+        .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
+        .Produces<NotFound>(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         async Task SendConfirmationEmailAsync(TUser user, UserManager<TUser> userManager, HttpContext context, string email, bool isChange = false)
         {
