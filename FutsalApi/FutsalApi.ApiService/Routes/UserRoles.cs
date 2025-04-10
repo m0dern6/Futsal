@@ -21,7 +21,6 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
     public static IEndpointConventionBuilder MapUserRolesApi(this IEndpointRouteBuilder endpoints)
     {
         var routeGroup = endpoints.MapGroup("/UserRoles").RequireAuthorization();
-        var logger = endpoints.ServiceProvider.GetRequiredService<ILogger>();
         var userManager = endpoints.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = endpoints.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
@@ -33,6 +32,7 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
             {
                 var roles = await roleManager.Roles.ToListAsync();
                 var userRoles = new List<UserRole>();
+
                 foreach (var role in roles)
                 {
                     var usersInRole = await userManager.GetUsersInRoleAsync(role.Name);
@@ -45,15 +45,14 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while retrieving all user roles.");
                 return TypedResults.Problem($"An error occurred while retrieving all user roles: {ex.Message}");
             }
         })
         .WithName("GetAllUserRoles")
         .WithSummary("Retrieves all user roles.")
         .WithDescription("Returns a list of all user roles in the system.")
-        .Produces<List<UserRole>>(200)
-        .ProducesProblem(500);
+        .Produces<List<UserRole>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // GET: /UserRoles/{userId}
         routeGroup.MapGet("/{userId}", async Task<Results<Ok<List<string>>, ProblemHttpResult>>
@@ -64,7 +63,7 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
                 var user = await userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    return TypedResults.Problem($"User with ID {userId} not found.", statusCode: 404);
+                    return TypedResults.Problem($"User with ID {userId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var roles = await userManager.GetRolesAsync(user);
@@ -72,16 +71,16 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while retrieving user roles.");
                 return TypedResults.Problem($"An error occurred while retrieving user roles: {ex.Message}");
             }
         })
         .WithName("GetUserRoles")
         .WithSummary("Retrieves roles for a specific user.")
         .WithDescription("Returns a list of roles assigned to the specified user.")
-        .Produces<List<string>>(200)
-        .ProducesProblem(404)
-        .ProducesProblem(500);
+        .Accepts<string>("userId")
+        .Produces<List<string>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // GET: /UserRoles/Role/{roleId}
         routeGroup.MapGet("/Role/{roleId}", async Task<Results<Ok<List<string>>, ProblemHttpResult>>
@@ -92,7 +91,7 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
                 var role = await roleManager.FindByIdAsync(roleId);
                 if (role == null)
                 {
-                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: 404);
+                    return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var usersInRole = await userManager.GetUsersInRoleAsync(role.Name);
@@ -100,16 +99,16 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while retrieving users in the role.");
                 return TypedResults.Problem($"An error occurred while retrieving users in the role: {ex.Message}");
             }
         })
         .WithName("GetUsersInRole")
         .WithSummary("Retrieves users in a specific role.")
         .WithDescription("Returns a list of users associated with the specified role.")
-        .Produces<List<string>>(200)
-        .ProducesProblem(404)
-        .ProducesProblem(500);
+        .Accepts<string>("roleId")
+        .Produces<List<string>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
 
         // POST: /UserRoles
@@ -127,30 +126,30 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
                 var role = await roleManager.FindByIdAsync(userRoleDto.RoleId);
                 if (role == null)
                 {
-                    return TypedResults.Problem($"Role with ID {userRoleDto.RoleId} not found.", statusCode: 404);
+                    return TypedResults.Problem($"Role with ID {userRoleDto.RoleId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var result = await userManager.AddToRoleAsync(user, role.Name);
                 if (!result.Succeeded)
                 {
-                    return TypedResults.Problem($"Failed to assign role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                    return TypedResults.Problem($"Failed to assign role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 return TypedResults.Ok($"User {user.UserName} assigned to role {role.Name}.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while assigning user roles.");
                 return TypedResults.Problem($"An error occurred while assigning user roles: {ex.Message}");
             }
         })
         .WithName("AssignUserRole")
         .WithSummary("Assigns a role to a user.")
         .WithDescription("Assigns the specified role to the user.")
-        .Produces<string>(200)
-        .ProducesProblem(400)
-        .ProducesProblem(404)
-        .ProducesProblem(500);
+        .Accepts<UserRole>("application/json")
+        .Produces<string>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // DELETE: /UserRoles
         routeGroup.MapDelete("/", async Task<Results<Ok<string>, ProblemHttpResult>>
@@ -161,36 +160,36 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
                 var user = await userManager.FindByIdAsync(userRoleDto.UserId);
                 if (user == null)
                 {
-                    return TypedResults.Problem($"User with ID {userRoleDto.UserId} not found.", statusCode: 404);
+                    return TypedResults.Problem($"User with ID {userRoleDto.UserId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var role = await roleManager.FindByIdAsync(userRoleDto.RoleId);
                 if (role == null)
                 {
-                    return TypedResults.Problem($"Role with ID {userRoleDto.RoleId} not found.", statusCode: 404);
+                    return TypedResults.Problem($"Role with ID {userRoleDto.RoleId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var result = await userManager.RemoveFromRoleAsync(user, role.Name);
                 if (!result.Succeeded)
                 {
-                    return TypedResults.Problem($"Failed to remove role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: 400);
+                    return TypedResults.Problem($"Failed to remove role: {string.Join(", ", result.Errors.Select(e => e.Description))}", statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 return TypedResults.Ok($"User {user.UserName} removed from role {role.Name}.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while removing user roles.");
                 return TypedResults.Problem($"An error occurred while removing user roles: {ex.Message}");
             }
         })
         .WithName("RemoveUserRole")
         .WithSummary("Removes a role from a user.")
         .WithDescription("Removes the specified role from the user.")
-        .Produces<string>(200)
-        .ProducesProblem(400)
-        .ProducesProblem(404)
-        .ProducesProblem(500);
+        .Accepts<UserRole>("application/json")
+        .Produces<string>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
 
         return routeGroup;
