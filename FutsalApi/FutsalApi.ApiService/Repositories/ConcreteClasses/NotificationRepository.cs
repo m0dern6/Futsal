@@ -1,4 +1,5 @@
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +33,46 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Sends a Notification to multiple users.
+    /// /// </summary>
+    public async Task<bool> SendNotificationToMultipleUsersAsync(NotificationListModel notificationListModel)
+    {
+        if (notificationListModel == null)
+        {
+            throw new ArgumentNullException(nameof(notificationListModel), "NotificationListModel cannot be null.");
+        }
+
+        if (notificationListModel.UserId.Count == 0 || string.IsNullOrEmpty(notificationListModel.Message))
+        {
+            throw new ArgumentException("UserId list and message cannot be empty.");
+        }
+
+        try
+        {
+            foreach (var userId in notificationListModel.UserId)
+            {
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    Message = notificationListModel.Message,
+                    IsRead = false
+                };
+                await _dbContext.Notifications.AddAsync(notification);
+            }
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new DbUpdateException("Error saving changes to the database.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("An unexpected error occurred.", ex);
+        }
     }
 
     /// <summary>
