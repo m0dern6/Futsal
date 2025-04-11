@@ -181,7 +181,7 @@ public static class ReviewApiEndpointRouteBuilderExtensions
                 var userIdClaim = httpContext.User.Claims.FirstOrDefault(c => c.Type == "sub");
                 if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
                 {
-                    return TypedResults.Problem("User ID not found in token.", statusCode: 401);
+                    return TypedResults.Problem("User ID not found in token.", statusCode: StatusCodes.Status401Unauthorized);
                 }
 
                 var userId = userIdClaim.Value;
