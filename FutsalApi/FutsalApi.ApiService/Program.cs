@@ -50,6 +50,7 @@ builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); // 
 builder.Services.AddScoped(typeof(IGenericrepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
