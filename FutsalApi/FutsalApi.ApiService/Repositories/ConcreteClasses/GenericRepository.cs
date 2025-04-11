@@ -10,7 +10,7 @@ namespace FutsalApi.ApiService.Repositories;
 /// Generic implementation of IGenericrepository for any model.
 /// </summary>
 /// <typeparam name="T">The type of the entity.</typeparam>
-public class GenericRepository<T> : IGenericrepository<T> where T : class
+public abstract class GenericRepository<T> : IGenericrepository<T> where T : class
 {
     private readonly AppDbContext _dbContext;
     private readonly DbSet<T> _dbSet;
@@ -24,7 +24,7 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Retrieves all records of type T from the database.
     /// </summary>
-    public async Task<IEnumerable<T>> GetAllAsync(int page = 1, int pageSize = 10)
+    public virtual async Task<IEnumerable<T>> GetAllAsync(int page = 1, int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
         {
@@ -37,7 +37,7 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Retrieves a record of type T by its ID.
     /// </summary>
-    public async Task<T?> GetByIdAsync(Expression<Func<T, bool>> predicate)
+    public virtual async Task<T?> GetByIdAsync(Expression<Func<T, bool>> predicate)
     {
         return await _dbSet.FirstOrDefaultAsync(predicate);
     }
@@ -45,7 +45,7 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Finds records of type T that match the specified predicate.
     /// </summary>
-    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+    public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
     {
         return await _dbSet.Where(predicate).ToListAsync();
     }
@@ -53,7 +53,7 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Creates a new record of type T in the database.
     /// </summary>
-    public async Task<T> CreateAsync(T entity)
+    public virtual async Task<T> CreateAsync(T entity)
     {
         _dbSet.Add(entity);
         await _dbContext.SaveChangesAsync();
@@ -63,7 +63,7 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Updates an existing record of type T in the database.
     /// </summary>
-    public async Task<T> UpdateAsync(Expression<Func<T, bool>> predicate, T entity)
+    public virtual async Task<T> UpdateAsync(Expression<Func<T, bool>> predicate, T entity)
     {
         var existingEntity = await _dbSet.FirstOrDefaultAsync(predicate);
         if (existingEntity == null)
@@ -79,7 +79,7 @@ public class GenericRepository<T> : IGenericrepository<T> where T : class
     /// <summary>
     /// Deletes a record of type T by its ID.
     /// </summary>
-    public async Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate)
+    public virtual async Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate)
     {
         var entity = await _dbSet.FirstOrDefaultAsync(predicate);
         if (entity == null)
