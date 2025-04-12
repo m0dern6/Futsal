@@ -136,6 +136,26 @@ public static class AuthApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
+        routeGroup.MapPost("/logout", async Task<Results<Ok, ProblemHttpResult>>
+            ([FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
+        {
+            var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
+            var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
+            signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+
+            await signInManager.SignOutAsync();
+            return TypedResults.Ok();
+        })
+        .WithName("LogoutUser")
+        .WithSummary("Logs out a user.")
+        .WithDescription("Logs out the user and invalidates the authentication cookie or bearer token.")
+        .Accepts<bool>("useCookies")
+        .Accepts<bool>("useSessionCookies")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+
         routeGroup.MapPost("/refresh", async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>>
             ([FromBody] RefreshRequest refreshRequest, [FromServices] IServiceProvider sp) =>
         {
@@ -313,6 +333,68 @@ public static class AuthApiEndpointRouteBuilderExtensions
 
         var accountGroup = routeGroup.MapGroup("/manage").RequireAuthorization();
 
+        //deactivate the user account
+        accountGroup.MapPost("/deactivate", async Task<Results<Ok, ProblemHttpResult>>
+            (ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp) =>
+        {
+            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+            if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
+            {
+                return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+            if (user is null || !await userManager.IsEmailConfirmedAsync(user))
+            {
+                return TypedResults.Problem("User not found or email not confirmed.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var result = await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+            if (!result.Succeeded)
+            {
+                return TypedResults.Problem(result.ToString(), statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            return TypedResults.Ok();
+        })
+        .WithName("DeactivateUser")
+        .WithSummary("Deactivate a user.")
+        .WithDescription("Deactivate a user account.")
+        .Accepts<ClaimsPrincipal>("User")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        //revalidate the user account
+        accountGroup.MapPost("/revalidate", async Task<Results<Ok, ProblemHttpResult>>
+            (ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp) =>
+        {
+            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+            if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
+            {
+                return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+            if (user is null || !await userManager.IsEmailConfirmedAsync(user))
+            {
+                return TypedResults.Problem("User not found or email not confirmed.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var result = await userManager.SetLockoutEndDateAsync(user, null);
+            if (!result.Succeeded)
+            {
+                return TypedResults.Problem(result.ToString(), statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            return TypedResults.Ok();
+        })
+        .WithName("RevalidateUser")
+        .WithSummary("Revalidate a user.")
+        .WithDescription("Revalidate a user account.")
+        .Accepts<ClaimsPrincipal>("User")
+        .Produces<Ok>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
         accountGroup.MapPost("/2fa", async Task<Results<Ok<TwoFactorResponse>, ValidationProblem, NotFound>>
             (ClaimsPrincipal claimsPrincipal, [FromBody] TwoFactorRequest tfaRequest, [FromServices] IServiceProvider sp) =>
         {
@@ -376,6 +458,12 @@ public static class AuthApiEndpointRouteBuilderExtensions
                     throw new NotSupportedException("The user manager must produce an authenticator key after reset.");
                 }
             }
+            // var qrCodeIssuer = UrlEncoder.Default.Encode(userManager.Options.Tokens.AuthenticatorIssuer);
+            // var email = await userManager.GetEmailAsync(user) ?? throw new NotSupportedException("Users must have an email.");
+            // var emailEncoded = UrlEncoder.Default.Encode(email);
+            // var sharedKeyEncoded = UrlEncoder.Default.Encode(key);
+            // var qrCode = $"otpauth://totp/{emailEncoded}?secret={sharedKeyEncoded}&issuer={qrCodeIssuer}";
+            // var qrCodeImageUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={qrCode}";
 
             return TypedResults.Ok(new TwoFactorResponse
             {
