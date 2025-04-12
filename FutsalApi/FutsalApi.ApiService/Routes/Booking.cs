@@ -35,17 +35,17 @@ public static class BookingApiEndpointRouteBuilderExtensions
                 {
                     return TypedResults.NotFound();
                 }
-                var notifications = await repository.GetBookingsByUserIdAsync(user.Id, page, pageSize);
-                return TypedResults.Ok(notifications);
+                var bookings = await repository.GetBookingsByUserIdAsync(user.Id, page, pageSize);
+                return TypedResults.Ok(bookings);
             }
             catch (Exception ex)
             {
-                return TypedResults.Problem($"An error occurred while retrieving notifications: {ex.Message}");
+                return TypedResults.Problem($"An error occurred while retrieving Bookings: {ex.Message}");
             }
         })
-        .WithName("GetNotificationsByUserId")
-        .WithSummary("Get Notifications of a user")
-        .WithDescription("Get all the Notifications for a partucular user using userid")
+        .WithName("GetBookingsByUserId")
+        .WithSummary("Get Bookings of a user")
+        .WithDescription("Get all the Bookings for a partucular user using userid")
         .Accepts<ClaimsPrincipal>("User")
         .Accepts<int>("page")
         .Accepts<int>("pageSize")
