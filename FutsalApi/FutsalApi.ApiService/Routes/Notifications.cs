@@ -47,9 +47,8 @@ public static class NotificationsApiEndpointRouteBuilderExtensions
         .WithName("GetNotificationsByUserId")
         .WithSummary("Get Notifications of a user")
         .WithDescription("Get all the Notifications for a partucular user using userid")
-        .Accepts<ClaimsPrincipal>("User")
-        .Accepts<int>("page")
-        .Accepts<int>("pageSize")
+
+
         .Produces<IEnumerable<Notification>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -117,7 +116,7 @@ public static class NotificationsApiEndpointRouteBuilderExtensions
         .WithSummary("Update Notification status by UserId")
         .WithDescription("Update Notification status by UserId")
         .Accepts<int>("notificationId")
-        .Accepts<ClaimsPrincipal>("User")
+
         .Produces<string>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);

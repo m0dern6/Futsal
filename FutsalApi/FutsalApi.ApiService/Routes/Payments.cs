@@ -47,9 +47,8 @@ public static class PaymentApiEndpointRouteBuilderExtensions
         .WithName("GetPaymentsByUserId")
         .WithSummary("Get Payments of a user")
         .WithDescription("Get all the Payments for a partucular user using userid")
-        .Accepts<ClaimsPrincipal>("User")
-        .Accepts<int>("page")
-        .Accepts<int>("pageSize")
+
+
         .Produces<IEnumerable<Payment>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)

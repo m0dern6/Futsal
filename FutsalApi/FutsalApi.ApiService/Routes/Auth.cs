@@ -358,7 +358,7 @@ public static class AuthApiEndpointRouteBuilderExtensions
         .WithName("DeactivateUser")
         .WithSummary("Deactivate a user.")
         .WithDescription("Deactivate a user account.")
-        .Accepts<ClaimsPrincipal>("User")
+
         .Produces<Ok>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
@@ -389,7 +389,7 @@ public static class AuthApiEndpointRouteBuilderExtensions
         .WithName("RevalidateUser")
         .WithSummary("Revalidate a user.")
         .WithDescription("Revalidate a user account.")
-        .Accepts<ClaimsPrincipal>("User")
+
         .Produces<Ok>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
@@ -497,7 +497,7 @@ public static class AuthApiEndpointRouteBuilderExtensions
         .WithName("GetUserInfo")
         .WithSummary("Retrieves the user's information.")
         .WithDescription("Retrieves the user's information, including email and 2FA status.")
-        .Accepts<ClaimsPrincipal>("User")
+
         .Produces<Ok<InfoResponse>>(StatusCodes.Status200OK)
         .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)
         .Produces<NotFound>(StatusCodes.Status404NotFound)
@@ -547,7 +547,7 @@ public static class AuthApiEndpointRouteBuilderExtensions
         .WithName("UpdateUserInfo")
         .WithSummary("Updates the user's information.")
         .WithDescription("Updates the user's information, including email and password.")
-        .Accepts<ClaimsPrincipal>("User")
+
         .Accepts<InfoRequest>("application/json")
         .Produces<Ok<InfoResponse>>(StatusCodes.Status200OK)
         .Produces<ValidationProblem>(StatusCodes.Status400BadRequest)

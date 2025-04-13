@@ -25,7 +25,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
     /// <returns>An <see cref="IEndpointConventionBuilder"/> to further customize the added endpoints.</returns>
     public static IEndpointConventionBuilder MapFutsalGroundApi(this IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/FutsalGround").RequireAuthorization();
+        var routeGroup = endpoints.MapGroup("/FutsalGround");
 
         // GET: /FutsalGround (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<FutsalGround>>, ProblemHttpResult>>
@@ -51,8 +51,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         .WithName("GetAllFutsalGround")
         .WithSummary("Retrieves all futsal grounds with pagination.")
         .WithDescription("Returns a paginated list of all futsal grounds available in the system.")
-        .Accepts<int>("page")
-        .Accepts<int>("pageSize")
+
         .Produces<IEnumerable<FutsalGround>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);

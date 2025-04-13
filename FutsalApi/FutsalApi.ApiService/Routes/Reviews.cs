@@ -44,8 +44,7 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithName("GetAllReviews")
         .WithSummary("Retrieves all reviews with pagination.")
         .WithDescription("Returns a paginated list of all reviews available in the system.")
-        .Accepts<int>("page")
-        .Accepts<int>("pageSize")
+
         .Produces<IEnumerable<Review>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -76,8 +75,7 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithSummary("Retrieves reviews for a specific ground.")
         .WithDescription("Returns a paginated list of reviews for a specific ground identified by its ID.")
         .Accepts<int>("groundId")
-        .Accepts<int>("page")
-        .Accepts<int>("pageSize")
+
         .Produces<IEnumerable<Review>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
