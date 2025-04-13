@@ -10,7 +10,7 @@ namespace FutsalApi.ApiService.Repositories;
 /// Generic implementation of IGenericrepository for any model.
 /// </summary>
 /// <typeparam name="T">The type of the entity.</typeparam>
-public abstract class GenericRepository<T> : IGenericrepository<T> where T : class
+public class GenericRepository<T> : IGenericrepository<T> where T : class
 {
     private readonly AppDbContext _dbContext;
     private readonly DbSet<T> _dbSet;
