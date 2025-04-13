@@ -29,7 +29,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
 
         // GET: /FutsalGround (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<FutsalGround>>, ProblemHttpResult>>
-            ([FromServices] IGenericrepository<FutsalGround> repository,
+            ([FromServices] FutsalGroundRepository repository,
              [FromQuery] int page = 1,
              [FromQuery] int pageSize = 10) =>
         {
@@ -58,7 +58,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
 
         // GET: /FutsalGround/{id}
         routeGroup.MapGet("/{id:int}", async Task<Results<Ok<FutsalGround>, NotFound, ProblemHttpResult>>
-            ([FromServices] IGenericrepository<FutsalGround> repository,
+            ([FromServices] FutsalGroundRepository repository,
             int id) =>
         {
             try
@@ -86,7 +86,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
 
         // POST: /FutsalGround
         routeGroup.MapPost("/", async Task<Results<Ok<FutsalGround>, ProblemHttpResult>>
-            ([FromServices] IGenericrepository<FutsalGround> repository,
+            ([FromServices] FutsalGroundRepository repository,
             [FromBody] FutsalGround futsalGround) =>
         {
             try
@@ -113,7 +113,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
 
         // PUT: /FutsalGround/{id}
         routeGroup.MapPut("/{id:int}", async Task<Results<Ok<FutsalGround>, NotFound, ProblemHttpResult>>
-            ([FromServices] IGenericrepository<FutsalGround> repository,
+            ([FromServices] FutsalGroundRepository repository,
             int id,
             [FromBody] FutsalGround updatedGround) =>
         {
@@ -143,7 +143,7 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
 
         // DELETE: /FutsalGround/{id}
         routeGroup.MapDelete("/{id:int}", async Task<Results<NoContent, NotFound, ProblemHttpResult>>
-            ([FromServices] IGenericrepository<FutsalGround> repository,
+            ([FromServices] FutsalGroundRepository repository,
             int id) =>
         {
             try
