@@ -51,7 +51,6 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         .WithName("GetAllFutsalGround")
         .WithSummary("Retrieves all futsal grounds with pagination.")
         .WithDescription("Returns a paginated list of all futsal grounds available in the system.")
-
         .Produces<IEnumerable<FutsalGround>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -79,7 +78,6 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         .WithName("GetFutsalGroundById")
         .WithSummary("Retrieves a futsal ground by ID.")
         .WithDescription("Returns the details of a specific futsal ground identified by its ID.")
-        .Accepts<int>("id")
         .Produces<FutsalGround>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -136,7 +134,6 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         .WithName("UpdateFutsalGround")
         .WithSummary("Updates an existing futsal ground.")
         .WithDescription("Modifies the details of an existing futsal ground identified by its ID.")
-        .Accepts<int>("id")
         .Produces<FutsalGround>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -170,7 +167,6 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         .WithName("DeleteFutsalGround")
         .WithSummary("Deletes a futsal ground.")
         .WithDescription("Removes a futsal ground from the system identified by its ID.")
-        .Accepts<int>("id")
         .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);

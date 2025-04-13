@@ -47,8 +47,6 @@ public static class PaymentApiEndpointRouteBuilderExtensions
         .WithName("GetPaymentsByUserId")
         .WithSummary("Get Payments of a user")
         .WithDescription("Get all the Payments for a partucular user using userid")
-
-
         .Produces<IEnumerable<Payment>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -76,7 +74,6 @@ public static class PaymentApiEndpointRouteBuilderExtensions
         .WithName("GetPaymentByBookingId")
         .WithSummary("Get Payment by bookingId")
         .WithDescription("Get Payment by bookingId")
-        .Accepts<int>("bookingId")
         .Produces<Payment>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)

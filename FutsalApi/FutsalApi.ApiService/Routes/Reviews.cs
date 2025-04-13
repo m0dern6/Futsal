@@ -44,7 +44,6 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithName("GetAllReviews")
         .WithSummary("Retrieves all reviews with pagination.")
         .WithDescription("Returns a paginated list of all reviews available in the system.")
-
         .Produces<IEnumerable<Review>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -74,8 +73,6 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithName("GetReviewsByGroundId")
         .WithSummary("Retrieves reviews for a specific ground.")
         .WithDescription("Returns a paginated list of reviews for a specific ground identified by its ID.")
-        .Accepts<int>("groundId")
-
         .Produces<IEnumerable<Review>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -104,7 +101,6 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithName("GetReviewById")
         .WithSummary("Retrieves a review by ID.")
         .WithDescription("Returns the details of a specific review identified by its ID.")
-        .Accepts<int>("id")
         .Produces<Review>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -161,7 +157,6 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithName("UpdateReview")
         .WithSummary("Updates an existing review.")
         .WithDescription("Modifies the details of an existing review identified by its ID.")
-        .Accepts<int>("id")
         .Accepts<Review>("application/json")
         .Produces<Review>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
@@ -211,7 +206,6 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .WithName("DeleteReview")
         .WithSummary("Deletes a review.")
         .WithDescription("Removes a review from the system identified by its ID. Users can only delete their own reviews.")
-        .Accepts<int>("id")
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status403Forbidden)

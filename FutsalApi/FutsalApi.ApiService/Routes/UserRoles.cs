@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Repositories;
@@ -77,7 +78,6 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
         .WithName("GetUserRoles")
         .WithSummary("Retrieves roles for a specific user.")
         .WithDescription("Returns a list of roles assigned to the specified user.")
-        .Accepts<string>("userId")
         .Produces<List<string>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -105,7 +105,6 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
         .WithName("GetUsersInRole")
         .WithSummary("Retrieves users in a specific role.")
         .WithDescription("Returns a list of users associated with the specified role.")
-        .Accepts<string>("roleId")
         .Produces<List<string>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -151,20 +150,21 @@ public static class UserRolesApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        // DELETE: /UserRoles
-        routeGroup.MapDelete("/", async Task<Results<Ok<string>, ProblemHttpResult>>
-            ([FromBody] UserRole userRoleDto) =>
+        // DELETE: /UserRoles/{userId}
+        routeGroup.MapDelete("/{userId}", async Task<Results<Ok<string>, ProblemHttpResult>>
+            (string userId, [FromBody] UserRole userRoleDto) =>
         {
             try
             {
-                var user = await userManager.FindByIdAsync(userRoleDto.UserId);
+                var user = await userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    return TypedResults.Problem($"User with ID {userRoleDto.UserId} not found.", statusCode: StatusCodes.Status404NotFound);
+                    return TypedResults.Problem($"User with ID {userId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var role = await roleManager.FindByIdAsync(userRoleDto.RoleId);
-                if (role == null)
+                if (role is null || string.IsNullOrEmpty(role.Name))
+
                 {
                     return TypedResults.Problem($"Role with ID {userRoleDto.RoleId} not found.", statusCode: StatusCodes.Status404NotFound);
                 }

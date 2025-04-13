@@ -46,8 +46,6 @@ public static class BookingApiEndpointRouteBuilderExtensions
         .WithName("GetBookingsByUserId")
         .WithSummary("Get Bookings of a user")
         .WithDescription("Get all the Bookings for a partucular user using userid")
-
-
         .Produces<IEnumerable<Notification>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)
