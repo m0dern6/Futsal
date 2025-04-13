@@ -23,10 +23,12 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
 
         return await _dbContext.Bookings
             .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.BookingDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
     }
+
     public override async Task<Booking> CreateAsync(Booking booking)
     {
         if (booking == null)

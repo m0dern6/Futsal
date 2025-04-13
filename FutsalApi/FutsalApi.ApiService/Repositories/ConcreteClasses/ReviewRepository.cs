@@ -29,6 +29,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
 
         return await _dbContext.Reviews
             .Where(r => r.GroundId == groundId)
+            .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

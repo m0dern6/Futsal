@@ -20,6 +20,7 @@ public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
         return await _context.Payments
             .Include(p => p.Booking)
             .Where(p => p.Booking.UserId == userId)
+            .OrderByDescending(p => p.Booking.BookingDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

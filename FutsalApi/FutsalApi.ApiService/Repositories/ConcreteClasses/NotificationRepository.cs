@@ -30,6 +30,24 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
 
         return await _dbContext.Notifications
             .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Retrieves all Notifications with pagination.
+    /// /// </summary>
+    public async Task<IEnumerable<Notification>> GetAllNotificationsAsync(int page = 1, int pageSize = 10)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException("Page and pageSize must be greater than 0.");
+        }
+
+        return await _dbContext.Notifications
+            .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
