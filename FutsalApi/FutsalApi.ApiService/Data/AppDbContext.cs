@@ -19,4 +19,5 @@ public class AppDbContext : IdentityDbContext<User, Role, string, IdentityUserCl
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<GeneralSetting> GeneralSettings { get; set; }
 }

@@ -8,6 +8,7 @@ using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
 using FutsalApi.ApiService.Services;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,13 +26,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = IdentityConstants.BearerScheme;
-    options.DefaultChallengeScheme = IdentityConstants.BearerScheme;
-    options.DefaultScheme = IdentityConstants.BearerScheme;
-}).AddBearerToken(IdentityConstants.BearerScheme,
+builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
    options =>
    {
        options.BearerTokenExpiration = TimeSpan.FromDays(1);
@@ -101,6 +98,23 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+//Retrie Google Client ID and Secret from the database
+using (var scope = app.Services.CreateScope())
+{
+    var settingsService = scope.ServiceProvider.GetRequiredService<IGeneralSettingsService>();
+
+    var googleClientId = await settingsService.GetSettingAsync("Google:ClientId");
+    var googleClientSecret = await settingsService.GetSettingAsync("Google:ClientSecret");
+
+    app.Services.GetRequiredService<AuthenticationBuilder>()
+        .AddGoogle(googleOptions =>
+        {
+            googleOptions.ClientId = googleClientId;
+            googleOptions.ClientSecret = googleClientSecret;
+            googleOptions.CallbackPath = "/signin-google";
+        });
+}
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
