@@ -4,6 +4,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
 using FutsalApi.ApiService.Services;
@@ -28,12 +29,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 
+
 builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
    options =>
    {
        options.BearerTokenExpiration = TimeSpan.FromDays(1);
        options.RefreshTokenExpiration = TimeSpan.FromDays(30);
-   });
+   })
+   .AddGoogleAuthentication();
 builder.Services.AddAuthorization(options =>
 {
     options.DefaultPolicy = new AuthorizationPolicyBuilder(IdentityConstants.BearerScheme)
@@ -80,12 +83,14 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddLogging(builder => builder.AddConsole());
 
+builder.Services.AddEndpoints(typeof(Program).Assembly); // Register all endpoints in the assembly
+
 builder.Services.AddTransient<IEmailSender<User>, EmailSender>();
 
 builder.Services.AddFluentValidationAutoValidation() // Enables automatic validation
                 .AddFluentValidationClientsideAdapters(); // Enables client-side validation for MVC
 
-builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); // Scans & registers all validators
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans & registers all validators
 
 builder.Services.AddScoped(typeof(IGenericrepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
@@ -99,22 +104,6 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-//Retrie Google Client ID and Secret from the database
-using (var scope = app.Services.CreateScope())
-{
-    var settingsService = scope.ServiceProvider.GetRequiredService<IGeneralSettingsService>();
-
-    var googleClientId = await settingsService.GetSettingAsync("Google:ClientId");
-    var googleClientSecret = await settingsService.GetSettingAsync("Google:ClientSecret");
-
-    app.Services.GetRequiredService<AuthenticationBuilder>()
-        .AddGoogle(googleOptions =>
-        {
-            googleOptions.ClientId = googleClientId;
-            googleOptions.ClientSecret = googleClientSecret;
-            googleOptions.CallbackPath = "/signin-google";
-        });
-}
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
@@ -135,11 +124,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthApi<User>().WithTags("User");
-app.MapFutsalGroundApi().WithTags("Futsal Grounds");
-app.MapReviewApi().WithTags("Reviews");
-app.MapNotificationApi().WithTags("Notifications");
-app.MapBookingApi().WithTags("Bookings");
-app.MapPaymentApi().WithTags("Payments");
+app.MapEndpoints(); // Maps all endpoints registered in the assembly
 
 app.MapDefaultEndpoints();
 
