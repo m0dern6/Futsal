@@ -1,6 +1,7 @@
 using System.Diagnostics;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.AspNetCore.Builder;
@@ -12,20 +13,13 @@ using Microsoft.Extensions.Logging;
 
 namespace FutsalApi.ApiService.Routes;
 
-/// <summary>
-/// Provides API endpoints for managing FutsalGround entities.
-/// Includes CRUD operations: GetAll, GetById, Create, Update, and Delete.
-/// </summary>
-public static class FutsalGroundApiEndpointRouteBuilderExtensions
+public class FutsalGroundApiEndpoints : IEndpoint
 {
-    /// <summary>
-    /// Maps API endpoints for FutsalGround management.
-    /// </summary>
-    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the endpoints to.</param>
-    /// <returns>An <see cref="IEndpointConventionBuilder"/> to further customize the added endpoints.</returns>
-    public static IEndpointConventionBuilder MapFutsalGroundApi(this IEndpointRouteBuilder endpoints)
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/FutsalGround");
+        var routeGroup = endpoints.MapGroup("/FutsalGround")
+            .WithTags("FutsalGround")
+            .RequireAuthorization();
 
         // GET: /FutsalGround (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<FutsalGround>>, ProblemHttpResult>>
@@ -170,8 +164,5 @@ public static class FutsalGroundApiEndpointRouteBuilderExtensions
         .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
-
-
-        return routeGroup;
     }
 }

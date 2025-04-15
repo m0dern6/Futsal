@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -10,11 +11,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FutsalApi.ApiService.Routes;
 
-public static class BookingApiEndpointRouteBuilderExtensions
+public class BookingApiEndpoints : IEndpoint
 {
-    public static IEndpointConventionBuilder MapBookingApi(this IEndpointRouteBuilder endpoints)
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/Booking").RequireAuthorization();
+        var routeGroup = endpoints.MapGroup("/Booking")
+            .WithTags("Booking")
+            .RequireAuthorization();
 
         // GET: /Booking (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<Booking>>, ProblemHttpResult, NotFound>>
@@ -149,10 +152,6 @@ public static class BookingApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-
-
-
-        return routeGroup;
     }
 
 

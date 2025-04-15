@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 
@@ -12,24 +13,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Routes;
 
-public static class RolesApiEndpointRouteBuilderExtensions
+public class RolesApiEndpoints : IEndpoint
 {
-    /// <summary>
-    /// Maps API endpoints for Roles management.
-    /// </summary>
-    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the endpoints to.</param>
-    /// <returns>An <see cref="IEndpointConventionBuilder"/> to further customize the added endpoints.</returns>
 
-    public static IEndpointConventionBuilder MapRolesApi(this IEndpointRouteBuilder endpoints)
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/Roles").RequireAuthorization();
+        var routeGroup = endpoints.MapGroup("/Roles")
+            .WithTags("Roles")
+            .RequireAuthorization();
 
-        var roleManager = endpoints.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-        var userManager = endpoints.ServiceProvider.GetRequiredService<UserManager<User>>();
 
         // GET: /Roles
         routeGroup.MapGet("/", async Task<Results<Ok<List<Role>>, ProblemHttpResult>>
-            () =>
+            ([FromServices] RoleManager<Role> roleManager) =>
         {
             try
             {
@@ -49,7 +45,8 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         // GET: /Roles/{roleId}
         routeGroup.MapGet("/{roleId}", async Task<Results<Ok<Role>, ProblemHttpResult>>
-            (string roleId) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId) =>
         {
             try
             {
@@ -74,7 +71,8 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         // POST: /Roles
         routeGroup.MapPost("/", async Task<Results<Ok<Role>, ProblemHttpResult>>
-            ([FromBody] Role role) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            [FromBody] Role role) =>
         {
             try
             {
@@ -100,7 +98,9 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         // PUT: /Roles/{roleId}
         routeGroup.MapPut("/{roleId}", async Task<Results<Ok<Role>, ProblemHttpResult>>
-            (string roleId, [FromBody] Role role) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId,
+            [FromBody] Role role) =>
         {
             try
             {
@@ -134,7 +134,8 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         // DELETE: /Roles/{roleId}
         routeGroup.MapDelete("/{roleId}", async Task<Results<Ok, ProblemHttpResult, NotFound>>
-            (string roleId) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId) =>
         {
             try
             {
@@ -166,7 +167,8 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         //Get: /Roles/{roleId}/Claims
         routeGroup.MapGet("/{roleId}/Claims", async Task<Results<Ok<List<Claim>>, ProblemHttpResult>>
-            (string roleId) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId) =>
         {
             try
             {
@@ -193,7 +195,9 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         // POST: /Roles/{roleId}/Claims
         routeGroup.MapPost("/{roleId}/Claims", async Task<Results<Ok, ProblemHttpResult>>
-            (string roleId, [FromBody] ClaimModel claimModel) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId,
+            [FromBody] ClaimModel claimModel) =>
         {
             try
             {
@@ -226,7 +230,9 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         //PUT: /Roles/{roleId}/Claims
         routeGroup.MapPut("/{roleId}/Claims", async Task<Results<Ok, ProblemHttpResult>>
-            (string roleId, [FromBody] ClaimModel claimModel) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId,
+            [FromBody] ClaimModel claimModel) =>
         {
             try
             {
@@ -272,7 +278,9 @@ public static class RolesApiEndpointRouteBuilderExtensions
 
         // DELETE: /Roles/{roleId}/Claims
         routeGroup.MapDelete("/{roleId}/Claims", async Task<Results<Ok, ProblemHttpResult>>
-            (string roleId, [FromBody] ClaimModel claimModel) =>
+            ([FromServices] RoleManager<Role> roleManager,
+            string roleId,
+            [FromBody] ClaimModel claimModel) =>
         {
             try
             {
@@ -305,6 +313,5 @@ public static class RolesApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        return routeGroup;
     }
 }

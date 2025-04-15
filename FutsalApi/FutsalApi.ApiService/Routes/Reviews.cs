@@ -1,3 +1,4 @@
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -5,20 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FutsalApi.ApiService.Data;
 
-/// <summary>
-/// Provides API endpoints for managing Review entities.
-/// Includes CRUD operations: GetAll, GetById, Create, Update, and Delete.
-/// </summary>
-public static class ReviewApiEndpointRouteBuilderExtensions
+public class ReviewApiEndpoints : IEndpoint
 {
-    /// <summary>
-    /// Maps API endpoints for Review management.
-    /// </summary>
-    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the endpoints to.</param>
-    /// <returns>An <see cref="IEndpointConventionBuilder"/> to further customize the added endpoints.</returns>
-    public static IEndpointConventionBuilder MapReviewApi(this IEndpointRouteBuilder endpoints)
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/Reviews").RequireAuthorization();
+        var routeGroup = endpoints.MapGroup("/Reviews")
+            .WithTags("Reviews")
+            .RequireAuthorization();
 
         // GET: /Reviews (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<Review>>, ProblemHttpResult>>
@@ -211,6 +205,5 @@ public static class ReviewApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        return routeGroup;
     }
 }

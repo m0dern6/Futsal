@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 
@@ -11,11 +12,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FutsalApi.ApiService.Routes;
 
-public static class NotificationsApiEndpointRouteBuilderExtensions
+public class NotificationsApiEndpoints : IEndpoint
 {
-    public static IEndpointConventionBuilder MapNotificationApi(this IEndpointRouteBuilder endpoints)
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/Notifications").RequireAuthorization();
+        var routeGroup = endpoints.MapGroup("/Notifications")
+            .WithTags("Notifications")
+            .RequireAuthorization();
 
         // GET: /Notifications (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<Notification>>, ProblemHttpResult, NotFound>>
@@ -117,7 +120,6 @@ public static class NotificationsApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        return routeGroup;
     }
 
 }

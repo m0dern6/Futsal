@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services;
 
@@ -11,11 +12,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FutsalApi.ApiService.Routes;
 
-public static class PaymentApiEndpointRouteBuilderExtensions
+public class PaymentApiEndpoints : IEndpoint
 {
-    public static IEndpointConventionBuilder MapPaymentApi(this IEndpointRouteBuilder endpoints)
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        var routeGroup = endpoints.MapGroup("/Payment").RequireAuthorization();
+        var routeGroup = endpoints.MapGroup("/Payment")
+            .WithTags("Payment")
+            .RequireAuthorization();
 
         //Get: /Payment (with pagination)
         routeGroup.MapGet("/", async Task<Results<Ok<IEnumerable<Payment>>, ProblemHttpResult, NotFound>>
@@ -115,7 +118,6 @@ public static class PaymentApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        return routeGroup;
     }
 
 }
