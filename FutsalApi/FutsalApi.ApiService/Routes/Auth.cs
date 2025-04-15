@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -134,6 +135,75 @@ public static class AuthApiEndpointRouteBuilderExtensions
         .Produces<Ok<AccessTokenResponse>>(StatusCodes.Status200OK)
         .Produces<EmptyHttpResult>(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        routeGroup.MapGet("/login/google", async Task<Results<RedirectHttpResult, ProblemHttpResult>>
+            ([FromQuery] string? returnUrl, [FromServices] IServiceProvider sp, HttpContext context) =>
+        {
+            var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
+            var properties = signInManager.ConfigureExternalAuthenticationProperties("Google", returnUrl ?? "/auth/google/callback");
+
+            if (properties == null)
+            {
+                return TypedResults.Problem("Failed to configure Google login.", statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            await context.ChallengeAsync("Google", properties);
+            return TypedResults.Redirect(properties.RedirectUri ?? "/");
+        })
+        .WithName("GoogleLogin")
+        .WithSummary("Redirects to Google for authentication.")
+        .WithDescription("Redirects the user to Google's OAuth 2.0 login page for authentication.")
+        .Produces<RedirectHttpResult>(StatusCodes.Status302Found)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        routeGroup.MapGet("/auth/google/callback", async Task<Results<RedirectHttpResult, ProblemHttpResult>>
+            ([FromQuery] string? returnUrl, [FromServices] IServiceProvider sp, HttpContext context) =>
+        {
+            var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
+            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+
+            var authenticateResult = await context.AuthenticateAsync("Google");
+
+            if (!authenticateResult.Succeeded)
+            {
+                return TypedResults.Problem("Google authentication failed.", statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            var email = authenticateResult.Principal?.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+            {
+                return TypedResults.Problem("Google login did not return an email address.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // Check if the user exists in the database
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                // Create a new user if they don't exist
+                user = new TUser();
+                await userManager.SetUserNameAsync(user, email);
+                await userManager.SetEmailAsync(user, email);
+                var createResult = await userManager.CreateAsync(user);
+
+                if (!createResult.Succeeded)
+                {
+                    return TypedResults.Problem("Failed to create a new user.", statusCode: StatusCodes.Status500InternalServerError);
+                }
+            }
+
+            // Sign in the user
+            await signInManager.SignInAsync(user, isPersistent: false);
+
+            // Redirect to the return URL or home page
+            return TypedResults.Redirect(returnUrl ?? "/");
+        })
+        .WithName("GoogleCallback")
+        .WithSummary("Handles the Google login callback.")
+        .WithDescription("Processes the Google login callback and signs in the user.")
+        .Produces<RedirectHttpResult>(StatusCodes.Status302Found)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapPost("/logout", async Task<Results<Ok, ProblemHttpResult>>
