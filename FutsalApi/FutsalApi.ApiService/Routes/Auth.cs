@@ -119,6 +119,10 @@ public static class AuthApiEndpointRouteBuilderExtensions
                     result = await signInManager.TwoFactorRecoveryCodeSignInAsync(login.TwoFactorRecoveryCode);
                 }
             }
+            if (result.IsLockedOut)
+            {
+                return TypedResults.Problem("User account locked out.", statusCode: StatusCodes.Status423Locked);
+            }
 
             if (!result.Succeeded)
             {
