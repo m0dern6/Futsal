@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 
 namespace FutsalApi.ApiService.Repositories;
 
-public interface IGenericrepository<T> where T : class
+public interface IGenericRepository<T> where T : class
 {
     Task<IEnumerable<T>> GetAllAsync(int page = 1, int pageSize = 10);
     Task<T?> GetByIdAsync(Expression<Func<T, bool>> predicate);

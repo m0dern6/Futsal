@@ -4,7 +4,7 @@ using FutsalApi.ApiService.Data;
 
 namespace FutsalApi.ApiService.Repositories;
 
-public interface IFutsalGroundRepository : IGenericrepository<FutsalGround>
+public interface IFutsalGroundRepository : IGenericRepository<FutsalGround>
 {
 
 }
