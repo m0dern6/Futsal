@@ -92,12 +92,10 @@ builder.Services.AddFluentValidationAutoValidation() // Enables automatic valida
 
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans & registers all validators
 
-builder.Services.AddScoped(typeof(IGenericrepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddRepositories(typeof(Program).Assembly); // Registers all repositories in the assembly
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddSingleton<ISmtpService, SmtpService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

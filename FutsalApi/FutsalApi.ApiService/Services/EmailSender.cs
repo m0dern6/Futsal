@@ -8,19 +8,34 @@ namespace FutsalApi.ApiService.Services;
 
 public class EmailSender : IEmailSender<User>
 {
+    // private readonly ISmtpService _smtpService;
+    // public EmailSender(ISmtpService smtpService)
+    // {
+    //     _smtpService = smtpService;
+
+    // }
     public Task SendConfirmationLinkAsync(User user, string email, string confirmationLink)
     {
-        Console.WriteLine($"Sending confirmation link to {email} with link {confirmationLink}");
+        // var subject = "Confirm Your Email";
+        // var body = $"Please confirm your email by clicking the following link: {confirmationLink}";
+        // _smtpService.SendEmailAsync(email, subject, body);
         return Task.CompletedTask;
+
     }
+
     public Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
     {
-        Console.WriteLine($"Sending password reset link to {email} with link {resetLink}");
+        // var subject = "Reset Your Password";
+        // var body = $"You can reset your password by clicking the following link: {resetLink}";
+        // _smtpService.SendEmailAsync(email, subject, body);
         return Task.CompletedTask;
     }
+
     public Task SendPasswordResetCodeAsync(User user, string email, string resetCode)
     {
-        Console.WriteLine($"Sending password reset code to {email} with code {resetCode}");
+        // var subject = "Your Password Reset Code";
+        // var body = $"Your password reset code is: {resetCode}";
+        // _smtpService.SendEmailAsync(email, subject, body);
         return Task.CompletedTask;
     }
 }
