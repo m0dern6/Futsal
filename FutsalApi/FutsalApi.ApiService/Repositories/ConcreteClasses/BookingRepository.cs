@@ -1,6 +1,7 @@
 using System;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,7 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
     {
         _dbContext = dbContext;
     }
-    public async Task<IEnumerable<Booking>> GetBookingsByUserIdAsync(string userId, int page, int pageSize)
+    public async Task<IEnumerable<BookingResponse>> GetBookingsByUserIdAsync(string userId, int page, int pageSize)
     {
         if (page <= 0 || pageSize <= 0)
         {
@@ -26,6 +27,17 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
             .OrderByDescending(r => r.BookingDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(e => new BookingResponse
+            {
+                Id = e.Id,
+                BookingDate = e.BookingDate,
+                StartTime = e.StartTime,
+                EndTime = e.EndTime,
+                Status = e.Status,
+                TotalAmount = e.TotalAmount,
+                CreatedAt = e.CreatedAt,
+                GroundName = e.Ground.Name
+            })
             .ToListAsync();
     }
 
