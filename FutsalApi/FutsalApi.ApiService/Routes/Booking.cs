@@ -54,7 +54,7 @@ public class BookingApiEndpoints : IEndpoint
             .WithSummary("Cancel an existing booking")
             .WithDescription("Cancel an existing booking for a user")
             .Produces<string>(StatusCodes.Status200OK)
-            .Produces<Booking>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
