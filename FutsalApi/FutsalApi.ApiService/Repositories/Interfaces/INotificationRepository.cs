@@ -8,7 +8,7 @@ namespace FutsalApi.ApiService.Repositories;
 /// </summary>
 public interface INotificationRepository : IGenericRepository<Notification>
 {
-    Task<IEnumerable<Notification>> GetNotificationsByUserIdAsync(string userId, int page = 1, int pageSize = 10);
+    Task<IEnumerable<NotificationResponse>> GetNotificationsByUserIdAsync(string userId, int page = 1, int pageSize = 10);
     Task<bool> UpdateStatusByUserIdAsync(int notificationId, string userId);
 
     Task<bool> SendNotificationToMultipleUsersAsync(NotificationListModel notificationListModel);

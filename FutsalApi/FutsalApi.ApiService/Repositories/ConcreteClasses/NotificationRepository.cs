@@ -21,7 +21,7 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
     /// <summary>
     /// Retrieves Notifications for a specific User with pagination.
     /// </summary>
-    public async Task<IEnumerable<Notification>> GetNotificationsByUserIdAsync(string userId, int page = 1, int pageSize = 10)
+    public async Task<IEnumerable<NotificationResponse>> GetNotificationsByUserIdAsync(string userId, int page = 1, int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
         {
@@ -33,6 +33,14 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(r => new NotificationResponse
+            {
+                Id = r.Id,
+                UserId = r.UserId,
+                Message = r.Message,
+                IsRead = r.IsRead,
+                CreatedAt = r.CreatedAt
+            })
             .ToListAsync();
     }
 
