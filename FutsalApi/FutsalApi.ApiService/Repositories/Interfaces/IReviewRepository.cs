@@ -1,4 +1,7 @@
+using System.Linq.Expressions;
+
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 
 namespace FutsalApi.ApiService.Repositories;
 
@@ -7,6 +10,8 @@ namespace FutsalApi.ApiService.Repositories;
 /// </summary>
 public interface IReviewRepository : IGenericRepository<Review>
 {
-    Task<IEnumerable<Review>> GetReviewsByGroundIdAsync(int groundId, int page = 1, int pageSize = 10);
+    new Task<ReviewResponse?> GetByIdAsync(Expression<Func<Review, bool>> predicate);
+    new Task<IEnumerable<ReviewResponse>> GetAllAsync(int page = 1, int pageSize = 10);
+    Task<IEnumerable<ReviewResponse>> GetReviewsByGroundIdAsync(int groundId, int page = 1, int pageSize = 10);
     Task<bool> DeleteReviewByUserAsync(int reviewId, string userId);
 }
