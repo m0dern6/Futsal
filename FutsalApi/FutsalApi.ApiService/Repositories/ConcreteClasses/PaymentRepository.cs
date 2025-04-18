@@ -2,6 +2,7 @@ using System;
 using System.Linq.Expressions;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
     {
         _context = context;
     }
-    public async Task<IEnumerable<Payment>> GetPaymentsByUserIdAsync(string userId, int page, int pageSize)
+    public async Task<IEnumerable<PaymentResponse>> GetPaymentsByUserIdAsync(string userId, int page, int pageSize)
     {
         return await _context.Payments
             .Include(p => p.Booking)
@@ -23,13 +24,33 @@ public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
             .OrderByDescending(p => p.Booking.BookingDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(p => new PaymentResponse
+            {
+                Id = p.Id,
+                AmountPaid = p.AmountPaid,
+                PaymentDate = p.PaymentDate,
+                BookingId = p.BookingId,
+                Method = p.Method,
+                Status = p.Status,
+                TransactionId = p.TransactionId
+            })
             .ToListAsync();
     }
-    public async Task<Payment> GetPaymentByBookingIdAsync(int bookingId)
+    public async Task<PaymentResponse?> GetPaymentByBookingIdAsync(int bookingId)
     {
         return await _context.Payments
-            .FirstOrDefaultAsync(p => p.BookingId == bookingId)
-            ?? throw new Exception($"Payment with BookingId {bookingId} not found.");
+        .Select(p => new PaymentResponse
+        {
+            Id = p.Id,
+            AmountPaid = p.AmountPaid,
+            PaymentDate = p.PaymentDate,
+            BookingId = p.BookingId,
+            Method = p.Method,
+            Status = p.Status,
+            TransactionId = p.TransactionId
+        })
+            .FirstOrDefaultAsync(p => p.BookingId == bookingId);
+
     }
 
 }
