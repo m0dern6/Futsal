@@ -1,9 +1,12 @@
-﻿using FutsalApi.ApiService.Data;
+﻿using System.Security.Claims;
+
+using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FutsalApi.ApiService.Routes;
@@ -36,8 +39,8 @@ public class FutsalGroundApiEndpoints : IEndpoint
             .WithName("CreateFutsalGround")
             .WithSummary("Creates a new futsal ground.")
             .WithDescription("Adds a new futsal ground to the system.")
-            .Accepts<FutsalGround>("application/json")
-            .Produces<FutsalGround>(StatusCodes.Status200OK)
+            .Accepts<FutsalGroundRequest>("application/json")
+            .Produces<string>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -45,7 +48,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
             .WithName("UpdateFutsalGround")
             .WithSummary("Updates an existing futsal ground.")
             .WithDescription("Modifies the details of an existing futsal ground identified by its ID.")
-            .Produces<FutsalGround>(StatusCodes.Status200OK)
+            .Produces<string>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -99,18 +102,33 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
     }
 
-    internal async Task<Results<Ok<FutsalGround>, ProblemHttpResult>> CreateFutsalGround(
+    internal async Task<Results<Ok<string>, ProblemHttpResult>> CreateFutsalGround(
         [FromServices] IFutsalGroundRepository repository,
-        [FromBody] FutsalGround futsalGround)
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
+        [FromBody] FutsalGroundRequest futsalGroundRequest)
     {
         try
         {
+            if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
+            {
+                return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+            FutsalGround futsalGround = new FutsalGround
+            {
+                Name = futsalGroundRequest.Name,
+                OwnerId = user.Id,
+                Location = futsalGroundRequest.Location,
+                PricePerHour = futsalGroundRequest.PricePerHour,
+                OpenTime = futsalGroundRequest.OpenTime,
+                CloseTime = futsalGroundRequest.CloseTime
+            };
             var result = await repository.CreateAsync(futsalGround);
             if (result is null)
             {
                 return TypedResults.Problem("Failed to create the futsal ground.", statusCode: StatusCodes.Status400BadRequest);
             }
-            return TypedResults.Ok(result);
+            return TypedResults.Ok("Futsal ground created successfully.");
         }
         catch (Exception ex)
         {
@@ -118,21 +136,38 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
     }
 
-    internal async Task<Results<Ok<FutsalGround>, NotFound, ProblemHttpResult>> UpdateFutsalGround(
+    internal async Task<Results<Ok<string>, NotFound, ProblemHttpResult>> UpdateFutsalGround(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         int id,
-        [FromBody] FutsalGround updatedGround)
+        [FromBody] FutsalGroundRequest updatedGroundRequest)
     {
         try
         {
-            var existingGround = await repository.GetByIdAsync(e => e.Id == id);
+            if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
+            {
+                return TypedResults.Problem("You are not authorized to update this futsalground", statusCode: StatusCodes.Status404NotFound);
+            }
+            var existingGround = await repository.GetByIdAsync(e => e.Id == id && e.OwnerId == user.Id);
             if (existingGround is null)
             {
                 return TypedResults.NotFound();
             }
+            FutsalGround updatedGround = new FutsalGround
+            {
+                OwnerId = user.Id,
+                Name = updatedGroundRequest.Name,
+                Location = updatedGroundRequest.Location,
+                PricePerHour = updatedGroundRequest.PricePerHour,
+                OpenTime = updatedGroundRequest.OpenTime,
+                CloseTime = updatedGroundRequest.CloseTime
+
+            };
+
 
             var result = await repository.UpdateAsync(e => e.Id == id, updatedGround);
-            return TypedResults.Ok(result);
+            return TypedResults.Ok("Futsal ground updated successfully.");
         }
         catch (Exception ex)
         {
@@ -142,11 +177,18 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<NoContent, NotFound, ProblemHttpResult>> DeleteFutsalGround(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         int id)
     {
         try
         {
-            var futsalGround = await repository.GetByIdAsync(e => e.Id == id);
+            if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
+            {
+                return TypedResults.Problem("You are not authorized to delete this futsal ground.", statusCode: StatusCodes.Status404NotFound);
+            }
+            var futsalGround = await repository.GetByIdAsync(e => e.Id == id && e.OwnerId == user.Id);
+
             if (futsalGround is null)
             {
                 return TypedResults.NotFound();
