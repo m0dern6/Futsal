@@ -121,7 +121,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapAuthApi<User>().WithTags("User");
 app.MapEndpoints(); // Maps all endpoints registered in the assembly
 
 app.MapDefaultEndpoints();
