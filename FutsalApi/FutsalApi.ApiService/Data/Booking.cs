@@ -25,6 +25,7 @@ public class Booking
     public BookingStatus Status { get; set; } = BookingStatus.Pending;
     public decimal TotalAmount { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = null;
 
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
