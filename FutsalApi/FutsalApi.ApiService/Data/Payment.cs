@@ -13,6 +13,7 @@ public enum PaymentMethod
 public enum PaymentStatus
 {
     Pending,
+    PartiallyCompleted,
     Completed,
     Failed
 }
