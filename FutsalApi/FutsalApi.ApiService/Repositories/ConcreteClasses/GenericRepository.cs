@@ -5,11 +5,6 @@ using FutsalApi.ApiService.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
-
-/// <summary>
-/// Generic implementation of IGenericrepository for any model.
-/// </summary>
-/// <typeparam name="T">The type of the entity.</typeparam>
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     private readonly AppDbContext _dbContext;
@@ -21,9 +16,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet = _dbContext.Set<T>();
     }
 
-    /// <summary>
-    /// Retrieves all records of type T from the database.
-    /// </summary>
     public virtual async Task<IEnumerable<T>> GetAllAsync(int page = 1, int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
@@ -34,25 +26,16 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
-    /// <summary>
-    /// Retrieves a record of type T by its ID.
-    /// </summary>
     public virtual async Task<T?> GetByIdAsync(Expression<Func<T, bool>> predicate)
     {
         return await _dbSet.FirstOrDefaultAsync(predicate);
     }
 
-    /// <summary>
-    /// Finds records of type T that match the specified predicate.
-    /// </summary>
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
     {
         return await _dbSet.Where(predicate).ToListAsync();
     }
 
-    /// <summary>
-    /// Creates a new record of type T in the database.
-    /// </summary>
     public virtual async Task<T> CreateAsync(T entity)
     {
         _dbSet.Add(entity);
@@ -60,9 +43,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return entity;
     }
 
-    /// <summary>
-    /// Updates an existing record of type T in the database.
-    /// </summary>
     public virtual async Task<T> UpdateAsync(Expression<Func<T, bool>> predicate, T entity)
     {
         var existingEntity = await _dbSet.FirstOrDefaultAsync(predicate);
@@ -76,9 +56,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return existingEntity;
     }
 
-    /// <summary>
-    /// Deletes a record of type T by its ID.
-    /// </summary>
     public virtual async Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate)
     {
         var entity = await _dbSet.FirstOrDefaultAsync(predicate);
@@ -90,5 +67,9 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet.Remove(entity);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+    public virtual IQueryable<T> Query() // Implemented Query method
+    {
+        return _dbSet.AsQueryable();
     }
 }
