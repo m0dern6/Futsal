@@ -8,6 +8,7 @@ using FutsalApi.ApiService.Repositories;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Routes;
 
@@ -26,6 +27,14 @@ public class FutsalGroundApiEndpoints : IEndpoint
             .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        routeGroup.MapGet("/search", SearchFutsalGrounds)
+       .WithName("SearchFutsalGrounds")
+       .WithSummary("Search futsal grounds by name and filters.")
+       .WithDescription("Searches futsal grounds by name, location, and average rating with pagination.")
+       .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
+       .ProducesProblem(StatusCodes.Status400BadRequest)
+       .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapGet("/{id:int}", GetFutsalGroundById)
             .WithName("GetFutsalGroundById")
@@ -102,6 +111,59 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
     }
 
+    internal async Task<Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult>> SearchFutsalGrounds(
+    [FromServices] IFutsalGroundRepository repository,
+    [FromQuery] string? name,
+    [FromQuery] string? location,
+    [FromQuery] double? minRating,
+    [FromQuery] double? maxRating,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        try
+        {
+            var query = repository.Query();
+
+            if (!string.IsNullOrWhiteSpace(name))
+                query = query.Where(f => f.Name.Contains(name));
+
+            if (!string.IsNullOrWhiteSpace(location))
+                query = query.Where(f => f.Location.Contains(location));
+
+            if (minRating.HasValue)
+                query = query.Where(f => f.AverageRating >= minRating.Value);
+
+            if (maxRating.HasValue)
+                query = query.Where(f => f.AverageRating <= maxRating.Value);
+
+            var futsalGrounds = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(f => new FutsalGroundResponse
+                {
+                    Id = f.Id,
+                    Name = f.Name,
+                    Location = f.Location,
+                    PricePerHour = f.PricePerHour,
+                    OpenTime = f.OpenTime,
+                    CloseTime = f.CloseTime,
+                    AverageRating = f.AverageRating,
+                })
+                .ToListAsync();
+
+            return TypedResults.Ok(futsalGrounds);
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"An error occurred while searching futsal grounds: {ex.Message}");
+        }
+    }
+
     internal async Task<Results<Ok<string>, ProblemHttpResult>> CreateFutsalGround(
         [FromServices] IFutsalGroundRepository repository,
         [FromServices] UserManager<User> userManager,
@@ -121,7 +183,11 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 Location = futsalGroundRequest.Location,
                 PricePerHour = futsalGroundRequest.PricePerHour,
                 OpenTime = futsalGroundRequest.OpenTime,
-                CloseTime = futsalGroundRequest.CloseTime
+                CloseTime = futsalGroundRequest.CloseTime,
+                Latitude = futsalGroundRequest.Latitude,
+                Longitude = futsalGroundRequest.Longitude,
+                Description = futsalGroundRequest.Description,
+                ImageUrl = futsalGroundRequest.ImageUrl
             };
             var result = await repository.CreateAsync(futsalGround);
             if (result is null)
@@ -161,8 +227,11 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 Location = updatedGroundRequest.Location,
                 PricePerHour = updatedGroundRequest.PricePerHour,
                 OpenTime = updatedGroundRequest.OpenTime,
-                CloseTime = updatedGroundRequest.CloseTime
-
+                CloseTime = updatedGroundRequest.CloseTime,
+                Latitude = updatedGroundRequest.Latitude,
+                Longitude = updatedGroundRequest.Longitude,
+                Description = updatedGroundRequest.Description,
+                ImageUrl = updatedGroundRequest.ImageUrl,
             };
 
 

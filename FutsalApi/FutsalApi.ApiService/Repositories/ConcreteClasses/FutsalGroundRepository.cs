@@ -35,7 +35,13 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 PricePerHour = g.PricePerHour,
                 OpenTime = g.OpenTime,
                 CloseTime = g.CloseTime,
+                ImageUrl = g.ImageUrl,
+                Description = g.Description,
+                Latitude = g.Latitude,
+                Longitude = g.Longitude,
+                RatingCount = g.RatingCount,
                 CreatedAt = g.CreatedAt,
+                AverageRating = g.AverageRating,
                 OwnerName = g.Owner.UserName!
             })
             .ToListAsync();
@@ -53,10 +59,31 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 PricePerHour = g.PricePerHour,
                 OpenTime = g.OpenTime,
                 CloseTime = g.CloseTime,
+                ImageUrl = g.ImageUrl,
+                Description = g.Description,
+                Latitude = g.Latitude,
+                Longitude = g.Longitude,
+                RatingCount = g.RatingCount,
                 CreatedAt = g.CreatedAt,
+                AverageRating = g.AverageRating,
                 OwnerName = g.Owner.UserName!
             })
             .FirstOrDefaultAsync();
+    }
+    public async Task UpdateRatingAsync(int groundId)
+    {
+        var ground = await _dbContext.FutsalGrounds.FindAsync(groundId);
+        if (ground == null) return;
+
+        var ratingsQuery = _dbContext.Reviews.Where(r => r.GroundId == groundId);
+
+        ground.RatingCount = await ratingsQuery.CountAsync();
+        ground.AverageRating = ground.RatingCount > 0
+            ? await ratingsQuery.AverageAsync(r => r.Rating)
+            : 0;
+
+        _dbContext.FutsalGrounds.Update(ground);
+        await _dbContext.SaveChangesAsync();
     }
 
 }
