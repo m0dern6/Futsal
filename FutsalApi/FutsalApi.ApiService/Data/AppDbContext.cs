@@ -20,4 +20,5 @@ public class AppDbContext : IdentityDbContext<User, Role, string, IdentityUserCl
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<GeneralSetting> GeneralSettings { get; set; }
+    public DbSet<Image> Images { get; set; } = null!;
 }
