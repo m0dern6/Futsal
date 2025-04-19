@@ -9,6 +9,7 @@ public class FutsalGroundResponse
     public string Location { get; set; } = string.Empty;
     public string OwnerId { get; set; } = string.Empty;
     public decimal PricePerHour { get; set; }
+    public double AverageRating { get; set; }
     public TimeSpan OpenTime { get; set; }
     public TimeSpan CloseTime { get; set; }
     public DateTime CreatedAt { get; set; }
