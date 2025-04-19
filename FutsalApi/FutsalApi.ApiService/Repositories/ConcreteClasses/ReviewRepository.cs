@@ -37,6 +37,9 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 UserId = r.UserId,
                 GroundId = r.GroundId,
                 Rating = r.Rating,
+                UserName = r.User.UserName ?? string.Empty,
+                UserImageUrl = r.User.ImageUrl ?? string.Empty,
+                ReviewImageUrl = r.ImageUrl ?? string.Empty,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })
@@ -52,6 +55,9 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 UserId = r.UserId,
                 GroundId = r.GroundId,
                 Rating = r.Rating,
+                UserName = r.User.UserName ?? string.Empty,
+                UserImageUrl = r.User.ImageUrl ?? string.Empty,
+                ReviewImageUrl = r.ImageUrl ?? string.Empty,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })
@@ -77,6 +83,9 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 UserId = r.UserId,
                 GroundId = r.GroundId,
                 Rating = r.Rating,
+                UserName = r.User.UserName ?? string.Empty,
+                UserImageUrl = r.User.ImageUrl ?? string.Empty,
+                ReviewImageUrl = r.ImageUrl ?? string.Empty,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })

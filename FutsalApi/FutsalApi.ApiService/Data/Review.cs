@@ -14,7 +14,8 @@ public class Review
     public int Rating { get; set; }
     public string? Comment { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
+    public DateTime? UpdatedAt { get; set; } = null;
+    public string? ImageUrl { get; set; } = null;
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
     [ForeignKey(nameof(GroundId))]
