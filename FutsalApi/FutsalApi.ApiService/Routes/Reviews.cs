@@ -141,6 +141,7 @@ public class ReviewApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<Review>, ProblemHttpResult>> CreateReview(
         [FromServices] IReviewRepository repository,
+        [FromServices] IFutsalGroundRepository groundRepository,
         [FromServices] UserManager<User> userManager,
         ClaimsPrincipal claimsPrincipal,
         [FromBody] ReviewRequest reviewRequest)
@@ -163,6 +164,7 @@ public class ReviewApiEndpoints : IEndpoint
             {
                 return TypedResults.Problem("Failed to create the review.", statusCode: StatusCodes.Status400BadRequest);
             }
+            await groundRepository.UpdateRatingAsync(reviewRequest.GroundId);
             return TypedResults.Ok(result);
         }
         catch (Exception ex)
@@ -173,6 +175,7 @@ public class ReviewApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<string>, NotFound, ProblemHttpResult>> UpdateReview(
         [FromServices] IReviewRepository repository,
+        [FromServices] IFutsalGroundRepository groundRepository,
         [FromServices] UserManager<User> userManager,
         ClaimsPrincipal claimsPrincipal,
         int id,
@@ -196,6 +199,7 @@ public class ReviewApiEndpoints : IEndpoint
                 Comment = updatedReviewRequest.Comment
             };
             var result = await repository.UpdateAsync(e => e.Id == id, updatedReview);
+            await groundRepository.UpdateRatingAsync(updatedReviewRequest.GroundId);
             return TypedResults.Ok("Review updated successfully.");
         }
         catch (Exception ex)
@@ -206,6 +210,7 @@ public class ReviewApiEndpoints : IEndpoint
 
     internal async Task<Results<NoContent, NotFound, ProblemHttpResult>> DeleteReview(
         [FromServices] IReviewRepository repository,
+        [FromServices] IFutsalGroundRepository groundRepository,
         [FromServices] UserManager<User> userManager,
         ClaimsPrincipal claimsPrincipal,
         int id)
@@ -222,14 +227,12 @@ public class ReviewApiEndpoints : IEndpoint
             {
                 return TypedResults.NotFound();
             }
-
-
             var success = await repository.DeleteReviewByUserAsync(id, user.Id);
             if (success)
             {
                 return TypedResults.NoContent();
             }
-
+            await groundRepository.UpdateRatingAsync(review.GroundId);
             return TypedResults.Problem("Failed to delete the review.");
         }
         catch (Exception ex)
