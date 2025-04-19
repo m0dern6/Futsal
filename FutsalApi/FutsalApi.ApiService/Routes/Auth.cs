@@ -49,8 +49,7 @@ public class AuthApiEndpointRouteBuilderExtensions : FutsalApi.ApiService.Infras
 
         // NOTE: We cannot inject UserManager<User> directly because the User generic parameter is currently unsupported by RDG.
         // https://github.com/dotnet/aspnetcore/issues/47338
-        routeGroup.MapPost("/register", (RegisterRequest registration, HttpContext context, [FromServices] IServiceProvider sp) =>
-            RegisterUser(registration, context, sp, confirmEmailEndpointName, linkGenerator, emailSender))
+        routeGroup.MapPost("/register", RegisterUser)
         .WithName("RegisterUser")
         .WithSummary("Registers a new user.")
         .WithDescription("Creates a new user account with the provided email and password.")
@@ -117,8 +116,7 @@ public class AuthApiEndpointRouteBuilderExtensions : FutsalApi.ApiService.Infras
             endpointBuilder.Metadata.Add(new EndpointNameMetadata(confirmEmailEndpointName));
         });
 
-        routeGroup.MapPost("/resendConfirmationEmail", (ResendConfirmationEmailRequest resendRequest, HttpContext context, [FromServices] IServiceProvider sp) =>
-            ResendConfirmationEmail(resendRequest, context, sp, confirmEmailEndpointName, linkGenerator, emailSender))
+        routeGroup.MapPost("/resendConfirmationEmail", ResendConfirmationEmail)
         .WithName("ResendConfirmationEmail")
         .WithSummary("Resends the email confirmation link.")
         .WithDescription("Resends the email confirmation link to the provided email address.")
@@ -184,8 +182,7 @@ public class AuthApiEndpointRouteBuilderExtensions : FutsalApi.ApiService.Infras
         .Produces<NotFound>(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        accountGroup.MapPost("/info", (ClaimsPrincipal claimsPrincipal, InfoRequest infoRequest, HttpContext context, [FromServices] IServiceProvider sp) =>
-            UpdateUserInfo(claimsPrincipal, infoRequest, context, sp, confirmEmailEndpointName, linkGenerator, emailSender))
+        accountGroup.MapPost("/info", UpdateUserInfo)
         .WithName("UpdateUserInfo")
         .WithSummary("Updates the user's information.")
         .WithDescription("Updates the user's information, including email and password.")
@@ -474,6 +471,7 @@ public class AuthApiEndpointRouteBuilderExtensions : FutsalApi.ApiService.Infras
         {
             return TypedResults.Problem("User not found or email not confirmed.", statusCode: StatusCodes.Status400BadRequest);
         }
+        await userManager.SetLockoutEnabledAsync(user, true);
         var result = await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
         if (!result.Succeeded)
         {
