@@ -1,7 +1,7 @@
 # Use official .NET 9 SDK image
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 7576
+EXPOSE 17012
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install tools required for GitHub Actions runner
@@ -49,4 +49,7 @@ ENTRYPOINT ["/actions-runner/entrypoint.sh"]
 # docker build -t github-runner-futsal -f github-runner.Dockerfile .
 
 # Step 2: Run the container
-# docker run -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=<token> --name github-runner-futsal github-runner-futsal:latest
+# docker run -p 7576:7576 -p 17012:17012 -d -e RUNNER_URL=https://github.com/0Ankit0/Futsal -e RUNNER_TOKEN=<Token> --name github-runner-futsal github-runner-futsal:latest
+
+# Step 3: To generate certificate for https, run the following command inside the container:
+# dotnet dev-certs https --trust

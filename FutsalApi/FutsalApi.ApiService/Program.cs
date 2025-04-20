@@ -95,7 +95,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans &
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddRepositories(typeof(Program).Assembly); // Registers all repositories in the assembly
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddSingleton<ISmtpService, SmtpService>();
+builder.Services.AddScoped<ISmtpService, SmtpService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
