@@ -15,11 +15,13 @@ public class ReviewApiEndpointsTests
 {
     private readonly Mock<IReviewRepository> _repositoryMock;
     private readonly Mock<UserManager<User>> _userManagerMock;
+    private readonly Mock<IFutsalGroundRepository> _groundRepositoryMock;
     private readonly ReviewApiEndpoints _endpoints;
 
     public ReviewApiEndpointsTests()
     {
         _repositoryMock = new Mock<IReviewRepository>();
+        _groundRepositoryMock = new Mock<IFutsalGroundRepository>();
         _userManagerMock = MockUserManager();
         _endpoints = new ReviewApiEndpoints();
     }
@@ -126,9 +128,8 @@ public class ReviewApiEndpointsTests
 
         _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
         _repositoryMock.Setup(r => r.CreateAsync(It.IsAny<Review>())).ReturnsAsync(review);
-
         // Act
-        var result = await _endpoints.CreateReview(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, reviewRequest);
+        var result = await _endpoints.CreateReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, reviewRequest);
 
         // Assert
         result.Should().BeOfType<Results<Ok<Review>, ProblemHttpResult>>();
@@ -152,7 +153,7 @@ public class ReviewApiEndpointsTests
         _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Expression<Func<Review, bool>>>(), It.IsAny<Review>())).ReturnsAsync(new Review());
 
         // Act
-        var result = await _endpoints.UpdateReview(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, reviewRequest);
+        var result = await _endpoints.UpdateReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, reviewRequest);
 
         // Assert
         result.Should().BeOfType<Results<Ok<string>, NotFound, ProblemHttpResult>>();
@@ -175,13 +176,13 @@ public class ReviewApiEndpointsTests
         _repositoryMock.Setup(r => r.DeleteReviewByUserAsync(1, user.Id)).ReturnsAsync(true);
 
         // Act
-        var result = await _endpoints.DeleteReview(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+        var result = await _endpoints.DeleteReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
 
         // Assert
         result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
-        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: NoContent })
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: NoContent noContentResult })
         {
-            result.Result.Should().BeOfType<NoContent>();
+            noContentResult.Should().BeOfType<NoContent>();
         }
     }
 
