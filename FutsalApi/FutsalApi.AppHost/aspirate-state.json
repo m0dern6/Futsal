@@ -1,0 +1,15 @@
+{
+  "projectPath": ".",
+  "containerImageTags": [
+    "latest"
+  ],
+  "containerBuilder": "docker",
+  "containerRepositoryPrefix": "futsal-local",
+  "outputFormat": "kustomize",
+  "secrets": {
+    "salt": "m9uzRKazNa4vdMK3",
+    "hash": "OAqq3oQvBlKSpaZMyJzW2oZXxuAFlSd8rDQn/\u002BQEK0g=",
+    "secrets": {}
+  },
+  "processAllComponents": true
+}

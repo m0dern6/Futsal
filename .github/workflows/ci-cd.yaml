@@ -21,8 +21,8 @@ jobs:
       - name: Run tests
         run: dotnet test /app/FutsalApi.sln --no-build --verbosity normal
 
-      - name: Publish AppHost
-        run: dotnet publish /app/FutsalApi.ApiService/FutsalApi.ApiService.csproj -c Release -o /app/publish
+      - name: Publish ApiService
+        run: cd /app/FutsalApi.ApiService && aspirate build
 
-      - name: Run AppHost DLL
-        run: dotnet /app/publish/FutsalApi.ApiService.dll --urls "http://0.0.0.0:7576;"
+      # - name: Run ApiService DLL
+      #   run: dotnet /app/publish/FutsalApi.ApiService.dll --urls "http://0.0.0.0:7576;"
