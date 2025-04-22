@@ -5,6 +5,7 @@ using FluentValidation.AspNetCore;
 
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Infrastructure;
+using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
 using FutsalApi.ApiService.Services;
@@ -97,6 +98,8 @@ builder.Services.AddRepositories(typeof(Program).Assembly); // Registers all rep
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
+//Add Permission handler
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionResourceHandler>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
