@@ -34,7 +34,7 @@ public class RolesApiEndpoints : IEndpoint
             .WithName("GetRoleById")
             .WithSummary("Retrieves a role by ID.")
             .WithDescription("Returns the role with the specified ID.")
-            .Produces<Role>(StatusCodes.Status200OK) 
+            .Produces<Role>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -243,7 +243,7 @@ public class RolesApiEndpoints : IEndpoint
     {
         try
         {
-            var claim = new Claim(claimModel.Type, claimModel.Value);
+            var claim = new Claim(claimModel.Type.ToString(), claimModel.Value);
             var role = await roleManager.FindByIdAsync(roleId);
             if (role == null)
             {
@@ -270,7 +270,7 @@ public class RolesApiEndpoints : IEndpoint
     {
         try
         {
-            var claim = new Claim(claimModel.Type, claimModel.Value);
+            var claim = new Claim(claimModel.Type.ToString(), claimModel.Value);
 
             var role = await roleManager.FindByIdAsync(roleId);
             if (role == null)
@@ -315,7 +315,7 @@ public class RolesApiEndpoints : IEndpoint
                 return TypedResults.Problem($"Role with ID {roleId} not found.", statusCode: StatusCodes.Status404NotFound);
             }
 
-            var claim = new Claim(claimModel.Type, claimModel.Value);
+            var claim = new Claim(claimModel.Type.ToString(), claimModel.Value);
 
             var result = await roleManager.RemoveClaimAsync(role, claim);
             if (!result.Succeeded)
