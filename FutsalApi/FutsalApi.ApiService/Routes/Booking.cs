@@ -4,8 +4,10 @@ using System.Security.Claims;
 
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Infrastructure;
+using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
+using FutsalApi.ApiService.Repositories.Interfaces;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +24,7 @@ public class BookingApiEndpoints : IEndpoint
             .RequireAuthorization();
 
         routeGroup.MapGet("/", GetBookingsByUserId)
+            .RequirePermissionResource(Permissions.CanView, Resources.Booking)
             .WithName("GetBookingsByUserId")
             .WithSummary("Get Bookings of a user")
             .WithDescription("Get all the Bookings for a particular user using userid")
@@ -88,15 +91,48 @@ public class BookingApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<string>, ProblemHttpResult>> CreateBooking(
         [FromServices] IBookingRepository repository,
+        [FromServices] IGroundClosureRepository groundClosureRepository,
         [FromServices] IFutsalGroundRepository groundRepository,
         [FromBody] BookingRequest bookingRequest)
     {
         try
         {
+            if (await groundClosureRepository.IsGroundClosedAsync(bookingRequest.GroundId, bookingRequest.BookingDate, bookingRequest.StartTime, bookingRequest.EndTime))
+            {
+                return TypedResults.Problem("The selected time slot is closed for booking.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
             var ground = await groundRepository.GetByIdAsync(e => e.Id == bookingRequest.GroundId);
             if (ground == null)
             {
                 return TypedResults.Problem("Ground not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+            var existingBooking = await repository.GetByIdAsync(e => e.GroundId == bookingRequest.GroundId && e.BookingDate == bookingRequest.BookingDate && e.StartTime < bookingRequest.EndTime && e.EndTime > bookingRequest.StartTime);
+            if (existingBooking != null)
+            {
+                return TypedResults.Problem("The selected time slot is already booked.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (bookingRequest.StartTime >= bookingRequest.EndTime)
+            {
+                return TypedResults.Problem("Start time must be less than end time.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (bookingRequest.StartTime < DateTime.UtcNow.TimeOfDay || bookingRequest.EndTime < DateTime.UtcNow.TimeOfDay)
+            {
+                return TypedResults.Problem("Start time and end time must be in the future.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (bookingRequest.StartTime < ground.OpenTime || bookingRequest.EndTime > ground.CloseTime)
+            {
+                return TypedResults.Problem("Booking time must be within the ground's operating hours.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            var doubleBooking = await repository.GetByIdAsync(e => e.GroundId == bookingRequest.GroundId && e.BookingDate == bookingRequest.BookingDate && e.StartTime < bookingRequest.EndTime && e.EndTime > bookingRequest.StartTime && e.UserId == bookingRequest.UserId);
+            if (doubleBooking != null)
+            {
+                return TypedResults.Problem("You have already booked this time slot.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            var userBookings = await repository.GetAllAsync(e => e.UserId == bookingRequest.UserId && e.BookingDate == bookingRequest.BookingDate, 1, 4);
+            if (userBookings != null && userBookings.Count() >= 4)
+            {
+                return TypedResults.Problem("You can only book a maximum of 4 slots per day.", statusCode: StatusCodes.Status400BadRequest);
             }
             Booking booking = new Booking
             {
@@ -128,6 +164,14 @@ public class BookingApiEndpoints : IEndpoint
             {
                 return TypedResults.NotFound();
             }
+            if (existingBooking.Status == BookingStatus.Cancelled)
+            {
+                return TypedResults.Problem("Cannot update a cancelled booking.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (existingBooking.Status == BookingStatus.Completed)
+            {
+                return TypedResults.Problem("Cannot update a completed booking.", statusCode: StatusCodes.Status400BadRequest);
+            }
 
             existingBooking.StartTime = bookingRequest.StartTime;
             existingBooking.EndTime = bookingRequest.EndTime;
@@ -157,6 +201,14 @@ public class BookingApiEndpoints : IEndpoint
             if (existingBooking == null)
             {
                 return TypedResults.NotFound();
+            }
+            if (existingBooking.Status == BookingStatus.Cancelled)
+            {
+                return TypedResults.Problem("Booking is already cancelled.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (existingBooking.Status == BookingStatus.Completed)
+            {
+                return TypedResults.Problem("Cannot cancel a completed booking.", statusCode: StatusCodes.Status400BadRequest);
             }
 
             existingBooking.Status = BookingStatus.Cancelled;

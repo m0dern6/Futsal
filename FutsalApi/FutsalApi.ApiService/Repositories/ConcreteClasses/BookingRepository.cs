@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Models;
@@ -14,6 +15,31 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
     public BookingRepository(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
+    }
+    public async Task<List<BookingResponse>> GetAllAsync(Expression<Func<Booking, bool>> predicate, int page, int pageSize)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException("Page and pageSize must be greater than 0.");
+        }
+
+        return await _dbContext.Bookings
+            .Where(predicate)
+            .OrderByDescending(r => r.BookingDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(e => new BookingResponse
+            {
+                Id = e.Id,
+                BookingDate = e.BookingDate,
+                StartTime = e.StartTime,
+                EndTime = e.EndTime,
+                Status = e.Status,
+                TotalAmount = e.TotalAmount,
+                CreatedAt = e.CreatedAt,
+                GroundName = e.Ground.Name
+            })
+            .ToListAsync();
     }
     public async Task<IEnumerable<BookingResponse>> GetBookingsByUserIdAsync(string userId, int page, int pageSize)
     {
