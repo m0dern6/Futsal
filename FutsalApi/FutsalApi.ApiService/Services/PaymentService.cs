@@ -25,7 +25,8 @@ public class PaymentService : IPaymentService
         }
         if (payment.AmountPaid != payment.Booking.TotalAmount)
         {
-            throw new ArgumentException("Payment amount does not match the total amount of the booking.", nameof(payment.AmountPaid));
+            payment.Status = PaymentStatus.PartiallyCompleted;
+            // throw new ArgumentException("Payment amount does not match the total amount of the booking.", nameof(payment.AmountPaid));
         }
         return await _paymentRepository.CreateAsync(payment);
     }

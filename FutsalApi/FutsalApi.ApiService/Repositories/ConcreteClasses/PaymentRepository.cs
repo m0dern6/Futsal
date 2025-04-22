@@ -36,21 +36,22 @@ public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
             })
             .ToListAsync();
     }
-    public async Task<PaymentResponse?> GetPaymentByBookingIdAsync(int bookingId)
+    public async Task<PaymentResponse?> GetPaymentByBookingIdAsync(Expression<Func<Payment, bool>> predicate)
     {
         return await _context.Payments
-        .Select(p => new PaymentResponse
-        {
-            Id = p.Id,
-            AmountPaid = p.AmountPaid,
-            PaymentDate = p.PaymentDate,
-            BookingId = p.BookingId,
-            Method = p.Method,
-            Status = p.Status,
-            TransactionId = p.TransactionId
-        })
-            .FirstOrDefaultAsync(p => p.BookingId == bookingId);
-
+            .Where(predicate)
+            .Select(p => new PaymentResponse
+            {
+                Id = p.Id,
+                AmountPaid = p.AmountPaid,
+                PaymentDate = p.PaymentDate,
+                RemainingAmount = p.Booking.TotalAmount - p.AmountPaid,
+                BookingId = p.BookingId,
+                Method = p.Method,
+                Status = p.Status,
+                TransactionId = p.TransactionId
+            })
+            .FirstOrDefaultAsync();
     }
 
 }

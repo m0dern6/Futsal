@@ -85,7 +85,7 @@ public class PaymentApiEndpoints : IEndpoint
     {
         try
         {
-            var payment = await repository.GetPaymentByBookingIdAsync(bookingId);
+            var payment = await repository.GetPaymentByBookingIdAsync(p => p.BookingId == bookingId);
             if (payment == null)
             {
                 return TypedResults.NotFound();
@@ -105,6 +105,13 @@ public class PaymentApiEndpoints : IEndpoint
     {
         try
         {
+            //check if the payment already exists for the bookingId and status is not partially completed
+            var existingPayment = await repository.GetPaymentByBookingIdAsync(p => p.BookingId == paymentRequest.BookingId && p.Status != PaymentStatus.PartiallyCompleted);
+            if (existingPayment != null)
+            {
+                return TypedResults.Problem("Payment already exists for this booking.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
             Payment payment = new Payment
             {
                 AmountPaid = paymentRequest.AmountPaid,
@@ -112,6 +119,7 @@ public class PaymentApiEndpoints : IEndpoint
                 Method = paymentRequest.Method,
                 Status = PaymentStatus.Pending
             };
+
             if (paymentRequest.Method == PaymentMethod.Online)
             {
                 var paymentResult = await paymentService.OnlinePaymentAsync(payment);

@@ -7,6 +7,7 @@ namespace FutsalApi.ApiService.Models;
 public class PaymentResponse
 {
     public int Id { get; set; }
+    public decimal? RemainingAmount { get; set; }
     public int BookingId { get; set; }
     public PaymentMethod Method { get; set; }
     public string? TransactionId { get; set; }
