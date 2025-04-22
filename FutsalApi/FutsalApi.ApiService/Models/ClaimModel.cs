@@ -2,8 +2,43 @@ using System;
 
 namespace FutsalApi.ApiService.Models;
 
+public enum ClaimType
+{
+    Permission,
+    Custom
+
+}
+public enum Permissions
+{
+    CanCreate,
+    CanEdit,
+    CanDelete,
+    CanView,
+    CanManage
+}
+public enum Resources
+{
+    Booking,
+    User,
+    FutsalGround,
+    Role,
+    UserRole,
+    Image,
+    Review,
+    GroundClosure,
+    Payment,
+    Report,
+    Notification,
+    All
+}
+
 public class ClaimModel
 {
-    public string Type { get; set; } = string.Empty; // The claim type (e.g., "Permission")
-    public string Value { get; set; } = string.Empty; // The claim value (e.g., "CanEdit")
+    //return the type as string
+
+    public ClaimType Type { get; set; }
+    //for value make sure the value is using enum Permissions or Resources
+    public Permissions Permission { get; set; }
+    public Resources Resource { get; set; }
+    public string Value => $"{Permission}:{Resource}";
 }
