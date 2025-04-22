@@ -7,10 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
 
-/// <summary>
-/// Repository for managing Review entities.
-/// Inherits from GenericRepository and provides additional methods specific to Review.
-/// </summary>
+
 public class ReviewRepository : GenericRepository<Review>, IReviewRepository
 {
     private readonly AppDbContext _dbContext;

@@ -152,6 +152,11 @@ public class ReviewApiEndpoints : IEndpoint
             {
                 return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
             }
+            var existingReview = await repository.GetByIdAsync(e => e.GroundId == reviewRequest.GroundId && e.UserId == user.Id);
+            if (existingReview is not null)
+            {
+                return TypedResults.Problem("You have already reviewed this ground.", statusCode: StatusCodes.Status400BadRequest);
+            }
             Review review = new Review
             {
                 UserId = user.Id,
