@@ -23,6 +23,7 @@ public class FutsalGround
     public TimeSpan CloseTime { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; } = null;
+    public bool IsActive { get; set; } = true;
 
     [ForeignKey(nameof(OwnerId))]
     public User Owner { get; set; } = null!;

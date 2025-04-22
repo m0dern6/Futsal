@@ -176,6 +176,20 @@ public class FutsalGroundApiEndpoints : IEndpoint
             {
                 return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
             }
+            if (futsalGroundRequest.OpenTime >= futsalGroundRequest.CloseTime)
+            {
+                return TypedResults.Problem("Open time must be less than close time.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (futsalGroundRequest.OpenTime < TimeSpan.FromHours(0) || futsalGroundRequest.CloseTime > TimeSpan.FromHours(24))
+            {
+                return TypedResults.Problem("Open and close time must be between 0 and 24.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            //check if duplicate entry exists
+            var existingGround = await repository.GetByIdAsync(e => e.Name == futsalGroundRequest.Name && e.OwnerId == user.Id);
+            if (existingGround is not null)
+            {
+                return TypedResults.Problem("Futsal ground with the same name already exists.", statusCode: StatusCodes.Status400BadRequest);
+            }
             FutsalGround futsalGround = new FutsalGround
             {
                 Name = futsalGroundRequest.Name,
@@ -220,6 +234,16 @@ public class FutsalGroundApiEndpoints : IEndpoint
             {
                 return TypedResults.NotFound();
             }
+            if (updatedGroundRequest.OpenTime >= updatedGroundRequest.CloseTime)
+            {
+                return TypedResults.Problem("Open time must be less than close time.", statusCode: StatusCodes.Status400BadRequest);
+            }
+            if (updatedGroundRequest.OpenTime < TimeSpan.FromHours(0) || updatedGroundRequest.CloseTime > TimeSpan.FromHours(24))
+            {
+                return TypedResults.Problem("Open and close time must be between 0 and 24.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+
             FutsalGround updatedGround = new FutsalGround
             {
                 OwnerId = user.Id,
@@ -255,6 +279,11 @@ public class FutsalGroundApiEndpoints : IEndpoint
             if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
             {
                 return TypedResults.Problem("You are not authorized to delete this futsal ground.", statusCode: StatusCodes.Status404NotFound);
+            }
+            var hasActiveBookings = await repository.HasActiveBookingsAsync(id);
+            if (hasActiveBookings)
+            {
+                return TypedResults.Problem("Cannot delete the futsal ground because it has active bookings.", statusCode: StatusCodes.Status400BadRequest);
             }
             var futsalGround = await repository.GetByIdAsync(e => e.Id == id && e.OwnerId == user.Id);
 

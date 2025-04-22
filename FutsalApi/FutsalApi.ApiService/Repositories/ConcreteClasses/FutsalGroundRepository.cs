@@ -46,6 +46,12 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
             })
             .ToListAsync();
     }
+    public async Task<bool> HasActiveBookingsAsync(int groundId)
+    {
+        return await _dbContext.Bookings
+            .AnyAsync(b => b.GroundId == groundId && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed));
+
+    }
     public async new Task<FutsalGroundResponse?> GetByIdAsync(Expression<Func<FutsalGround, bool>> predicate)
     {
         return await _dbContext.FutsalGrounds
