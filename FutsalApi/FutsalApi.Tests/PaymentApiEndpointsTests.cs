@@ -85,7 +85,7 @@ public class PaymentApiEndpointsTests
             Status = PaymentStatus.Completed
         };
 
-        _repositoryMock.Setup(r => r.GetPaymentByBookingIdAsync(1)).ReturnsAsync(payment);
+        _repositoryMock.Setup(r => r.GetPaymentByBookingIdAsync(It.IsAny<Expression<Func<Payment, bool>>>())).ReturnsAsync(payment);
 
         // Act
         var result = await _endpoints.GetPaymentByBookingId(_repositoryMock.Object, 1);
@@ -102,7 +102,7 @@ public class PaymentApiEndpointsTests
     public async Task GetPaymentByBookingId_ReturnsNotFound_WhenPaymentDoesNotExist()
     {
         // Arrange
-        _repositoryMock.Setup(r => r.GetPaymentByBookingIdAsync(1)).ReturnsAsync((PaymentResponse?)null);
+        _repositoryMock.Setup(r => r.GetPaymentByBookingIdAsync(It.IsAny<Expression<Func<Payment, bool>>>())).ReturnsAsync((PaymentResponse?)null);
 
         // Act
         var result = await _endpoints.GetPaymentByBookingId(_repositoryMock.Object, 1);
