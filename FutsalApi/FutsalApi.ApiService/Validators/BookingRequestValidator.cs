@@ -1,12 +1,14 @@
 using System;
+
 using FluentValidation;
-using FutsalApi.ApiService.Data;
+
+using FutsalApi.ApiService.Models;
 
 namespace FutsalApi.ApiService.Validators;
 
-public class BookingValidator : AbstractValidator<Booking>
+public class BookingRequestValidator : AbstractValidator<BookingRequest>
 {
-    public BookingValidator()
+    public BookingRequestValidator()
     {
         RuleFor(x => x.UserId).NotEmpty().WithMessage("User ID is required");
         RuleFor(x => x.GroundId).NotEmpty().WithMessage("Ground ID is required");
@@ -14,8 +16,5 @@ public class BookingValidator : AbstractValidator<Booking>
             .WithMessage("Booking date cannot be in the past");
         RuleFor(x => x.StartTime).LessThan(x => x.EndTime)
             .WithMessage("Start time must be before end time");
-        RuleFor(x => x.TotalAmount).GreaterThan(0)
-            .WithMessage("Total amount must be greater than zero");
     }
 }
-
