@@ -8,6 +8,9 @@ using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Repositories.Interfaces;
+using FutsalApi.Auth.Infrastructure;
+using FutsalApi.Auth.Models;
+using FutsalApi.Data.DTO;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
