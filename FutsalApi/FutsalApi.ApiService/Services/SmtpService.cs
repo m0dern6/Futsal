@@ -1,5 +1,7 @@
-using System;
+﻿using System;
 using System.Net.Mail;
+
+using FutsalApi.ServiceDefaults.Services;
 
 namespace FutsalApi.ApiService.Services;
 public interface ISmtpService

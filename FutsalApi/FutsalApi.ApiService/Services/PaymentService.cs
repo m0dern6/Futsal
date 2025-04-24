@@ -1,7 +1,6 @@
-using System;
-
-using FutsalApi.ApiService.Data;
+﻿using System;
 using FutsalApi.ApiService.Repositories;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Services;
 
