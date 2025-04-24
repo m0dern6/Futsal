@@ -1,6 +1,5 @@
-using System;
-
-using FutsalApi.ApiService.Data;
+﻿using System;
+using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Repositories.Interfaces;
 
 using Microsoft.EntityFrameworkCore;

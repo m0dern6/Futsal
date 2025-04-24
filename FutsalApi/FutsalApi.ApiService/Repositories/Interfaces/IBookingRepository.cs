@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
-
-using FutsalApi.ApiService.Data;
+using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Models;
 
 namespace FutsalApi.ApiService.Repositories;

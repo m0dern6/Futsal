@@ -1,6 +1,6 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
-using FutsalApi.ApiService.Data;
+using FutsalApi.Data.DTO;
 
 using Microsoft.EntityFrameworkCore;
 
