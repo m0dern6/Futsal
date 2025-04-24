@@ -4,6 +4,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
+[assembly: InternalsVisibleTo("FutsalApi.Tests")]
 namespace FutsalApi.Auth.Routes;
 
 public class AuthApiEndpointRouteBuilderExtensions 
