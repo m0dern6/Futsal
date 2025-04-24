@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Reflection;
 
 using FutsalApi.ApiService.Repositories;
 
-namespace FutsalApi.ApiService.Infrastructure;
+namespace FutsalApi.Auth.Infrastructure;
 
 public static class RepositoryExtension
 {

@@ -9,6 +9,10 @@ using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
 using FutsalApi.ApiService.Services;
+using FutsalApi.Auth.Infrastructure;
+using FutsalApi.Auth.Services;
+using FutsalApi.Data.DTO;
+using FutsalApi.ServiceDefaults.Services;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -31,22 +35,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 
 
-builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
-   options =>
-   {
-       options.BearerTokenExpiration = TimeSpan.FromDays(1);
-       options.RefreshTokenExpiration = TimeSpan.FromDays(30);
-   })
-   .AddGoogleAuthentication();
-builder.Services.AddAuthorization(options =>
-{
-    options.DefaultPolicy = new AuthorizationPolicyBuilder(IdentityConstants.BearerScheme)
-        .RequireAuthenticatedUser()
-        .Build();
-});
-builder.Services.AddIdentity<User, Role>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddAuthConfig();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
@@ -98,8 +87,6 @@ builder.Services.AddRepositories(typeof(Program).Assembly); // Registers all rep
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
-//Add Permission handler
-builder.Services.AddSingleton<IAuthorizationHandler, PermissionResourceHandler>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -121,9 +108,7 @@ app.MapGet("/", context =>
     return Task.CompletedTask;
 });
 
-app.UseAuthentication();
-app.UseAuthorization();
-
+app.UseAuthConfig(app);
 app.MapEndpoints(); // Maps all endpoints registered in the assembly
 
 app.MapDefaultEndpoints();

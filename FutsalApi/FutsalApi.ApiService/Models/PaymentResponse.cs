@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 
 using FutsalApi.ApiService.Data;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Models;
 

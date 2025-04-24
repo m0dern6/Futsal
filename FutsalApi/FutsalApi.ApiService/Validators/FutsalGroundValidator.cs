@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using FluentValidation;
-using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 
 namespace FutsalApi.ApiService.Validators;
 
-public class FutsalGroundValidator : AbstractValidator<FutsalGround>
+public class FutsalGroundValidator : AbstractValidator<FutsalGroundRequest>
 {
     public FutsalGroundValidator()
     {

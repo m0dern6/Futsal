@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using FluentValidation;
 using FutsalApi.ApiService.Data;
+using FutsalApi.ApiService.Models;
 
 namespace FutsalApi.ApiService.Validators;
 
-public class ReviewValidator : AbstractValidator<Review>
+public class ReviewValidator : AbstractValidator<ReviewRequest>
 {
     public ReviewValidator()
     {
