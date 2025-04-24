@@ -1,14 +1,10 @@
-﻿using System.Security.Claims;
-using FutsalApi.ApiService.Data;
-using FutsalApi.ApiService.Routes;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using Xunit;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using FutsalApi.Auth.Routes;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.Tests;
 

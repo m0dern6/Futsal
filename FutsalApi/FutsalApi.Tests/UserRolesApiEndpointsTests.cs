@@ -7,6 +7,8 @@ using Moq;
 using Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using FutsalApi.Data.DTO;
+using FutsalApi.Auth.Routes;
 
 namespace FutsalApi.Tests;
 

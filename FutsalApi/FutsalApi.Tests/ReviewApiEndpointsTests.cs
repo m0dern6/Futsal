@@ -6,8 +6,8 @@ using FutsalApi.ApiService.Repositories;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Moq;
-using Xunit;
 using FluentAssertions;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.Tests;
 
