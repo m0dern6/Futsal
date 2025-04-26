@@ -140,6 +140,48 @@ public class ReviewApiEndpointsTests
     }
 
     [Fact]
+    public async Task CreateReview_ReturnsProblem_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+        var reviewRequest = new ReviewRequest { GroundId = 1, Rating = 5, Comment = "Great!" };
+
+        // Act
+        var result = await _endpoints.CreateReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, reviewRequest);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<Review>, ProblemHttpResult>>();
+        if (result is Results<Ok<Review>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
+        {
+            problemResult.ProblemDetails.Detail.Should().Be("User not found.");
+        }
+    }
+
+    [Fact]
+    public async Task CreateReview_ReturnsProblem_WhenAlreadyReviewed()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var reviewRequest = new ReviewRequest { GroundId = 1, Rating = 5, Comment = "Great!" };
+        var existingReview = new ReviewResponse { Id = 2, UserId = "user1", GroundId = 1, Rating = 4, Comment = "Nice" };
+
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<Review, bool>>>())).ReturnsAsync(existingReview);
+
+        // Act
+        var result = await _endpoints.CreateReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, reviewRequest);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<Review>, ProblemHttpResult>>();
+        if (result is Results<Ok<Review>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
+        {
+            problemResult.ProblemDetails.Detail.Should().Be("You have already reviewed this ground.");
+        }
+    }
+
+    [Fact]
     public async Task UpdateReview_ReturnsOk_WhenUpdated()
     {
         // Arrange
@@ -160,6 +202,47 @@ public class ReviewApiEndpointsTests
         if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: Ok<string> okResult })
         {
             okResult.Value.Should().Be("Review updated successfully.");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateReview_ReturnsProblem_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+        var reviewRequest = new ReviewRequest { GroundId = 1, Rating = 4, Comment = "Good!" };
+
+        // Act
+        var result = await _endpoints.UpdateReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, reviewRequest);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, NotFound, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
+        {
+            problemResult.ProblemDetails.Detail.Should().Be("User not found.");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateReview_ReturnsNotFound_WhenReviewNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var reviewRequest = new ReviewRequest { GroundId = 1, Rating = 4, Comment = "Good!" };
+
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<Review, bool>>>())).ReturnsAsync((ReviewResponse?)null);
+
+        // Act
+        var result = await _endpoints.UpdateReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, reviewRequest);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, NotFound, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: NotFound })
+        {
+            result.Result.Should().BeOfType<NotFound>();
         }
     }
 
@@ -186,9 +269,90 @@ public class ReviewApiEndpointsTests
         }
     }
 
+    [Fact]
+    public async Task DeleteReview_ReturnsProblem_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+
+        // Act
+        var result = await _endpoints.DeleteReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
+        {
+            problemResult.ProblemDetails.Detail.Should().Be("User not found.");
+        }
+    }
+
+    [Fact]
+    public async Task DeleteReview_ReturnsNotFound_WhenReviewNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<Review, bool>>>())).ReturnsAsync((ReviewResponse?)null);
+
+        // Act
+        var result = await _endpoints.DeleteReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: NotFound })
+        {
+            result.Result.Should().BeOfType<NotFound>();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteReview_ReturnsProblem_WhenDeleteFails()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var existingReview = new ReviewResponse { Id = 1, UserId = "user1", GroundId = 1, Rating = 5, Comment = "Great!" };
+
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<Review, bool>>>())).ReturnsAsync(existingReview);
+        _repositoryMock.Setup(r => r.DeleteReviewByUserAsync(1, user.Id)).ReturnsAsync(false);
+
+        // Act
+        var result = await _endpoints.DeleteReview(_repositoryMock.Object, _groundRepositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
+        {
+            problemResult.ProblemDetails.Detail.Should().Be("Failed to delete the review.");
+        }
+    }
+
     private static Mock<UserManager<User>> MockUserManager()
     {
         var store = new Mock<IUserStore<User>>();
-        return new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
+        var options = new Mock<Microsoft.Extensions.Options.IOptions<IdentityOptions>>();
+        var passwordHasher = new Mock<IPasswordHasher<User>>();
+        var userValidators = new List<IUserValidator<User>>();
+        var passwordValidators = new List<IPasswordValidator<User>>();
+        var keyNormalizer = new Mock<ILookupNormalizer>();
+        var errors = new Mock<IdentityErrorDescriber>();
+        var services = new Mock<IServiceProvider>();
+        var logger = new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<User>>>();
+
+        return new Mock<UserManager<User>>(
+            store.Object,
+            options.Object,
+            passwordHasher.Object,
+            userValidators,
+            passwordValidators,
+            keyNormalizer.Object,
+            errors.Object,
+            services.Object,
+            logger.Object
+        );
     }
 }
