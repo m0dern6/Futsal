@@ -135,6 +135,76 @@ public class FutsalGroundApiEndpointsTests
     }
 
     [Fact]
+    public async Task CreateFutsalGround_ReturnsProblem_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+        var request = new FutsalGroundRequest();
+
+        // Act
+        var result = await _endpoints.CreateFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, request);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("User not found.");
+        }
+    }
+
+    [Fact]
+    public async Task CreateFutsalGround_ReturnsProblem_WhenDuplicateGround()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var request = new FutsalGroundRequest
+        {
+            Name = "Ground 1",
+            OpenTime = TimeSpan.FromHours(8),
+            CloseTime = TimeSpan.FromHours(22)
+        };
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<FutsalGround, bool>>>())).ReturnsAsync(new FutsalGroundResponse());
+
+        // Act
+        var result = await _endpoints.CreateFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, request);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("Futsal ground with the same name already exists.");
+        }
+    }
+
+    [Fact]
+    public async Task CreateFutsalGround_ReturnsProblem_WhenInvalidOpenCloseTime()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var request = new FutsalGroundRequest
+        {
+            Name = "Ground 1",
+            OpenTime = TimeSpan.FromHours(10),
+            CloseTime = TimeSpan.FromHours(8)
+        };
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+
+        // Act
+        var result = await _endpoints.CreateFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, request);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("Open time must be less than close time.");
+        }
+    }
+
+    [Fact]
     public async Task UpdateFutsalGround_ReturnsOk_WhenUpdated()
     {
         // Arrange
@@ -143,7 +213,7 @@ public class FutsalGroundApiEndpointsTests
         var futsalGroundRequest = new FutsalGroundRequest
         {
             Name = "Updated Ground",
-            OwnerId="Owner1",
+            OwnerId = "Owner1",
             Location = "Updated Location",
             PricePerHour = 150,
             OpenTime = TimeSpan.FromHours(9),
@@ -169,6 +239,71 @@ public class FutsalGroundApiEndpointsTests
         if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: Ok<string> okResult })
         {
             okResult.Value.Should().Be("Futsal ground updated successfully.");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateFutsalGround_ReturnsProblem_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+        var request = new FutsalGroundRequest();
+
+        // Act
+        var result = await _endpoints.UpdateFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, request);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, NotFound, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("You are not authorized to update this futsalground");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateFutsalGround_ReturnsNotFound_WhenGroundNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var request = new FutsalGroundRequest();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<FutsalGround, bool>>>())).ReturnsAsync((FutsalGroundResponse?)null);
+
+        // Act
+        var result = await _endpoints.UpdateFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, request);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, NotFound, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: NotFound })
+        {
+            result.Result.Should().BeOfType<NotFound>();
+        }
+    }
+
+    [Fact]
+    public async Task UpdateFutsalGround_ReturnsProblem_WhenInvalidOpenCloseTime()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        var request = new FutsalGroundRequest
+        {
+            OpenTime = TimeSpan.FromHours(10),
+            CloseTime = TimeSpan.FromHours(8)
+        };
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<FutsalGround, bool>>>())).ReturnsAsync(new FutsalGroundResponse());
+
+        // Act
+        var result = await _endpoints.UpdateFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, request);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, NotFound, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("Open time must be less than close time.");
         }
     }
 
@@ -201,9 +336,123 @@ public class FutsalGroundApiEndpointsTests
         }
     }
 
+    [Fact]
+    public async Task DeleteFutsalGround_ReturnsProblem_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+
+        // Act
+        var result = await _endpoints.DeleteFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("You are not authorized to delete this futsal ground.");
+        }
+    }
+
+    [Fact]
+    public async Task DeleteFutsalGround_ReturnsProblem_WhenHasActiveBookings()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.HasActiveBookingsAsync(It.IsAny<int>())).ReturnsAsync(true);
+
+        // Act
+        var result = await _endpoints.DeleteFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("Cannot delete the futsal ground because it has active bookings.");
+        }
+    }
+
+    [Fact]
+    public async Task DeleteFutsalGround_ReturnsNotFound_WhenGroundNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.HasActiveBookingsAsync(It.IsAny<int>())).ReturnsAsync(false);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<FutsalGround, bool>>>())).ReturnsAsync((FutsalGroundResponse?)null);
+
+        // Act
+        var result = await _endpoints.DeleteFutsalGround(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<NoContent, NotFound, ProblemHttpResult>>();
+        if (result is Results<NoContent, NotFound, ProblemHttpResult> { Result: NotFound })
+        {
+            result.Result.Should().BeOfType<NotFound>();
+        }
+    }
+
+    [Fact]
+    public async Task SearchFutsalGrounds_ReturnsOk_WhenValid()
+    {
+        // Arrange
+        var futsalGrounds = new List<FutsalGround>
+        {
+            new FutsalGround { Id = 1, Name = "Ground 1", Location = "Location 1" }
+        };
+        var queryable = futsalGrounds.AsQueryable();
+        _repositoryMock.Setup(r => r.Query()).Returns(queryable);
+
+        // Act
+        var result = await _endpoints.SearchFutsalGrounds(_repositoryMock.Object, "Ground", null, null, null, 1, 10);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult>>();
+        if (result is Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult> { Result: Ok<List<FutsalGroundResponse>> ok })
+        {
+            ok.Value.Should().NotBeNull();
+        }
+    }
+
+    [Fact]
+    public async Task SearchFutsalGrounds_ReturnsProblem_WhenInvalidPage()
+    {
+        // Act
+        var result = await _endpoints.SearchFutsalGrounds(_repositoryMock.Object, null, null, null, null, 0, 10);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult>>();
+        if (result is Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("Page and pageSize must be greater than 0.");
+        }
+    }
+
     private static Mock<UserManager<User>> MockUserManager()
     {
         var store = new Mock<IUserStore<User>>();
-        return new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
+        var options = new Mock<Microsoft.Extensions.Options.IOptions<IdentityOptions>>();
+        var passwordHasher = new Mock<IPasswordHasher<User>>();
+        var userValidators = new List<IUserValidator<User>>();
+        var passwordValidators = new List<IPasswordValidator<User>>();
+        var keyNormalizer = new Mock<ILookupNormalizer>();
+        var errors = new Mock<IdentityErrorDescriber>();
+        var services = new Mock<IServiceProvider>();
+        var logger = new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<User>>>();
+
+        return new Mock<UserManager<User>>(
+            store.Object,
+            options.Object,
+            passwordHasher.Object,
+            userValidators,
+            passwordValidators,
+            keyNormalizer.Object,
+            errors.Object,
+            services.Object,
+            logger.Object
+        );
     }
 }
