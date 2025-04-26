@@ -1,4 +1,5 @@
 ﻿using System;
+
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.Data.DTO;
 
@@ -6,7 +7,7 @@ namespace FutsalApi.ApiService.Services;
 
 public interface IPaymentService
 {
-    Task<Payment> OnlinePaymentAsync(Payment payment);
+    Task<Payment?> OnlinePaymentAsync(Payment payment);
 
 }
 public class PaymentService : IPaymentService
@@ -16,7 +17,7 @@ public class PaymentService : IPaymentService
     {
         _paymentRepository = paymentRepository;
     }
-    public async Task<Payment> OnlinePaymentAsync(Payment payment)
+    public async Task<Payment?> OnlinePaymentAsync(Payment payment)
     {
         if (payment == null)
         {
