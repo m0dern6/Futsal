@@ -88,13 +88,14 @@ public class BookingApiEndpointsTests
     public async Task CreateBooking_ReturnsOk_WhenBookingIsCreated()
     {
         // Arrange
+        var now = DateTime.UtcNow.TimeOfDay;
         var bookingRequest = new BookingRequest
         {
             UserId = "user1",
             GroundId = 1,
             BookingDate = DateTime.Today,
-            StartTime = TimeSpan.FromHours(10),
-            EndTime = TimeSpan.FromHours(12)
+            StartTime = now.Add(TimeSpan.FromHours(1)),
+            EndTime = now.Add(TimeSpan.FromHours(2))
         };
         var ground = new FutsalGroundResponse
         {
@@ -102,9 +103,9 @@ public class BookingApiEndpointsTests
             Name = "Ground 1",
             Location = "Location 1",
             OwnerId = "Owner1",
-            PricePerHour = 100,
-            OpenTime = TimeSpan.FromHours(8),
-            CloseTime = TimeSpan.FromHours(22),
+            PricePerHour = 200,
+            OpenTime = now.Subtract(TimeSpan.FromHours(2)),
+            CloseTime = now.Add(TimeSpan.FromHours(6)),
             CreatedAt = DateTime.UtcNow,
             OwnerName = "Owner Name"
         };
@@ -133,8 +134,8 @@ public class BookingApiEndpointsTests
                 UserId = "user1",
                 GroundId = 1,
                 BookingDate = DateTime.Today,
-                StartTime = TimeSpan.FromHours(10),
-                EndTime = TimeSpan.FromHours(12),
+                StartTime = now.Add(TimeSpan.FromHours(1)),
+                EndTime = now.Add(TimeSpan.FromHours(2)),
                 TotalAmount = 200
             });
 
@@ -412,6 +413,25 @@ public class BookingApiEndpointsTests
     private static Mock<UserManager<User>> MockUserManager()
     {
         var store = new Mock<IUserStore<User>>();
-        return new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        var options = new Mock<Microsoft.Extensions.Options.IOptions<IdentityOptions>>();
+        var passwordHasher = new Mock<IPasswordHasher<User>>();
+        var userValidators = new List<IUserValidator<User>>();
+        var passwordValidators = new List<IPasswordValidator<User>>();
+        var keyNormalizer = new Mock<ILookupNormalizer>();
+        var errors = new Mock<IdentityErrorDescriber>();
+        var services = new Mock<IServiceProvider>();
+        var logger = new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<User>>>();
+
+        return new Mock<UserManager<User>>(
+            store.Object,
+            options.Object,
+            passwordHasher.Object,
+            userValidators,
+            passwordValidators,
+            keyNormalizer.Object,
+            errors.Object,
+            services.Object,
+            logger.Object
+        );
     }
 }
