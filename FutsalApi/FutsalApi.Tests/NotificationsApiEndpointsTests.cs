@@ -69,6 +69,46 @@ public class NotificationsApiEndpointsTests
     }
 
     [Fact]
+    public async Task GetNotificationsByUserId_ReturnsProblem_WhenInvalidPage()
+    {
+        // Arrange
+        var user = new User { Id = "user1" };
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, user.Id) }));
+
+        // Act
+        var result = await _endpoints.GetNotificationsByUserId(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 0, 10);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<IEnumerable<NotificationResponse>>, ProblemHttpResult, NotFound>>();
+        if (result is Results<Ok<IEnumerable<NotificationResponse>>, ProblemHttpResult, NotFound> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Be("Page and pageSize must be greater than 0.");
+        }
+    }
+
+    [Fact]
+    public async Task GetNotificationsByUserId_ReturnsProblem_WhenRepositoryThrows()
+    {
+        // Arrange
+        var user = new User { Id = "user1" };
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, user.Id) }));
+
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetNotificationsByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+            .ThrowsAsync(new Exception("Repository error"));
+
+        // Act
+        var result = await _endpoints.GetNotificationsByUserId(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, 10);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<IEnumerable<NotificationResponse>>, ProblemHttpResult, NotFound>>();
+        if (result is Results<Ok<IEnumerable<NotificationResponse>>, ProblemHttpResult, NotFound> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Contain("An error occurred while retrieving notifications");
+        }
+    }
+
+    [Fact]
     public async Task SendNotificationToMultipleUsers_ReturnsOk_WhenNotificationsSent()
     {
         // Arrange
@@ -115,6 +155,30 @@ public class NotificationsApiEndpointsTests
     }
 
     [Fact]
+    public async Task SendNotificationToMultipleUsers_ReturnsProblem_WhenExceptionThrown()
+    {
+        // Arrange
+        var notificationList = new NotificationListModel
+        {
+            UserId = new List<string> { "user1", "user2" },
+            Message = "Test Notification"
+        };
+
+        _repositoryMock.Setup(r => r.SendNotificationToMultipleUsersAsync(notificationList))
+            .ThrowsAsync(new Exception("Send error"));
+
+        // Act
+        var result = await _endpoints.SendNotificationToMultipleUsers(_repositoryMock.Object, notificationList);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
+        if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Contain("An error occurred while sending notifications");
+        }
+    }
+
+    [Fact]
     public async Task UpdateNotificationStatusByUserId_ReturnsOk_WhenStatusUpdated()
     {
         // Arrange
@@ -132,6 +196,24 @@ public class NotificationsApiEndpointsTests
         if (result is Results<Ok<string>, ProblemHttpResult, NotFound> { Result: Ok<string> okResult })
         {
             okResult.Value.Should().Be("Notification status updated successfully.");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateNotificationStatusByUserId_ReturnsNotFound_WhenUserNotFound()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal();
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+
+        // Act
+        var result = await _endpoints.UpdateNotificationStatusByUserId(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult, NotFound>>();
+        if (result is Results<Ok<string>, ProblemHttpResult, NotFound> { Result: NotFound })
+        {
+            result.Result.Should().BeOfType<NotFound>();
         }
     }
 
@@ -156,9 +238,49 @@ public class NotificationsApiEndpointsTests
         }
     }
 
+    [Fact]
+    public async Task UpdateNotificationStatusByUserId_ReturnsProblem_WhenRepositoryThrows()
+    {
+        // Arrange
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var user = new User { Id = "user1" };
+
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.UpdateStatusByUserIdAsync(1, user.Id)).ThrowsAsync(new Exception("Update error"));
+
+        // Act
+        var result = await _endpoints.UpdateNotificationStatusByUserId(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1);
+
+        // Assert
+        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult, NotFound>>();
+        if (result is Results<Ok<string>, ProblemHttpResult, NotFound> { Result: ProblemHttpResult problem })
+        {
+            problem.ProblemDetails.Detail.Should().Contain("An error occurred while updating the notification status");
+        }
+    }
+
     private static Mock<UserManager<User>> MockUserManager()
     {
         var store = new Mock<IUserStore<User>>();
-        return new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
+        var options = new Mock<Microsoft.Extensions.Options.IOptions<IdentityOptions>>();
+        var passwordHasher = new Mock<IPasswordHasher<User>>();
+        var userValidators = new List<IUserValidator<User>>();
+        var passwordValidators = new List<IPasswordValidator<User>>();
+        var keyNormalizer = new Mock<ILookupNormalizer>();
+        var errors = new Mock<IdentityErrorDescriber>();
+        var services = new Mock<IServiceProvider>();
+        var logger = new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<User>>>();
+
+        return new Mock<UserManager<User>>(
+            store.Object,
+            options.Object,
+            passwordHasher.Object,
+            userValidators,
+            passwordValidators,
+            keyNormalizer.Object,
+            errors.Object,
+            services.Object,
+            logger.Object
+        );
     }
 }
