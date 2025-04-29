@@ -52,5 +52,22 @@ public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
             })
             .FirstOrDefaultAsync();
     }
+    public async Task<decimal> GetPaidAmount(int id)
+    {
+        var payment = await _context.Payments
+            .Where(p => p.BookingId == id)
+            .Select(p => p.AmountPaid)
+            .ToListAsync();
+        if (payment == null || payment.Count == 0)
+        {
+            return 0;
+        }
+        decimal totalPaid = 0;
+        foreach (var item in payment)
+        {
+            totalPaid += item;
+        }
+        return totalPaid;
+    }
 
 }

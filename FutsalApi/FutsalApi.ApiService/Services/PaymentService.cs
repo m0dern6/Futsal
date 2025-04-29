@@ -23,11 +23,38 @@ public class PaymentService : IPaymentService
         {
             throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
         }
-        if (payment.AmountPaid != payment.Booking.TotalAmount)
+        decimal RemainingAmount;
+        decimal paidAmount = await _paymentRepository.GetPaidAmount(payment.BookingId);
+        if (paidAmount == 0)
+        {
+            RemainingAmount = payment.Booking.TotalAmount - payment.AmountPaid;
+        }
+        else if (paidAmount > 0 && paidAmount < payment.Booking.TotalAmount)
+        {
+            RemainingAmount = payment.Booking.TotalAmount - paidAmount - payment.AmountPaid;
+        }
+        else if (paidAmount == payment.Booking.TotalAmount)
+        {
+            RemainingAmount = 0;
+        }
+        else
+        {
+            throw new ArgumentException("Invalid paid amount.", nameof(paidAmount));
+        }
+        if (RemainingAmount < 0)
+        {
+            throw new ArgumentException("Payment exceeds the total amount.", nameof(payment.AmountPaid));
+        }
+        else if (RemainingAmount == 0)
+        {
+            payment.Status = PaymentStatus.Completed;
+        }
+        else if (RemainingAmount > 0 && RemainingAmount < payment.Booking.TotalAmount)
         {
             payment.Status = PaymentStatus.PartiallyCompleted;
-            // throw new ArgumentException("Payment amount does not match the total amount of the booking.", nameof(payment.AmountPaid));
         }
+
+
         return await _paymentRepository.CreateAsync(payment);
     }
 }
