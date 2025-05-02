@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication;
-using FutsalApi.ServiceDefaults.Services;
+using FutsalApi.Auth.Services;
 
 namespace FutsalApi.Auth.Infrastructure;
 
@@ -13,8 +13,8 @@ public static class GoogleAuthConfiguration
         var serviceProvider = builder.Services.BuildServiceProvider();
         var secretRetriever = serviceProvider.GetRequiredService<IGeneralSettingsService>();
 
-        var googleClientId = secretRetriever.GetSettingAsync("Google:ClientId").GetAwaiter().GetResult();
-        var googleClientSecret = secretRetriever.GetSettingAsync("Google:ClientSecret").GetAwaiter().GetResult();
+        var googleClientId = secretRetriever.GetValueAsync("Google:ClientId").GetAwaiter().GetResult();
+        var googleClientSecret = secretRetriever.GetValueAsync("Google:ClientSecret").GetAwaiter().GetResult();
 
         builder.AddGoogle(googleOptions =>
         {

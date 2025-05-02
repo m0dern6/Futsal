@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
-using global::FutsalApi.ApiService.Infrastructure.Auth;
-using global::FutsalApi.Data.DTO;
+using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.Auth.Routes;
+using FutsalApi.Auth.Models;
 
 namespace FutsalApi.Auth.Infrastructure;
 
@@ -30,7 +29,7 @@ public static class AuthExtensions
 
         // Add Identity
         services.AddIdentity<User, Role>()
-            .AddEntityFrameworkStores<AppDbContext>()
+            .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
         // Add Permission Handler
