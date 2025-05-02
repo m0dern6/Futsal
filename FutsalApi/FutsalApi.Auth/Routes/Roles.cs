@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Security.Claims;
-
-using FutsalApi.Data.DTO;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
