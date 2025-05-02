@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Identity;
 
-namespace FutsalApi.Data.DTO;
+namespace FutsalApi.Auth.Models;
 
 public class User : IdentityUser
 {
