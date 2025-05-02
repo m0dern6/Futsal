@@ -2,6 +2,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using FutsalApi.Auth.Models;
+
 namespace FutsalApi.Data.DTO;
 
 public class FutsalGround
