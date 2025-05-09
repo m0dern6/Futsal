@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.Data.DTO;
 
-public class AppDbContext
+public class AppDbContext : DbContext
 {
 
     public AppDbContext()

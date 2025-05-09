@@ -32,10 +32,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
-
-
-builder.Services.AddAuthConfig();
+builder.Services.AddAuthConfig(builder.Configuration);
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
@@ -74,8 +71,6 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddLogging(builder => builder.AddConsole());
 
 builder.Services.AddEndpoints(typeof(Program).Assembly); // Register all endpoints in the assembly
-
-builder.Services.AddTransient<IEmailSender<User>, EmailSender>();
 
 builder.Services.AddFluentValidationAutoValidation() // Enables automatic validation
                 .AddFluentValidationClientsideAdapters(); // Enables client-side validation for MVC
