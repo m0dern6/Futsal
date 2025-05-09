@@ -3,13 +3,21 @@ using Microsoft.AspNetCore.Identity;
 using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.Auth.Routes;
 using FutsalApi.Auth.Models;
+using Microsoft.EntityFrameworkCore;
+using FutsalApi.Auth.Services;
 
 namespace FutsalApi.Auth.Infrastructure;
 
 public static class AuthExtensions
 {
-    public static IServiceCollection AddAuthConfig(this IServiceCollection services)
+    public static IServiceCollection AddAuthConfig(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        // Add DbContext with PostgreSQL
+        services.AddDbContext<AuthDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
         // Add Authentication
         services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
             options =>
@@ -28,12 +36,24 @@ public static class AuthExtensions
         });
 
         // Add Identity
-        services.AddIdentity<User, Role>()
+        services.AddIdentity<User, Role>(options =>
+        {
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequiredLength = 6;
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.SignIn.RequireConfirmedAccount = false;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+            options.SignIn.RequireConfirmedEmail = false;
+        })
             .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
         // Add Permission Handler
         services.AddSingleton<IAuthorizationHandler, PermissionResourceHandler>();
+        services.AddTransient<IEmailSender<User>, EmailSender>();
 
         return services;
     }
