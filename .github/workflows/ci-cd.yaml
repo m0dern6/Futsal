@@ -12,7 +12,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Publish Aspire App for Docker Compose
+      - name: Publish Aspire App Manifest
         run: |
           # Generate the manifest files (Aspire workload should already be installed on the runner)
           dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish
@@ -33,10 +33,10 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
           script: |
-            # Stop and remove any previous containers managed by compose
-            # The project name is derived from the directory name, which will be 'publish'
-            cd /home/${{ secrets.DO_USERNAME }}/app && docker-compose -p futsalapi down --remove-orphans || true
-            # Remove the old publish directory
+            # Stop and remove any previous containers
+            docker stop $(docker ps -q) || true
+            docker rm $(docker ps -aq) || true
+            # Remove the old app directory
             rm -rf /home/${{ secrets.DO_USERNAME }}/app
             # Create a new directory for the app
             mkdir -p /home/${{ secrets.DO_USERNAME }}/app
@@ -51,7 +51,7 @@ jobs:
           target: "/home/${{ secrets.DO_USERNAME }}/app"
           strip_components: 1
 
-      - name: Run Docker Compose on DigitalOcean
+      - name: Deploy using Aspire Manifest
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DO_HOST }}
@@ -59,4 +59,25 @@ jobs:
           password: ${{ secrets.DO_PASSWORD }}
           script: |
             cd /home/${{ secrets.DO_USERNAME }}/app
-            docker-compose -p futsalapi up -d --build
+            # Check if manifest.json exists
+            if [ -f "manifest.json" ]; then
+              echo "Found manifest.json, deploying using Aspire manifest..."
+              # Install aspire CLI if not already installed
+              which aspire || dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
+              # Deploy using the manifest
+              aspire deploy --manifest manifest.json
+            else
+              echo "No manifest.json found, listing available files:"
+              ls -la
+              # Fallback to docker compose if docker-compose.yml exists
+              if [ -f "docker-compose.yml" ]; then
+                echo "Found docker-compose.yml, using docker compose..."
+                docker compose up -d --build
+              elif [ -f "compose.yaml" ]; then
+                echo "Found compose.yaml, using docker compose..."
+                docker compose up -d --build
+              else
+                echo "No deployment files found!"
+                exit 1
+              fi
+            fi
