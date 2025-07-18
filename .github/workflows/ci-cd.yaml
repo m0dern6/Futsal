@@ -12,46 +12,24 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      # Generate Docker Compose files using Aspire
+      # Generate Docker Compose file using Aspire
       - name: Generate Docker Compose
         run: |
           mkdir -p ./publish
           cd FutsalApi/FutsalApi.AppHost
-          dotnet run --project . -- --publisher manifest --output-path ../../publish/manifest.json
+          aspirate generate --output-format compose --output-path ../../publish
 
-      # Convert manifest to Docker Compose
-      - name: Convert to Docker Compose
+      - name: Deploy Application
         run: |
-          cd ./publish
-          dotnet run --project ../FutsalApi/FutsalApi.AppHost -- --publisher dockercompose --input-path manifest.json --output-path .
-
-      # Clean up previous deployment
-      - name: Clean Previous Deployment
-        run: |
-          sudo mkdir -p /home/${{ secrets.DO_USERNAME }}/app
-          sudo chown -R $USER:$USER /home/${{ secrets.DO_USERNAME }}/app
-
-          cd /home/${{ secrets.DO_USERNAME }}/app
+          APP_DIR="/home/${{ secrets.DO_USERNAME }}/app"
+          sudo mkdir -p $APP_DIR
+          sudo chown -R $USER:$USER $APP_DIR
+          cd $APP_DIR
           sudo docker-compose -p futsalapi down || true
           sudo docker system prune -f || true
-
-      # Copy new deployment files
-      - name: Copy Deployment Files
-        run: |
-          cp -r ./publish/* /home/${{ secrets.DO_USERNAME }}/app/
-
-      # Deploy with Docker Compose
-      - name: Deploy with Docker Compose
-        run: |
-          cd /home/${{ secrets.DO_USERNAME }}/app
-
-          # Start the application
+          sudo cp -r ${{ github.workspace }}/publish/* .
           sudo docker-compose -p futsalapi up -d --build
-
-          # Wait for containers to be ready
           sleep 15
-
-          # Verify deployment
           if sudo docker ps | grep -q "futsalapi"; then
             echo "✅ Deployment successful"
             sudo docker ps --filter "name=futsalapi"
