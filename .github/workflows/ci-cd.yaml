@@ -1,4 +1,4 @@
-name: Aspire CI/CD
+name: Futsal API CI/CD
 
 on:
   push:
@@ -12,37 +12,44 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      # Create manifest in runner's workspace first
-      - name: Generate Manifest Locally
+      # Generate Docker Compose files using Aspire
+      - name: Generate Docker Compose
         run: |
           mkdir -p ./publish
-          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish/manifest.json
+          dotnet publish FutsalApi/FutsalApi.AppHost --os linux --arch x64 /t:PublishContainer --publisher dockercompose --output ./publish
 
-      # Fix permissions and prepare environment
-      - name: Prepare Deployment Directory
+      # Clean up previous deployment
+      - name: Clean Previous Deployment
         run: |
-          # Create directory with correct ownership
           sudo mkdir -p /home/${{ secrets.DO_USERNAME }}/app
           sudo chown -R $USER:$USER /home/${{ secrets.DO_USERNAME }}/app
 
-          # Clean up Docker containers
-          docker stop $(docker ps -q) || true
-          docker rm $(docker ps -aq) || true
+          cd /home/${{ secrets.DO_USERNAME }}/app
+          sudo docker-compose -p futsalapi down || true
+          sudo docker system prune -f || true
 
-      # Copy manifest to app directory
-      - name: Copy Manifest
+      # Copy new deployment files
+      - name: Copy Deployment Files
         run: |
-          cp ./publish/manifest.json /home/${{ secrets.DO_USERNAME }}/app/
+          cp -r ./publish/* /home/${{ secrets.DO_USERNAME }}/app/
 
-      - name: Deploy Application
+      # Deploy with Docker Compose
+      - name: Deploy with Docker Compose
         run: |
           cd /home/${{ secrets.DO_USERNAME }}/app
 
-          # Install Aspire CLI if needed
-          if ! command -v aspire &> /dev/null; then
-            dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
-            echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-          fi
+          # Start the application
+          sudo docker-compose -p futsalapi up -d --build
 
-          # Deploy the application
-          aspire deploy --manifest manifest.json
+          # Wait for containers to be ready
+          sleep 15
+
+          # Verify deployment
+          if sudo docker ps | grep -q "futsalapi"; then
+            echo "✅ Deployment successful"
+            sudo docker ps --filter "name=futsalapi"
+          else
+            echo "❌ Deployment failed"
+            sudo docker-compose -p futsalapi logs
+            exit 1
+          fi
