@@ -12,11 +12,11 @@ public static class AuthExtensions
 {
     public static IServiceCollection AddAuthConfig(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        //var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         // Add DbContext with PostgreSQL
-        services.AddDbContext<AuthDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        //services.AddDbContext<AuthDbContext>(options =>
+        //    options.UseNpgsql(connectionString));
 
         // Add Authentication
         services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
