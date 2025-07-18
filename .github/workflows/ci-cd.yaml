@@ -14,19 +14,15 @@ jobs:
 
       - name: Publish Aspire App Manifest
         run: |
-          echo "Generating Aspire manifest directly to workspace root's 'publish' directory..."
-          # IMPORTANT: Explicitly specify --output-path to the workspace root's 'publish' directory.
-          # This resolves the "The '--output-path [path]' option was not specified" error.
-          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ${{ github.workspace }}/publish
+          mkdir -p ./publish
+          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish/manifest.json
 
       - name: Debug - List publish directory contents
         run: |
           echo "Contents of ./publish directory:"
-          ls -la ./publish || echo "Publish directory does not exist or is empty."
-          echo "Contents of current directory:"
-          ls -la .
-          echo "Total files in publish directory (if exists):"
-          find ./publish -type f 2>/dev/null | wc -l || echo "0"
+          ls -la ./publish || echo "Publish directory does not exist or is empty"
+          echo "Total files in publish directory:"
+          find ./publish -type f | wc -l
 
       - name: Deploy to DigitalOcean - Prepare remote
         uses: appleboy/ssh-action@master
@@ -35,29 +31,13 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
           script: |
-            echo "Preparing remote DigitalOcean server..."
-            # Stop and remove any previous containers gracefully
-            if docker ps -q | grep .; then
-              echo "Stopping running Docker containers..."
+            if docker ps -q; then
               docker stop $(docker ps -q)
-            else
-              echo "No running Docker containers to stop."
             fi
-            if docker ps -aq | grep .; then
-              echo "Removing all Docker containers..."
+            if docker ps -aq; then
               docker rm $(docker ps -aq)
-            else
-              echo "No Docker containers to remove."
             fi
-            # Remove the old app directory if it exists
-            if [ -d "/home/${{ secrets.DO_USERNAME }}/app" ]; then
-              echo "Removing old app directory: /home/${{ secrets.DO_USERNAME }}/app"
-              rm -rf /home/${{ secrets.DO_USERNAME }}/app
-            else
-              echo "App directory does not exist, skipping removal."
-            fi
-            # Create a new directory for the app
-            echo "Creating new app directory: /home/${{ secrets.DO_USERNAME }}/app"
+            rm -rf /home/${{ secrets.DO_USERNAME }}/app
             mkdir -p /home/${{ secrets.DO_USERNAME }}/app
 
       - name: Copy published files to DigitalOcean
@@ -66,10 +46,8 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
-          # This will now correctly point to the 'publish' directory at the repository root.
-          source: "publish/*"
+          source: "publish/manifest.json"
           target: "/home/${{ secrets.DO_USERNAME }}/app"
-          strip_components: 1
 
       - name: Deploy using Aspire Manifest
         uses: appleboy/ssh-action@master
@@ -78,32 +56,13 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
           script: |
-            echo "Initiating deployment on DigitalOcean server..."
             cd /home/${{ secrets.DO_USERNAME }}/app
-            # Check if manifest.json exists
             if [ -f "manifest.json" ]; then
-              echo "Found manifest.json, deploying using Aspire manifest..."
-              # Install aspire CLI if not already installed
-              if ! command -v aspire &> /dev/null; then
-                echo "Aspire CLI not found, installing..."
+              if ! command -v aspire; then
                 dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
-              else
-                echo "Aspire CLI already installed."
               fi
-              # Deploy using the manifest
               aspire deploy --manifest manifest.json
             else
-              echo "No manifest.json found in /home/${{ secrets.DO_USERNAME }}/app. Listing available files:"
-              ls -la
-              # Fallback to docker compose if docker-compose.yml exists
-              if [ -f "docker-compose.yml" ]; then
-                echo "Found docker-compose.yml, using docker compose..."
-                docker compose up -d --build
-              elif [ -f "compose.yaml" ]; then
-                echo "Found compose.yaml, using docker compose..."
-                docker compose up -d --build
-              else
-                echo "No deployment files (manifest.json, docker-compose.yml, compose.yaml) found! Exiting."
-                exit 1
-              fi
+              echo "ERROR: manifest.json not found!"
+              exit 1
             fi
