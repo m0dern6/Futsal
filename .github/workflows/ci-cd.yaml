@@ -12,28 +12,36 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Build and generate manifest
+      # Create manifest in runner's workspace first
+      - name: Generate Manifest Locally
         run: |
-          # Generate manifest directly in the app directory
-          mkdir -p /home/${{ secrets.DO_USERNAME }}/app
-          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path /home/${{ secrets.DO_USERNAME }}/app/manifest.json
+          mkdir -p ./publish
+          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish/manifest.json
 
-      - name: Prepare environment
+      # Fix permissions and prepare environment
+      - name: Prepare Deployment Directory
         run: |
-          # Stop and clean up any previous containers
-          if [ "$(docker ps -q)" ]; then
-            docker stop $(docker ps -q)
-          fi
-          if [ "$(docker ps -aq)" ]; then
-            docker rm $(docker ps -aq)
-          fi
+          # Create directory with correct ownership
+          sudo mkdir -p /home/${{ secrets.DO_USERNAME }}/app
+          sudo chown -R $USER:$USER /home/${{ secrets.DO_USERNAME }}/app
 
-      - name: Deploy using Aspire Manifest
+          # Clean up Docker containers
+          docker stop $(docker ps -q) || true
+          docker rm $(docker ps -aq) || true
+
+      # Copy manifest to app directory
+      - name: Copy Manifest
+        run: |
+          cp ./publish/manifest.json /home/${{ secrets.DO_USERNAME }}/app/
+
+      - name: Deploy Application
         run: |
           cd /home/${{ secrets.DO_USERNAME }}/app
+
           # Install Aspire CLI if needed
           if ! command -v aspire &> /dev/null; then
             dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
+            echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
           fi
 
           # Deploy the application
