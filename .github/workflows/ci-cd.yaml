@@ -12,10 +12,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      # Install Aspire workload
+      # Install Aspire workload with sudo
       - name: Install Aspire Workload
         run: |
-          dotnet workload install aspire
+          sudo dotnet workload install aspire
 
       # Generate Docker Compose files using Aspire
       - name: Generate Docker Compose
