@@ -15,6 +15,13 @@ jobs:
       - name: Publish Aspire App for Docker Compose
         run: dotnet publish FutsalApi/FutsalApi.AppHost -c Release -o ./publish
 
+      - name: Debug - List publish directory contents
+        run: |
+          echo "Contents of ./publish directory:"
+          ls -la ./publish
+          echo "Total files in publish directory:"
+          find ./publish -type f | wc -l
+
       - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@master
         with:
