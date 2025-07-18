@@ -20,6 +20,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
     {
         var routeGroup = endpoints.MapGroup("/FutsalGround")
             .WithTags("FutsalGround")
+            .CacheOutput()
             .RequireAuthorization();
 
         routeGroup.MapGet("/", GetAllFutsalGrounds)

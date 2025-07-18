@@ -18,6 +18,7 @@ public class ReviewApiEndpoints : IEndpoint
     {
         var routeGroup = endpoints.MapGroup("/Reviews")
             .WithTags("Reviews")
+            .CacheOutput()
             .RequireAuthorization();
 
         // GET: /Reviews (with pagination)

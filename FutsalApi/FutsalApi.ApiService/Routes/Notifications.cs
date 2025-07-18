@@ -20,6 +20,7 @@ public class NotificationsApiEndpoints : IEndpoint
     {
         var routeGroup = endpoints.MapGroup("/Notifications")
             .WithTags("Notifications")
+            .CacheOutput()
             .RequireAuthorization();
 
         // GET: /Notifications (with pagination)

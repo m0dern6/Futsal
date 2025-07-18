@@ -1,22 +1,12 @@
-﻿using System.Reflection;
-
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
 
-using FutsalApi.ApiService.Data;
-using FutsalApi.ApiService.Infrastructure;
-using FutsalApi.ApiService.Infrastructure.Auth;
+using FutsalApi.ApiService.Extensions;
 using FutsalApi.ApiService.Repositories;
-using FutsalApi.ApiService.Routes;
 using FutsalApi.ApiService.Services;
 using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Auth.Services;
 using FutsalApi.Data.DTO;
-using FutsalApi.ServiceDefaults.Services;
 
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -25,12 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
-// Get connection string from appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.AddRedisOutputCache("cache");
 
-// Add DbContext with PostgreSQL
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.AddNpgsqlDbContext<AppDbContext>("futsaldb");
 
 builder.Services.AddAuthConfig(builder.Configuration);
 
@@ -87,7 +74,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-
+app.UseOutputCache();
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
@@ -107,5 +94,6 @@ app.UseAuthConfig(app);
 app.MapEndpoints(); // Maps all endpoints registered in the assembly
 
 app.MapDefaultEndpoints();
+app.EnsureDatabaseCreated<AppDbContext>();
 
 app.Run();
