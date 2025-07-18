@@ -12,11 +12,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      # Install Aspire workload
+      - name: Install Aspire Workload
+        run: |
+          dotnet workload install aspire
+
       # Generate Docker Compose files using Aspire
       - name: Generate Docker Compose
         run: |
           mkdir -p ./publish
-          dotnet publish FutsalApi/FutsalApi.AppHost --os linux --arch x64 /t:PublishContainer --publisher dockercompose --output ./publish
+          cd FutsalApi/FutsalApi.AppHost
+          dotnet run --project . -- --publisher manifest --output-path ../../publish/manifest.json
+
+      # Convert manifest to Docker Compose
+      - name: Convert to Docker Compose
+        run: |
+          cd ./publish
+          dotnet run --project ../FutsalApi/FutsalApi.AppHost -- --publisher dockercompose --input-path manifest.json --output-path .
 
       # Clean up previous deployment
       - name: Clean Previous Deployment
