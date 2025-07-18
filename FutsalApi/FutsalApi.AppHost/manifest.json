@@ -3,8 +3,16 @@
   "resources": {
     "cache": {
       "type": "container.v0",
-      "connectionString": "{cache.bindings.tcp.host}:{cache.bindings.tcp.port}",
+      "connectionString": "{cache.bindings.tcp.host}:{cache.bindings.tcp.port},password={cache-password.value}",
       "image": "docker.io/library/redis:7.4",
+      "entrypoint": "/bin/sh",
+      "args": [
+        "-c",
+        "redis-server --requirepass $REDIS_PASSWORD"
+      ],
+      "env": {
+        "REDIS_PASSWORD": "{cache-password.value}"
+      },
       "bindings": {
         "tcp": {
           "scheme": "tcp",
@@ -14,6 +22,29 @@
         }
       }
     },
+    "db": {
+      "type": "container.v0",
+      "connectionString": "Host={db.bindings.tcp.host};Port={db.bindings.tcp.port};Username=postgres;Password={db-password.value}",
+      "image": "docker.io/library/postgres:17.4",
+      "env": {
+        "POSTGRES_HOST_AUTH_METHOD": "scram-sha-256",
+        "POSTGRES_INITDB_ARGS": "--auth-host=scram-sha-256 --auth-local=scram-sha-256",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "{db-password.value}"
+      },
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "targetPort": 5432
+        }
+      }
+    },
+    "futsaldb": {
+      "type": "value.v0",
+      "connectionString": "{db.connectionString};Database=futsaldb"
+    },
     "apiservice": {
       "type": "project.v0",
       "path": "../FutsalApi.ApiService/FutsalApi.ApiService.csproj",
@@ -22,7 +53,10 @@
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
         "ASPNETCORE_FORWARDEDHEADERS_ENABLED": "true",
-        "HTTP_PORTS": "{apiservice.bindings.http.targetPort}"
+        "HTTP_PORTS": "{apiservice.bindings.http.targetPort};{apiservice.bindings.Http5000.targetPort}",
+        "HTTPS_PORTS": "{apiservice.bindings.Https5001.targetPort}",
+        "ConnectionStrings__db": "{db.connectionString}",
+        "ConnectionStrings__cache": "{cache.connectionString}"
       },
       "bindings": {
         "http": {
@@ -34,6 +68,51 @@
           "scheme": "https",
           "protocol": "tcp",
           "transport": "http"
+        },
+        "Http5000": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 5000,
+          "targetPort": 8000
+        },
+        "Https5001": {
+          "scheme": "https",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 5001,
+          "targetPort": 8001
+        }
+      }
+    },
+    "cache-password": {
+      "type": "parameter.v0",
+      "value": "{cache-password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true,
+          "default": {
+            "generate": {
+              "minLength": 22,
+              "special": false
+            }
+          }
+        }
+      }
+    },
+    "db-password": {
+      "type": "parameter.v0",
+      "value": "{db-password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true,
+          "default": {
+            "generate": {
+              "minLength": 22
+            }
+          }
         }
       }
     }

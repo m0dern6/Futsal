@@ -2,7 +2,7 @@
   "TemplatePath": null,
   "ContainerSettings": {
     "Registry": null,
-    "RepositoryPrefix": "futsal-local",
+    "RepositoryPrefix": "Futsal",
     "Tags": [
       "latest"
     ],
