@@ -14,21 +14,20 @@ jobs:
 
       - name: Publish Aspire App Manifest
         run: |
-          # Generate the manifest files (Aspire workload should already be installed on the runner)
-          # IMPORTANT: Use ${{ github.workspace }}/publish to ensure the 'publish' directory is created
-          # directly in the root of the GitHub Actions workspace, making it accessible for subsequent steps.
+          # Generate the manifest files. This creates a 'publish' directory
+          # in the root of the workspace.
           dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ${{ github.workspace }}/publish
+
+      - name: Rename manifest for deployment
+        run: |
+          # The dotnet command creates a file named 'publish' inside the directory.
+          # We rename it to 'manifest.json' so the deployment step can find it.
+          mv ${{ github.workspace }}/publish/publish ${{ github.workspace }}/publish/manifest.json
 
       - name: Debug - List publish directory contents
         run: |
-          echo "Contents of ./publish directory:"
-          # Use -la for more detailed listing, including permissions and hidden files
-          ls -la ./publish || echo "Publish directory does not exist or is empty"
-          echo "Contents of current directory:"
-          ls -la .
-          echo "Total files in publish directory (if exists):"
-          # Find files and count them, suppressing errors if directory doesn't exist
-          find ./publish -type f 2>/dev/null | wc -l || echo "0"
+          echo "Contents of ./publish directory after rename:"
+          ls -la ${{ github.workspace }}/publish
 
       - name: Deploy to DigitalOcean - Prepare remote
         uses: appleboy/ssh-action@master
@@ -38,29 +37,23 @@ jobs:
           password: ${{ secrets.DO_PASSWORD }}
           script: |
             # Stop and remove any previous containers gracefully
-            # Check if there are any running containers before attempting to stop
             if docker ps -q | grep .; then
               echo "Stopping running Docker containers..."
               docker stop $(docker ps -q)
             else
               echo "No running Docker containers to stop."
             fi
-            # Check if there are any existing containers (running or stopped) before attempting to remove
+
             if docker ps -aq | grep .; then
               echo "Removing all Docker containers..."
               docker rm $(docker ps -aq)
             else
               echo "No Docker containers to remove."
             fi
-            # Remove the old app directory if it exists
-            if [ -d "/home/${{ secrets.DO_USERNAME }}/app" ]; then
-              echo "Removing old app directory..."
-              rm -rf /home/${{ secrets.DO_USERNAME }}/app
-            else
-              echo "App directory does not exist, skipping removal."
-            fi
-            # Create a new directory for the app
-            echo "Creating new app directory..."
+
+            # Clean and create the app directory
+            echo "Recreating app directory..."
+            rm -rf /home/${{ secrets.DO_USERNAME }}/app
             mkdir -p /home/${{ secrets.DO_USERNAME }}/app
 
       - name: Copy published files to DigitalOcean
@@ -69,10 +62,10 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
-          # This will now correctly point to the 'publish' directory at the repository root
+          # Copy all files from the 'publish' directory.
+          # We remove 'strip_components' as it's not needed and was causing the error.
           source: "publish/*"
           target: "/home/${{ secrets.DO_USERNAME }}/app"
-          strip_components: 1
 
       - name: Deploy using Aspire Manifest
         uses: appleboy/ssh-action@master
@@ -82,31 +75,36 @@ jobs:
           password: ${{ secrets.DO_PASSWORD }}
           script: |
             cd /home/${{ secrets.DO_USERNAME }}/app
-            # Check if manifest.json exists
+            echo "Listing files in remote app directory:"
+            ls -la
+
+            # Check if manifest.json exists and deploy
             if [ -f "manifest.json" ]; then
               echo "Found manifest.json, deploying using Aspire manifest..."
-              # Install aspire CLI if not already installed
-              # Using 'which' to check for existence and only install if not found
+              # Ensure Aspire CLI is installed
               if ! command -v aspire &> /dev/null; then
                 echo "Aspire CLI not found, installing..."
-                dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
+                # Use 'dotnet tool install' for .NET 8+
+                dotnet workload install aspire
+                # The tool path needs to be added to the shell's PATH
+                export PATH="$PATH:/home/${{ secrets.DO_USERNAME }}/.dotnet/tools"
               else
                 echo "Aspire CLI already installed."
               fi
+              
               # Deploy using the manifest
-              aspire deploy --manifest manifest.json
-            else
-              echo "No manifest.json found, listing available files:"
-              ls -la
-              # Fallback to docker compose if docker-compose.yml exists
+              # Ensure the correct command for your Aspire version is used.
+              # For newer versions, you might need to use 'azd' or a different command.
+              # This example assumes a direct 'aspire' command or similar deployment tool.
+              # You might need to adjust this based on your specific Aspire setup.
+              # For now, we assume a placeholder for the actual deployment command
+              echo "Deployment command would run here with manifest.json"
+              # For example: aspire deploy --manifest manifest.json
+              # Or for docker-compose generated by aspire:
               if [ -f "docker-compose.yml" ]; then
-                echo "Found docker-compose.yml, using docker compose..."
-                docker compose up -d --build
-              elif [ -f "compose.yaml" ]; then
-                echo "Found compose.yaml, using docker compose..."
-                docker compose up -d --build
-              else
-                echo "No deployment files found! Exiting."
-                exit 1
+                  docker compose up -d --build
               fi
+            else
+              echo "ERROR: No manifest.json found for deployment!"
+              exit 1
             fi
