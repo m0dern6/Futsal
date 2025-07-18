@@ -2,50 +2,50 @@ name: Aspire CI/CD
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build-and-deploy:
     runs-on: self-hosted
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v3
 
-    - name: Publish Aspire App for Docker Compose
-      run: dotnet publish FutsalApi/FutsalApi.AppHost -c Release -o ./publish --publisher dockercompose
+      - name: Publish Aspire App for Docker Compose
+        run: dotnet publish FutsalApi/FutsalApi.AppHost -c Release -o ./publish
 
-    - name: Deploy to DigitalOcean
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.DO_HOST }}
-        username: ${{ secrets.DO_USERNAME }}
-        password: ${{ secrets.DO_PASSWORD }}
-        script: |
-          # Stop and remove any previous containers managed by compose
-          # The project name is derived from the directory name, which will be 'publish'
-          cd /home/${{ secrets.DO_USERNAME }}/app && docker-compose -p futsalapi down --remove-orphans || true
-          # Remove the old publish directory
-          rm -rf /home/${{ secrets.DO_USERNAME }}/app
-          # Create a new directory for the app
-          mkdir -p /home/${{ secrets.DO_USERNAME }}/app
+      - name: Deploy to DigitalOcean
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          password: ${{ secrets.DO_PASSWORD }}
+          script: |
+            # Stop and remove any previous containers managed by compose
+            # The project name is derived from the directory name, which will be 'publish'
+            cd /home/${{ secrets.DO_USERNAME }}/app && docker-compose -p futsalapi down --remove-orphans || true
+            # Remove the old publish directory
+            rm -rf /home/${{ secrets.DO_USERNAME }}/app
+            # Create a new directory for the app
+            mkdir -p /home/${{ secrets.DO_USERNAME }}/app
 
-    - name: Copy published files to DigitalOcean
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.DO_HOST }}
-        username: ${{ secrets.DO_USERNAME }}
-        password: ${{ secrets.DO_PASSWORD }}
-        source: "publish/*"
-        target: "/home/${{ secrets.DO_USERNAME }}/app"
-        strip_components: 1
+      - name: Copy published files to DigitalOcean
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          password: ${{ secrets.DO_PASSWORD }}
+          source: "publish/*"
+          target: "/home/${{ secrets.DO_USERNAME }}/app"
+          strip_components: 1
 
-    - name: Run Docker Compose on DigitalOcean
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.DO_HOST }}
-        username: ${{ secrets.DO_USERNAME }}
-        password: ${{ secrets.DO_PASSWORD }}
-        script: |
-          cd /home/${{ secrets.DO_USERNAME }}/app
-          docker-compose -p futsalapi up -d --build
+      - name: Run Docker Compose on DigitalOcean
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          password: ${{ secrets.DO_PASSWORD }}
+          script: |
+            cd /home/${{ secrets.DO_USERNAME }}/app
+            docker-compose -p futsalapi up -d --build
