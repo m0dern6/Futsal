@@ -12,57 +12,29 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Publish Aspire App Manifest
+      - name: Build and generate manifest
         run: |
-          mkdir -p ./publish
-          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish/manifest.json
+          # Generate manifest directly in the app directory
+          mkdir -p /home/${{ secrets.DO_USERNAME }}/app
+          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path /home/${{ secrets.DO_USERNAME }}/app/manifest.json
 
-      - name: Debug - List publish directory contents
+      - name: Prepare environment
         run: |
-          echo "Contents of ./publish directory:"
-          ls -la ./publish || echo "Publish directory does not exist or is empty"
-          echo "Total files in publish directory:"
-          find ./publish -type f | wc -l
-
-      - name: Deploy to DigitalOcean - Prepare remote
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          password: ${{ secrets.DO_PASSWORD }}
-          script: |
-            if docker ps -q; then
-              docker stop $(docker ps -q)
-            fi
-            if docker ps -aq; then
-              docker rm $(docker ps -aq)
-            fi
-            rm -rf /home/${{ secrets.DO_USERNAME }}/app
-            mkdir -p /home/${{ secrets.DO_USERNAME }}/app
-
-      - name: Copy published files to DigitalOcean
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          password: ${{ secrets.DO_PASSWORD }}
-          source: "publish/manifest.json"
-          target: "/home/${{ secrets.DO_USERNAME }}/app"
+          # Stop and clean up any previous containers
+          if [ "$(docker ps -q)" ]; then
+            docker stop $(docker ps -q)
+          fi
+          if [ "$(docker ps -aq)" ]; then
+            docker rm $(docker ps -aq)
+          fi
 
       - name: Deploy using Aspire Manifest
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          password: ${{ secrets.DO_PASSWORD }}
-          script: |
-            cd /home/${{ secrets.DO_USERNAME }}/app
-            if [ -f "manifest.json" ]; then
-              if ! command -v aspire; then
-                dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
-              fi
-              aspire deploy --manifest manifest.json
-            else
-              echo "ERROR: manifest.json not found!"
-              exit 1
-            fi
+        run: |
+          cd /home/${{ secrets.DO_USERNAME }}/app
+          # Install Aspire CLI if needed
+          if ! command -v aspire &> /dev/null; then
+            dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
+          fi
+
+          # Deploy the application
+          aspire deploy --manifest manifest.json
