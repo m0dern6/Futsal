@@ -1,16 +1,26 @@
 ﻿using System;
 
+using FutsalApi.Auth.Models;
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.Data.DTO;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<User, Role, string, IdentityUserClaim<string>, UserRole, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
 {
 
     public AppDbContext()
     {
     }
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options)
+    {
 
+    }
+
+    public DbSet<GeneralSetting> GeneralSettings { get; set; }
     public DbSet<FutsalGround>? FutsalGrounds { get; set; }
     public DbSet<Booking>? Bookings { get; set; }
     public DbSet<Payment>? Payments { get; set; }
