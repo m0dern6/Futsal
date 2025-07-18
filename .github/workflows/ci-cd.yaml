@@ -1,28 +1,62 @@
-name: Aspire CI/CD
+name: Aspire CI/CD to DigitalOcean (Docker Compose)
 
 on:
   push:
     branches: ["master"]
 
+env:
+  # Path to your Aspire AppHost project relative to the repository root
+  APPHOST_PROJECT_PATH: "FutsalApi/FutsalApi.AppHost"
+  # Name of your solution file (if different from directory structure)
+  SOLUTION_FILE_NAME: "FutsalApi.sln" # Ensure this matches your actual solution file name
+
+  # DigitalOcean Droplet secrets (DO_HOST, DO_USERNAME, DO_PASSWORD) are assumed to be set in your repo secrets
+  REMOTE_APP_DIR: "/home/${{ secrets.DO_USERNAME }}/aspire-app" # Directory on droplet to deploy to
+
 jobs:
   build-and-deploy:
-    runs-on: self-hosted
+    runs-on: self-hosted # Assuming your self-hosted runner has dotnet, docker, and docker-compose installed
 
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Publish Aspire App Manifest
-        run: |
-          mkdir -p ./publish
-          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish/manifest.json
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x" # Or whatever .NET version your Aspire app uses
 
-      - name: Debug - List publish directory contents
+      - name: Restore .NET tools and dependencies (including Aspire tooling)
+        run: dotnet restore ${{ env.SOLUTION_FILE_NAME }}
+
+      # This step builds the Docker images for all projects referenced by the AppHost
+      # and generates the manifest and docker-compose.yml.
+      # Requires Aspire 8.0.1+ for direct docker-compose generation
+      - name: Build Aspire App and Generate Docker Compose
         run: |
-          echo "Contents of ./publish directory:"
-          ls -la ./publish || echo "Publish directory does not exist or is empty"
-          echo "Total files in publish directory:"
-          find ./publish -type f | wc -l
+          # Build the solution (this will also build Docker images for container projects)
+          dotnet build ${{ env.SOLUTION_FILE_NAME }}
+
+          # Publish the AppHost to generate the manifest AND docker-compose.yml
+          # Using --output-path . will put manifest.json and docker-compose.yml at the root of the repo
+          # or a sub-directory if you prefer. Let's put it in a 'deployment' folder.
+          mkdir -p ./deployment
+          dotnet publish ${{ env.APPHOST_PROJECT_PATH }} -c Release -o ./deployment /p:PublishProfile=DefaultContainer
+          # Aspire automatically generates a docker-compose.yml when publishing with Container support
+          # If not automatically generated, you might need to use `azd pipeline config` or similar,
+          # but the `dotnet publish ... /p:PublishProfile=DefaultContainer` should handle it.
+
+          # Verify generated files
+          echo "Contents of ./deployment directory:"
+          ls -la ./deployment
+          if [ ! -f "./deployment/manifest.json" ]; then
+            echo "ERROR: manifest.json was not generated!"
+            exit 1
+          fi
+          if [ ! -f "./deployment/docker-compose.yml" ]; then
+            echo "ERROR: docker-compose.yml was not generated! Ensure Aspire tooling is correct."
+            exit 1
+          fi
 
       - name: Deploy to DigitalOcean - Prepare remote
         uses: appleboy/ssh-action@master
@@ -31,14 +65,13 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
           script: |
-            if docker ps -q; then
-              docker stop $(docker ps -q)
-            fi
-            if docker ps -aq; then
-              docker rm $(docker ps -aq)
-            fi
-            rm -rf /home/${{ secrets.DO_USERNAME }}/app
-            mkdir -p /home/${{ secrets.DO_USERNAME }}/app
+            echo "Stopping and removing existing containers..."
+            docker-compose -f ${{ env.REMOTE_APP_DIR }}/docker-compose.yml down || true
+            docker rm $(docker ps -aq) || true # Remove any other dangling containers
+
+            echo "Cleaning remote application directory..."
+            rm -rf ${{ env.REMOTE_APP_DIR }}
+            mkdir -p ${{ env.REMOTE_APP_DIR }}
 
       - name: Copy published files to DigitalOcean
         uses: appleboy/scp-action@master
@@ -46,23 +79,28 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
-          source: "publish/manifest.json"
-          target: "/home/${{ secrets.DO_USERNAME }}/app"
+          source: "deployment/*" # Copy all generated files (manifest, docker-compose, etc.)
+          target: "${{ env.REMOTE_APP_DIR }}"
 
-      - name: Deploy using Aspire Manifest
+      - name: Deploy Aspire Application with Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
           script: |
-            cd /home/${{ secrets.DO_USERNAME }}/app
-            if [ -f "manifest.json" ]; then
-              if ! command -v aspire; then
-                dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
-              fi
-              aspire deploy --manifest manifest.json
+            echo "Navigating to remote app directory: ${{ env.REMOTE_APP_DIR }}"
+            cd ${{ env.REMOTE_APP_DIR }}
+
+            if [ -f "docker-compose.yml" ]; then
+              echo "Starting Docker Compose services..."
+              # Use --build to ensure images are built on the remote (if not already existing/pulled)
+              # Use -d for detached mode
+              # --wait will wait for services to be healthy
+              docker-compose -f docker-compose.yml up -d --build --force-recreate --wait
+
+              echo "Deployment complete with Docker Compose!"
             else
-              echo "ERROR: manifest.json not found!"
+              echo "ERROR: docker-compose.yml not found in ${{ env.REMOTE_APP_DIR }}!"
               exit 1
             fi
