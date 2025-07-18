@@ -14,14 +14,7 @@ jobs:
 
       - name: Publish Aspire App for Docker Compose
         run: |
-          # Check if Aspire workload is already installed
-          if ! dotnet workload list | grep -q aspire; then
-            echo "Installing Aspire workload..."
-            sudo dotnet workload install aspire
-          else
-            echo "Aspire workload already installed"
-          fi
-          # Generate the manifest files
+          # Generate the manifest files (Aspire workload should already be installed on the runner)
           dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish
 
       - name: Debug - List publish directory contents
