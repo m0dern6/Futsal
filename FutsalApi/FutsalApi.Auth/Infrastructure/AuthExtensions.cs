@@ -25,12 +25,14 @@ public static class AuthExtensions
                 options.BearerTokenExpiration = TimeSpan.FromDays(1);
                 options.RefreshTokenExpiration = TimeSpan.FromDays(30);
             });
-            //.AddGoogleAuthentication();
+        //.AddGoogleAuthentication();
 
         // Add Authorization
         services.AddAuthorization(options =>
         {
-            options.DefaultPolicy = new AuthorizationPolicyBuilder(IdentityConstants.BearerScheme)
+            options.DefaultPolicy = new AuthorizationPolicyBuilder(
+                IdentityConstants.BearerScheme,
+                IdentityConstants.ApplicationScheme)
                 .RequireAuthenticatedUser()
                 .Build();
         });
