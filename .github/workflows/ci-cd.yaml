@@ -13,14 +13,18 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Publish Aspire App for Docker Compose
-        run: dotnet publish FutsalApi/FutsalApi.AppHost -c Release -o ./publish
+        run: |
+          dotnet workload install aspire
+          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ./publish
 
       - name: Debug - List publish directory contents
         run: |
           echo "Contents of ./publish directory:"
-          ls -la ./publish
-          echo "Total files in publish directory:"
-          find ./publish -type f | wc -l
+          ls -la ./publish || echo "Publish directory does not exist"
+          echo "Contents of current directory:"
+          ls -la .
+          echo "Total files in publish directory (if exists):"
+          find ./publish -type f 2>/dev/null | wc -l || echo "0"
 
       - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@master
