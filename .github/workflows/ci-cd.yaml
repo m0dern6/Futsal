@@ -14,42 +14,15 @@ jobs:
 
       - name: Publish Aspire App Manifest
         run: |
-          # Generate the manifest files. Aspire's publisher typically outputs them
-          # relative to the project directory (e.g., FutsalApi/FutsalApi.AppHost/publish).
-          # The '--output-path' argument with 'dotnet run --publisher manifest' might be ignored
-          # or interpreted relative to the project, so we'll move them in a subsequent step.
-          echo "Generating Aspire manifest..."
-          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest
+          echo "Generating Aspire manifest directly to workspace root's 'publish' directory..."
+          # IMPORTANT: Explicitly specify --output-path to the workspace root's 'publish' directory.
+          # This resolves the "The '--output-path [path]' option was not specified" error.
+          dotnet run --project FutsalApi/FutsalApi.AppHost --publisher manifest --output-path ${{ github.workspace }}/publish
 
-      - name: Move Published Manifest to Workspace Root
+      - name: Debug - List publish directory contents
         run: |
-          echo "Moving published manifest files to workspace root's 'publish' directory..."
-          # Define the source path where Aspire publishes the manifest
-          SOURCE_PUBLISH_DIR="FutsalApi/FutsalApi.AppHost/publish"
-          # Define the target path at the workspace root
-          TARGET_PUBLISH_DIR="./publish"
-
-          # Create the target directory if it doesn't exist
-          mkdir -p "${TARGET_PUBLISH_DIR}"
-
-          # Check if the source directory exists and contains files
-          if [ -d "${SOURCE_PUBLISH_DIR}" ] && [ "$(ls -A ${SOURCE_PUBLISH_DIR})" ]; then
-            # Use 'shopt -s dotglob' to ensure dotfiles (like .dockerignore) are also moved
-            shopt -s dotglob
-            mv "${SOURCE_PUBLISH_DIR}"/* "${TARGET_PUBLISH_DIR}/"
-            shopt -u dotglob # Disable dotglob after use
-            echo "Successfully moved contents from ${SOURCE_PUBLISH_DIR} to ${TARGET_PUBLISH_DIR}"
-          else
-            echo "Warning: Source publish directory '${SOURCE_PUBLISH_DIR}' is empty or does not exist."
-            echo "This might indicate an issue with the 'Publish Aspire App Manifest' step."
-            # Exit with an error if no files were published, as subsequent steps will fail
-            exit 1
-          fi
-
-      - name: Debug - List publish directory contents (after move)
-        run: |
-          echo "Contents of ./publish directory (after move):"
-          ls -la ./publish || echo "Publish directory does not exist or is empty after move."
+          echo "Contents of ./publish directory:"
+          ls -la ./publish || echo "Publish directory does not exist or is empty."
           echo "Contents of current directory:"
           ls -la .
           echo "Total files in publish directory (if exists):"
@@ -64,14 +37,12 @@ jobs:
           script: |
             echo "Preparing remote DigitalOcean server..."
             # Stop and remove any previous containers gracefully
-            # Check if there are any running containers before attempting to stop
             if docker ps -q | grep .; then
               echo "Stopping running Docker containers..."
               docker stop $(docker ps -q)
             else
               echo "No running Docker containers to stop."
             fi
-            # Check if there are any existing containers (running or stopped) before attempting to remove
             if docker ps -aq | grep .; then
               echo "Removing all Docker containers..."
               docker rm $(docker ps -aq)
@@ -95,8 +66,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           password: ${{ secrets.DO_PASSWORD }}
-          # This will now correctly point to the 'publish' directory at the repository root,
-          # which should contain the manifest files after the 'Move' step.
+          # This will now correctly point to the 'publish' directory at the repository root.
           source: "publish/*"
           target: "/home/${{ secrets.DO_USERNAME }}/app"
           strip_components: 1
@@ -114,7 +84,6 @@ jobs:
             if [ -f "manifest.json" ]; then
               echo "Found manifest.json, deploying using Aspire manifest..."
               # Install aspire CLI if not already installed
-              # Using 'command -v' to check for existence and only install if not found
               if ! command -v aspire &> /dev/null; then
                 echo "Aspire CLI not found, installing..."
                 dotnet tool install -g Microsoft.Extensions.Hosting.Aspire
