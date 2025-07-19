@@ -4,7 +4,8 @@ var cache = builder.AddRedis("cache");
 
 var db = builder.AddPostgres("db")
     .WithPgAdmin()
-    .WithVolume("./pgdata", "/var/lib/postgresql/data"); // Host path first, container path second
+    .WithVolume("./pgdata", "/var/lib/postgresql/data")
+    .WithEnvironment("POSTGRES_DB", "futsaldb");
 
 var futsaldb = db.AddDatabase("futsaldb");
 
