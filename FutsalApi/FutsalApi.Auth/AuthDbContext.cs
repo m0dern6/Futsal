@@ -12,6 +12,4 @@ public class AuthDbContext : IdentityDbContext<User, Role, string, IdentityUserC
     {
 
     }
-
-    public DbSet<GeneralSetting> GeneralSettings { get; set; }
 }
