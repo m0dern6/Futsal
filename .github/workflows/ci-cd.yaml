@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir -p ./publish
           cd FutsalApi/FutsalApi.AppHost
-          aspirate generate --output-format compose --output-path ../../publish --non-interactive --secret-password "$SECRET_PASSWORD"
+          aspirate generate --output-format compose --output-path ../../publish --non-interactive --include-dashboard --secret-password "$SECRET_PASSWORD"
 
       - name: Deploy Application
         run: |
