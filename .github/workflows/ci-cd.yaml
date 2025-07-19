@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir -p ./publish
           cd FutsalApi/FutsalApi.AppHost
-          aspirate generate --output-format compose --output-path ../../publish
+          aspirate generate --output-format compose --output-path ../../publish --non-interactive
 
       - name: Deploy Application
         run: |
