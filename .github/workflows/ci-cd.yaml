@@ -12,6 +12,16 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      # Install aspirate if not installed
+      - name: Ensure aspirate is installed
+        run: |
+          if ! command -v aspirate &> /dev/null; then
+            dotnet tool install --global aspirate
+            export PATH="$PATH:$HOME/.dotnet/tools"
+          else
+            echo "aspirate is already installed"
+          fi
+
       # Generate Docker Compose file using Aspire
       - name: Generate Docker Compose
         run: |
