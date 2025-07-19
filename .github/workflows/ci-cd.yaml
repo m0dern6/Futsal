@@ -17,10 +17,12 @@ jobs:
         run: |
           if ! command -v aspirate &> /dev/null; then
             dotnet tool install --global aspirate
-            export PATH="$PATH:$HOME/.dotnet/tools"
           else
             echo "aspirate is already installed"
           fi
+
+      - name: Add dotnet tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
       # Generate Docker Compose file using Aspire
       - name: Generate Docker Compose
