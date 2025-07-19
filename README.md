@@ -8,16 +8,14 @@
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
 - [Setup & Configuration](#setup--configuration)
-- [Running Services](#running-services)
 - [Running Tests](#running-tests)
 - [Documentation](#documentation)
-- [Deployment](#deployment)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
 
-This solution is composed of multiple projects under the `FutsalApi` solution and related folders:
+This solution is composed of multiple projects under the `FutsalApi` solution and related folders. For a detailed breakdown of the project structure, please see the [Project Structure](./Documentation/Project-Structure.md) documentation.
 
 - **FutsalApi.ApiService** – Core HTTP API for bookings, payments, reviews, notifications, and more.
 - **FutsalApi.AppHost** – Host configuration and orchestration layer.
@@ -28,72 +26,17 @@ This solution is composed of multiple projects under the `FutsalApi` solution an
 
 ## Architecture
 
-Each service is organized as a .NET project (`.csproj`) and follows Clean Architecture principles:
-
-1. **Models** – Request/response DTOs.
-2. **Validators** – FluentValidation rules.
-3. **Repositories** – Data persistence interfaces and implementations.
-4. **Services** – Business logic.
-5. **Routes** – Minimal API or controller endpoints.
-6. **Infrastructure** – Shared utilities and setup.
+Each service is organized as a .NET project (`.csproj`) and follows Clean Architecture principles.
 
 ## Prerequisites
 
-- [.NET 7 SDK](https://dotnet.microsoft.com/download)
-- SQL Server or compatible database for persistence
-- PowerShell (Windows) or Bash (Linux/macOS)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- Docker
+- Git
 
 ## Setup & Configuration
 
-1. **Clone the repository**
-
-   ```powershell
-   git clone https://github.com/0Ankit0/Futsal.git
-   cd Futsal
-   ```
-
-2. **Configure connection strings**
-
-   Update `appsettings.json` and `appsettings.Development.json` in each project (`ApiService`, `Auth`, etc.) with your database connection strings and any third-party API keys.
-
-3. **Apply database migrations**
-
-   ```powershell
-   cd FutsalApi.Data
-   dotnet ef database update --project . --startup-project ../FutsalApi.ApiService
-   ```
-
-4. **Restore dependencies**
-
-   ```powershell
-   dotnet restore FutsalApi.sln
-   ```
-
-## Running Services
-
-From the solution root, you can run individual services using the .NET CLI or your IDE of choice.
-
-- **API Service**
-
-  ```powershell
-  cd FutsalApi.ApiService
-  dotnet run
-  ```
-
-- **Authentication Service**
-
-  ```powershell
-  cd FutsalApi.Auth
-  dotnet run
-  ```
-
-- **App Host**
-  ```powershell
-  cd FutsalApi.AppHost
-  dotnet run
-  ```
-
-Other services follow the same pattern.
+For detailed setup and installation instructions, please see the [Setup and Installation](./Documentation/Setup-and-Installation.md) guide.
 
 ## Running Tests
 
@@ -106,18 +49,19 @@ dotnet test
 
 ## Documentation
 
-- API reference and OpenAPI definitions are available under `Documentation/API-Documentation.md`.
-- Database schema diagram: `Documentation/DbSchema.png`.
+This project includes the following documentation:
 
-## Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions and environment-specific configurations.
+- **[API Endpoints](./Documentation/API-Endpoints.md)**: Detailed information about the API endpoints.
+- **[Project Structure](./Documentation/Project-Structure.md)**: An overview of the project's directory structure.
+- **[Setup and Installation](./Documentation/Setup-and-Installation.md)**: Instructions on how to set up and run the project locally.
+- **[Deployment](./Documentation/Deployment.md)**: Information about the CI/CD pipeline and deployment process.
+- **[Database Schema](./Documentation/DbSchema.png)**: A diagram of the database schema.
 
 ## Contributing
 
 1. Fork the repository.
 2. Create a feature branch: `git checkout -b feature/YourFeature`
-3. Commit your changes: `git commit -m "Add your feature"
+3. Commit your changes: `git commit -m "Add your feature"`
 4. Push to your branch: `git push origin feature/YourFeature`
 5. Open a Pull Request.
 
