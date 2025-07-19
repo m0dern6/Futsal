@@ -34,21 +34,23 @@ jobs:
           aspirate generate --output-format compose --output-path ../../publish --non-interactive --include-dashboard --secret-password "$SECRET_PASSWORD"
 
       - name: Deploy Application
+        env:
+          SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
         run: |
           APP_DIR="/home/${{ secrets.DO_USERNAME }}/app"
-          sudo mkdir -p $APP_DIR
-          sudo chown -R $USER:$USER $APP_DIR
+          echo "$SUDO_PASSWORD" | sudo -S mkdir -p $APP_DIR
+          echo "$SUDO_PASSWORD" | sudo -S chown -R $USER:$USER $APP_DIR
           cd $APP_DIR
-          sudo docker-compose -p futsalapi down || true
-          sudo docker system prune -f || true
-          sudo cp -r ${{ github.workspace }}/publish/* .
-          sudo docker-compose -p futsalapi up -d --build
+          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi down || true
+          echo "$SUDO_PASSWORD" | sudo -S docker system prune -f || true
+          echo "$SUDO_PASSWORD" | sudo -S cp -r ${{ github.workspace }}/publish/* .
+          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build
           sleep 15
-          if sudo docker ps | grep -q "futsalapi"; then
+          if echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "futsalapi"; then
             echo "✅ Deployment successful"
-            sudo docker ps --filter "name=futsalapi"
+            echo "$SUDO_PASSWORD" | sudo -S docker ps --filter "name=futsalapi"
           else
             echo "❌ Deployment failed"
-            sudo docker-compose -p futsalapi logs
+            echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi logs
             exit 1
           fi
