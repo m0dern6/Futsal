@@ -2,7 +2,9 @@
 
 var cache = builder.AddRedis("cache");
 
-var db = builder.AddPostgres("db").WithPgAdmin();
+var db = builder.AddPostgres("db")
+        .WithPgAdmin()
+        .WithVolume("/var/lib/postgresql/data", "./pgdata"); // Host path: ./pgdata, Container path: /var/lib/postgresql/data
 
 var futsaldb = db.AddDatabase("futsaldb");
 
