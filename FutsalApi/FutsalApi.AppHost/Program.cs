@@ -3,8 +3,8 @@
 var cache = builder.AddRedis("cache");
 
 var db = builder.AddPostgres("db")
-        .WithPgAdmin()
-        .WithVolume("/var/lib/postgresql/data", "./pgdata"); // Host path: ./pgdata, Container path: /var/lib/postgresql/data
+    .WithPgAdmin()
+    .WithVolume("./pgdata", "/var/lib/postgresql/data"); // Host path first, container path second
 
 var futsaldb = db.AddDatabase("futsaldb");
 
@@ -15,6 +15,5 @@ var apiService = builder.AddProject<Projects.FutsalApi_ApiService>("apiservice")
     .WaitFor(futsaldb)
     .WithReference(cache)
     .WaitFor(cache);
-
 
 builder.Build().Run();
