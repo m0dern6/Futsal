@@ -5,6 +5,7 @@ using FutsalApi.ApiService.Extensions;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services;
 using FutsalApi.Auth.Infrastructure;
+using FutsalApi.Auth.Services;
 using FutsalApi.Data.DTO;
 
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +68,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans &
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddRepositories(typeof(Program).Assembly); // Registers all repositories in the assembly
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -97,3 +99,6 @@ app.MapDefaultEndpoints();
 app.EnsureDatabaseCreated<AppDbContext>();
 
 app.Run();
+
+//To create a migration use the following command:
+// dotnet ef migrations add InitialCreate --project FutsalApi.Data/FutsalApi.Data.csproj --startup-project FutsalApi.ApiService/FutsalApi.ApiService.csproj --context AppDbContext
