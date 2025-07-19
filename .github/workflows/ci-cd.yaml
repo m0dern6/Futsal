@@ -26,10 +26,12 @@ jobs:
 
       # Generate Docker Compose file using Aspire
       - name: Generate Docker Compose
+        env:
+          SECRET_PASSWORD: ${{ secrets.SECRET_PASSWORD }}
         run: |
           mkdir -p ./publish
           cd FutsalApi/FutsalApi.AppHost
-          aspirate generate --output-format compose --output-path ../../publish --non-interactive
+          aspirate generate --output-format compose --output-path ../../publish --non-interactive --password "$SECRET_PASSWORD"
 
       - name: Deploy Application
         run: |
