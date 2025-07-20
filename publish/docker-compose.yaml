@@ -42,6 +42,7 @@ services:
       POSTGRES_DB: "futsaldb"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "db"
+      OTLP_API_KEY: ${DASHBOARD_API_KEY}
     volumes:
     - "pgdata:/var/lib/postgresql/data"
     ports:
@@ -79,6 +80,7 @@ services:
       ConnectionStrings__cache: "cache:6379,password=${REDIS_PASSWORD}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "apiservice"
+      OTLP_API_KEY: ${DASHBOARD_API_KEY}
     ports:
     - target: 8080
       published: 10000
