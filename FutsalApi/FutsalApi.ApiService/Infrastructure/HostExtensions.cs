@@ -16,7 +16,7 @@ namespace FutsalApi.ApiService.Extensions
         {
             using var scope = host.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
-            dbContext.Database.EnsureCreatedAsync();
+            // dbContext.Database.EnsureCreatedAsync();
             dbContext.Database.Migrate();
             DbSetInitializer.Initialize(dbContext);
         }
