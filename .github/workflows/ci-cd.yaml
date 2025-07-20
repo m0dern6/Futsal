@@ -50,7 +50,18 @@ jobs:
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsal down || true
           echo "$SUDO_PASSWORD" | sudo -S docker system prune -f || true
           echo "$SUDO_PASSWORD" | sudo -S cp -r ${{ github.workspace }}/publish/* .
-          echo "$SUDO_PASSWORD" | sudo -S REDIS_PASSWORD="$REDIS_PASSWORD" POSTGRES_PASSWORD="$POSTGRES_PASSWORD" PGADMIN_EMAIL="$PGADMIN_EMAIL" PGLADMIN_PASSWORD="$PGADMIN_PASSWORD" DASHBOARD_API_KEY="$DASHBOARD_API_KEY" DASHBOARD_PASSWORD="$DASHBOARD_PASSWORD" docker-compose -p futsalapi up -d --build
+
+          # Create .env file with environment variables
+          cat > .env << EOF
+          REDIS_PASSWORD=$REDIS_PASSWORD
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          PGADMIN_EMAIL=$PGADMIN_EMAIL
+          PGADMIN_PASSWORD=$PGADMIN_PASSWORD
+          DASHBOARD_API_KEY=$DASHBOARD_API_KEY
+          DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
+          EOF
+
+          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build
           sleep 15
           if echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "futsalapi"; then
             echo "✅ Deployment successful"
