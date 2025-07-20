@@ -1,6 +1,6 @@
 {
   "projectPath": ".",
-  "outputPath": "aspirate-output",
+  "outputPath": "../../publish",
   "namespace": "Futsal",
   "containerImageTags": [
     "latest"
@@ -10,6 +10,7 @@
   "outputFormat": "compose",
   "skipFinalKustomizeGeneration": false,
   "privateRegistryEmail": "aspir8@aka.ms",
+  "includeDashboard": true,
   "useCustomNamespace": true,
   "secrets": {
     "salt": "\u002B5\u002BSPl8/68HQ4bHp",
@@ -28,7 +29,8 @@
       "futsaldb": {},
       "apiservice": {
         "ConnectionStrings__db": "\u002B5\u002BSPl8/68HQ4bHplaJzhR\u002BPMc4C8QUW0nr7ugYjJCxWz6mF4cXKV6idLQwly/Er4iRtRLMyMtgNUmVY0wN4q1zefamMvPhjkgc8TKPacDg2n1iCxXj4tu\u002B3P4GZUOI=",
-        "ConnectionStrings__cache": "\u002B5\u002BSPl8/68HQ4bHpe\u002BXPJHH09QwRH6Fd/TBw6y0tNDAOkf2NhpOUU/Tbakh4gsBl3iFvbu4cOeBSYFJ94lVN33bmS6POqQ=="
+        "ConnectionStrings__cache": "\u002B5\u002BSPl8/68HQ4bHpe\u002BXPJHH09QwRH6Fd/TBw6y0tNDAOkf2NhpOUU/Tbakh4gsBl3iFvbu4cOeBSYFJ94lVN33bmS6POqQ==",
+        "ConnectionStrings__futsaldb": "\u002B5\u002BSPl8/68HQ4bHp2K0XbS6n2z8h/Tdsh7phhAYjJCxWz6mF4cXKV6idLQwly/Er4iRtRLMyMtgNUmVY0wN4q1zefamMvPhjkgc8TKPacDg2n1iCxXj4tu\u002B3P4GZUOKdsWk4X\u002BhqLjzSL6cOBmhOkLw="
       }
     }
   },

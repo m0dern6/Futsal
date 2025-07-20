@@ -3,17 +3,16 @@
 var cache = builder.AddRedis("cache");
 
 var db = builder.AddPostgres("db")
-    .WithPgAdmin()
+    .WithPgAdmin(pgAdmin => pgAdmin.WithHostPort(5050)) // Example: Use port 5050
     .WithVolume("./pgdata", "/var/lib/postgresql/data")
     .WithEnvironment("POSTGRES_DB", "futsaldb");
 
 var futsaldb = db.AddDatabase("futsaldb");
 
 var apiService = builder.AddProject<Projects.FutsalApi_ApiService>("apiservice")
-    .WithHttpEndpoint(port: 8000, name: "Http8000")
-    // .WithHttpsEndpoint(port: 8001, name: "Https8001")
+   .WithExternalHttpEndpoints()
     .WithReference(futsaldb)
-    .WaitFor(futsaldb)
+    .WaitFor(db)
     .WithReference(cache)
     .WaitFor(cache);
 

@@ -13,38 +13,44 @@ jobs:
         uses: actions/checkout@v3
 
       # Install aspirate if not installed
-      - name: Ensure aspirate is installed
-        run: |
-          if ! command -v aspirate &> /dev/null; then
-            dotnet tool install --global aspirate
-          else
-            echo "aspirate is already installed"
-          fi
+      # - name: Ensure aspirate is installed
+      #   run: |
+      #     if ! command -v aspirate &> /dev/null; then
+      #       dotnet tool install --global aspirate
+      #     else
+      #       echo "aspirate is already installed"
+      #     fi
 
-      - name: Add dotnet tools to PATH
-        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      # - name: Add dotnet tools to PATH
+      #   run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-      # Generate Docker Compose file using Aspire
-      - name: Generate Docker Compose
-        env:
-          SECRET_PASSWORD: ${{ secrets.SECRET_PASSWORD }}
-        run: |
-          mkdir -p ./publish
-          cd FutsalApi/FutsalApi.AppHost
-          aspirate generate --output-format compose --output-path ../../publish --non-interactive --include-dashboard --secret-password "$SECRET_PASSWORD"
+      # # Generate Docker Compose file using Aspire
+      # - name: Generate Docker Compose
+      #   env:
+      #     SECRET_PASSWORD: ${{ secrets.SECRET_PASSWORD }}
+      #   run: |
+      #     mkdir -p ./publish
+      #     cd FutsalApi/FutsalApi.AppHost
+      #     aspirate generate --output-format compose --output-path ../../publish --non-interactive --include-dashboard --secret-password "$SECRET_PASSWORD"
 
       - name: Deploy Application
         env:
           SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+          DASHBOARD_API_KEY: ${{ secrets.DASHBOARD_API_KEY }}
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: |
           APP_DIR="/home/${{ secrets.DO_USERNAME }}/app"
           echo "$SUDO_PASSWORD" | sudo -S mkdir -p $APP_DIR
           echo "$SUDO_PASSWORD" | sudo -S chown -R $USER:$USER $APP_DIR
           cd $APP_DIR
-          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi down || true
+          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsal down || true
           echo "$SUDO_PASSWORD" | sudo -S docker system prune -f || true
           echo "$SUDO_PASSWORD" | sudo -S cp -r ${{ github.workspace }}/publish/* .
-          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build
+          echo "$SUDO_PASSWORD" | sudo -S REDIS_PASSWORD="$REDIS_PASSWORD" POSTGRES_PASSWORD="$POSTGRES_PASSWORD" PGADMIN_EMAIL="$PGADMIN_EMAIL" PGLADMIN_PASSWORD="$PGADMIN_PASSWORD" DASHBOARD_API_KEY="$DASHBOARD_API_KEY" DASHBOARD_PASSWORD="$DASHBOARD_PASSWORD" docker-compose -p futsalapi up -d --build
           sleep 15
           if echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "futsalapi"; then
             echo "✅ Deployment successful"
