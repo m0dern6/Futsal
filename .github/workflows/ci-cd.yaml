@@ -48,7 +48,10 @@ jobs:
           echo "$SUDO_PASSWORD" | sudo -S chown -R $USER:$USER $APP_DIR
           cd $APP_DIR
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsal down || true
+          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi down || true
           echo "$SUDO_PASSWORD" | sudo -S docker system prune -f || true
+          echo "$SUDO_PASSWORD" | sudo -S docker volume prune -f || true
+          echo "$SUDO_PASSWORD" | sudo -S docker container prune -f || true
           echo "$SUDO_PASSWORD" | sudo -S cp -r ${{ github.workspace }}/publish/* .
 
           # Create .env file with environment variables
@@ -61,7 +64,7 @@ jobs:
           DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
           EOF
 
-          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build
+          echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build --force-recreate
           sleep 15
           if echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "futsalapi"; then
             echo "✅ Deployment successful"
