@@ -65,11 +65,22 @@ jobs:
           EOF
 
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build --force-recreate
-          sleep 15
-          if echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "futsalapi"; then
-            echo "✅ Deployment successful"
-            echo "$SUDO_PASSWORD" | sudo -S docker ps --filter "name=futsalapi"
-          else
+
+          # Health check loop for apiservice
+          for i in {1..30}; do
+            if echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "apiservice"; then
+              STATUS=$(echo "$SUDO_PASSWORD" | sudo -S docker inspect --format='{{.State.Health.Status}}' apiservice 2>/dev/null || echo "unknown")
+              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "running" ] || [ "$STATUS" = "unknown" ]; then
+                echo "✅ Deployment successful"
+                echo "$SUDO_PASSWORD" | sudo -S docker ps --filter "name=apiservice"
+                break
+              fi
+            fi
+            sleep 2
+          done
+
+          # If not healthy after loop, show logs and fail
+          if ! echo "$SUDO_PASSWORD" | sudo -S docker ps | grep -q "apiservice"; then
             echo "❌ Deployment failed"
             echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi logs
             exit 1
