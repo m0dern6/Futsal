@@ -10,6 +10,7 @@ using FutsalApi.Data.DTO;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using FutsalApi.ApiService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,7 +79,7 @@ var app = builder.Build();
 
 app.UseOutputCache();
 // Configure the HTTP request pipeline.
-app.UseExceptionHandler();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
