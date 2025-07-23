@@ -1,19 +1,21 @@
-﻿using System.Linq.Expressions;
+﻿using System.Data;
+using System.Linq.Expressions;
+using Dapper;
 using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Models;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
 
-
 public class ReviewRepository : GenericRepository<Review>, IReviewRepository
 {
     private readonly AppDbContext _dbContext;
+    private readonly IDbConnection _dbConnection;
 
-    public ReviewRepository(AppDbContext dbContext) : base(dbContext)
+    public ReviewRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
+        _dbConnection = dbConnection;
     }
 
     public new async Task<IEnumerable<ReviewResponse>> GetAllAsync(int page = 1, int pageSize = 10)
@@ -41,6 +43,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
             })
             .ToListAsync();
     }
+
     public new async Task<ReviewResponse?> GetByIdAsync(Expression<Func<Review, bool>> predicate)
     {
         var review = await _dbContext.Reviews
@@ -61,6 +64,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
 
         return review;
     }
+
     public async Task<IEnumerable<ReviewResponse>> GetReviewsByGroundIdAsync(int groundId, int page = 1, int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
@@ -88,17 +92,37 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
             .ToListAsync();
     }
 
-
     public async Task<bool> DeleteReviewByUserAsync(int reviewId, string userId)
     {
-        var review = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId && r.UserId == userId);
-        if (review == null)
-        {
-            return false;
-        }
+        var parameters = new { p_review_id = reviewId, p_user_id = userId };
+        return await _dbConnection.ExecuteScalarAsync<bool>("delete_review_by_user", parameters, commandType: CommandType.StoredProcedure);
+    }
 
-        _dbContext.Reviews.Remove(review);
-        await _dbContext.SaveChangesAsync();
-        return true;
+    public async Task<int> CreateReviewAsync(Review review)
+    {
+        var parameters = new
+        {
+            p_user_id = review.UserId,
+            p_ground_id = review.GroundId,
+            p_rating = review.Rating,
+            p_comment = review.Comment,
+            p_image_url = review.ImageUrl
+        };
+
+        return await _dbConnection.ExecuteScalarAsync<int>("create_review", parameters, commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task UpdateReviewAsync(Review review)
+    {
+        var parameters = new
+        {
+            p_review_id = review.Id,
+            p_user_id = review.UserId,
+            p_rating = review.Rating,
+            p_comment = review.Comment,
+            p_image_url = review.ImageUrl
+        };
+
+        await _dbConnection.ExecuteAsync("update_review", parameters, commandType: CommandType.StoredProcedure);
     }
 }

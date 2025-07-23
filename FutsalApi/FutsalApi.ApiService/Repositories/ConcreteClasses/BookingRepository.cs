@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Data;
 using System.Linq.Expressions;
-
+using Dapper;
 using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
@@ -12,10 +12,14 @@ namespace FutsalApi.ApiService.Repositories;
 public class BookingRepository : GenericRepository<Booking>, IBookingRepository
 {
     private readonly AppDbContext _dbContext;
-    public BookingRepository(AppDbContext dbContext) : base(dbContext)
+    private readonly IDbConnection _dbConnection;
+
+    public BookingRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
+        _dbConnection = dbConnection;
     }
+
     public async Task<List<BookingResponse>> GetAllAsync(Expression<Func<Booking, bool>> predicate, int page, int pageSize)
     {
         if (page <= 0 || pageSize <= 0)
@@ -41,6 +45,7 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
             })
             .ToListAsync();
     }
+
     public async Task<IEnumerable<BookingResponse>> GetBookingsByUserIdAsync(string userId, int page, int pageSize)
     {
         if (page <= 0 || pageSize <= 0)
@@ -67,21 +72,27 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
             .ToListAsync();
     }
 
-    public override async Task<Booking> CreateAsync(Booking booking)
+    public async Task<int> CreateBookingAsync(Booking booking)
     {
         if (booking == null)
         {
             throw new ArgumentNullException(nameof(booking), "Booking cannot be null.");
         }
-        //check if the time slot is already booked
-        var existingBooking = await _dbContext.Bookings
-            .FirstOrDefaultAsync(b => b.StartTime < booking.EndTime && b.EndTime > booking.StartTime && b.GroundId == booking.GroundId);
-        if (existingBooking != null)
-        {
-            throw new InvalidOperationException("The selected time slot is already booked.");
-        }
 
-        return await base.CreateAsync(booking);
+        var parameters = new DynamicParameters();
+        parameters.Add("p_user_id", booking.UserId);
+        parameters.Add("p_ground_id", booking.GroundId);
+        parameters.Add("p_booking_date", booking.BookingDate);
+        parameters.Add("p_start_time", booking.StartTime);
+        parameters.Add("p_end_time", booking.EndTime);
+        parameters.Add("p_total_amount", booking.TotalAmount);
+
+        return await _dbConnection.ExecuteScalarAsync<int>("create_booking", parameters, commandType: CommandType.StoredProcedure);
     }
 
+    public async Task<bool> CancelBookingAsync(int bookingId, string userId)
+    {
+        var parameters = new { p_booking_id = bookingId, p_user_id = userId };
+        return await _dbConnection.ExecuteScalarAsync<bool>("cancel_booking", parameters, commandType: CommandType.StoredProcedure);
+    }
 }

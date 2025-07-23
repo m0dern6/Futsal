@@ -11,5 +11,6 @@ public interface IFutsalGroundRepository : IGenericRepository<FutsalGround>
     new Task<FutsalGroundResponse?> GetByIdAsync(Expression<Func<FutsalGround, bool>> predicate);
     Task UpdateRatingAsync(int groundId);
     Task<bool> HasActiveBookingsAsync(int groundId);
+    Task<IEnumerable<FutsalGroundResponse>> SearchFutsalGroundsAsync(string? name, string? location, double? minRating, double? maxRating, int page, int pageSize);
 
 }

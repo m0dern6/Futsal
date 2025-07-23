@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq.Expressions;
-
 using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Repositories.Interfaces;

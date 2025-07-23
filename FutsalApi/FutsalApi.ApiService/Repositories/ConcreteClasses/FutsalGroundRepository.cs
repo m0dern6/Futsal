@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Data;
 using System.Linq.Expressions;
-
+using Dapper;
 using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Models;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
@@ -11,10 +11,14 @@ namespace FutsalApi.ApiService.Repositories;
 public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGroundRepository
 {
     private readonly AppDbContext _dbContext;
-    public FutsalGroundRepository(AppDbContext dbContext) : base(dbContext)
+    private readonly IDbConnection _dbConnection;
+
+    public FutsalGroundRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
+        _dbConnection = dbConnection;
     }
+
     public async new Task<IEnumerable<FutsalGroundResponse>> GetAllAsync(int page = 1, int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
@@ -46,12 +50,13 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
             })
             .ToListAsync();
     }
+
     public async Task<bool> HasActiveBookingsAsync(int groundId)
     {
         return await _dbContext.Bookings
             .AnyAsync(b => b.GroundId == groundId && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed));
-
     }
+
     public async new Task<FutsalGroundResponse?> GetByIdAsync(Expression<Func<FutsalGround, bool>> predicate)
     {
         return await _dbContext.FutsalGrounds
@@ -76,20 +81,25 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
             })
             .FirstOrDefaultAsync();
     }
+
     public async Task UpdateRatingAsync(int groundId)
     {
-        var ground = await _dbContext.FutsalGrounds.FindAsync(groundId);
-        if (ground == null) return;
-
-        var ratingsQuery = _dbContext.Reviews.Where(r => r.GroundId == groundId);
-
-        ground.RatingCount = await ratingsQuery.CountAsync();
-        ground.AverageRating = ground.RatingCount > 0
-            ? await ratingsQuery.AverageAsync(r => r.Rating)
-            : 0;
-
-        _dbContext.FutsalGrounds.Update(ground);
-        await _dbContext.SaveChangesAsync();
+        var parameters = new { p_ground_id = groundId };
+        await _dbConnection.ExecuteAsync("update_futsal_ground_rating", parameters, commandType: CommandType.StoredProcedure);
     }
 
+    public async Task<IEnumerable<FutsalGroundResponse>> SearchFutsalGroundsAsync(string? name, string? location, double? minRating, double? maxRating, int page, int pageSize)
+    {
+        var parameters = new
+        {
+            p_name = name,
+            p_location = location,
+            p_min_rating = minRating,
+            p_max_rating = maxRating,
+            p_page = page,
+            p_page_size = pageSize
+        };
+
+        return await _dbConnection.QueryAsync<FutsalGroundResponse>("search_futsal_grounds", parameters, commandType: CommandType.StoredProcedure);
+    }
 }

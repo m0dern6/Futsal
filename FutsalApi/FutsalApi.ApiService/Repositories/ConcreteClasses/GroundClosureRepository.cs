@@ -1,29 +1,32 @@
 ﻿using System;
+using System.Data;
+using Dapper;
 using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Repositories.Interfaces;
-
-using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories.ConcreteClasses;
 
 public class GroundClosureRepository : GenericRepository<GroundClosure>, IGroundClosureRepository
 {
     private readonly AppDbContext _dbContext;
+    private readonly IDbConnection _dbConnection;
 
-    public GroundClosureRepository(AppDbContext dbContext) : base(dbContext)
+    public GroundClosureRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
+        _dbConnection = dbConnection;
     }
 
     public async Task<bool> IsGroundClosedAsync(int groundId, DateTime date, TimeSpan startTime, TimeSpan endTime)
     {
-        return await _dbContext.GroundClosures
-            .AnyAsync(gc => gc.GroundId == groundId &&
-                            gc.StartDate.Date <= date.Date &&
-                            gc.EndDate.Date >= date.Date &&
-                            ((gc.StartDate.TimeOfDay <= startTime && gc.EndDate.TimeOfDay >= startTime) ||
-                             (gc.StartDate.TimeOfDay <= endTime && gc.EndDate.TimeOfDay >= endTime) ||
-                             (gc.StartDate.TimeOfDay >= startTime && gc.EndDate.TimeOfDay <= endTime)));
-    }
+        var parameters = new
+        {
+            p_ground_id = groundId,
+            p_date = date.Date,
+            p_start_time = startTime,
+            p_end_time = endTime
+        };
 
+        return await _dbConnection.ExecuteScalarAsync<bool>("is_ground_closed", parameters, commandType: CommandType.StoredProcedure);
+    }
 }

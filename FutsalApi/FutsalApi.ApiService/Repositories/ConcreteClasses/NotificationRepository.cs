@@ -1,7 +1,8 @@
 ﻿
+using System.Data;
+using Dapper;
 using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Models;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
@@ -13,10 +14,12 @@ namespace FutsalApi.ApiService.Repositories;
 public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
 {
     private readonly AppDbContext _dbContext;
+    private readonly IDbConnection _dbConnection;
 
-    public NotificationRepository(AppDbContext dbContext) : base(dbContext)
+    public NotificationRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
+        _dbConnection = dbConnection;
     }
 
     /// <summary>
@@ -46,26 +49,9 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
     }
 
     /// <summary>
-    /// Retrieves all Notifications with pagination.
-    /// /// </summary>
-    public async Task<IEnumerable<Notification>> GetAllNotificationsAsync(int page = 1, int pageSize = 10)
-    {
-        if (page <= 0 || pageSize <= 0)
-        {
-            throw new ArgumentOutOfRangeException("Page and pageSize must be greater than 0.");
-        }
-
-        return await _dbContext.Notifications
-            .OrderByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-    }
-
-    /// <summary>
     /// Sends a Notification to multiple users.
     /// /// </summary>
-    public async Task<bool> SendNotificationToMultipleUsersAsync(NotificationListModel notificationListModel)
+    public async Task SendNotificationToMultipleUsersAsync(NotificationListModel notificationListModel)
     {
         if (notificationListModel == null)
         {
@@ -77,29 +63,13 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             throw new ArgumentException("UserId list and message cannot be empty.");
         }
 
-        try
+        var parameters = new
         {
-            foreach (var userId in notificationListModel.UserId)
-            {
-                var notification = new Notification
-                {
-                    UserId = userId,
-                    Message = notificationListModel.Message,
-                    IsRead = false
-                };
-                await _dbContext.Notifications.AddAsync(notification);
-            }
-            await _dbContext.SaveChangesAsync();
-            return true;
-        }
-        catch (DbUpdateException ex)
-        {
-            throw new DbUpdateException("Error saving changes to the database.", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("An unexpected error occurred.", ex);
-        }
+            p_user_ids = notificationListModel.UserId.ToArray(),
+            p_message = notificationListModel.Message
+        };
+
+        await _dbConnection.ExecuteAsync("send_notifications_to_multiple_users", parameters, commandType: CommandType.StoredProcedure);
     }
 
     /// <summary>

@@ -13,4 +13,6 @@ public interface IReviewRepository : IGenericRepository<Review>
     new Task<IEnumerable<ReviewResponse>> GetAllAsync(int page = 1, int pageSize = 10);
     Task<IEnumerable<ReviewResponse>> GetReviewsByGroundIdAsync(int groundId, int page = 1, int pageSize = 10);
     Task<bool> DeleteReviewByUserAsync(int reviewId, string userId);
+    Task<int> CreateReviewAsync(Review review);
+    Task UpdateReviewAsync(Review review);
 }
