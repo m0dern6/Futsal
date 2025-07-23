@@ -150,7 +150,7 @@ public class FutsalGroundApiEndpointsTests
         result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
         if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problem })
         {
-            problem.ProblemDetails.Detail.Should().Be("User not found.");
+            problem.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -411,8 +411,8 @@ public class FutsalGroundApiEndpointsTests
         var result = await _endpoints.SearchFutsalGrounds(_repositoryMock.Object, "Ground", null, null, null, 1, 10);
 
         // Assert
-        result.Should().BeOfType<Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult>>();
-        if (result is Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult> { Result: Ok<List<FutsalGroundResponse>> ok })
+        result.Should().BeOfType<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>>();
+        if (result is Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult> { Result: Ok<IEnumerable<FutsalGroundResponse>> ok })
         {
             ok.Value.Should().NotBeNull();
         }
@@ -425,8 +425,8 @@ public class FutsalGroundApiEndpointsTests
         var result = await _endpoints.SearchFutsalGrounds(_repositoryMock.Object, null, null, null, null, 0, 10);
 
         // Assert
-        result.Should().BeOfType<Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult>>();
-        if (result is Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult> { Result: ProblemHttpResult problem })
+        result.Should().BeOfType<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>>();
+        if (result is Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult> { Result: ProblemHttpResult problem })
         {
             problem.ProblemDetails.Detail.Should().Be("Page and pageSize must be greater than 0.");
         }

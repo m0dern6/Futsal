@@ -120,7 +120,8 @@ public class PaymentApiEndpoints : IEndpoint
                 AmountPaid = paymentRequest.AmountPaid,
                 BookingId = paymentRequest.BookingId,
                 Method = paymentRequest.Method,
-                Status = PaymentStatus.Pending
+                Status = PaymentStatus.Pending,
+                TransactionId = Guid.NewGuid().ToString() // Generate a new transaction ID
             };
 
             if (paymentRequest.Method == PaymentMethod.Online)
@@ -130,13 +131,17 @@ public class PaymentApiEndpoints : IEndpoint
                 {
                     return TypedResults.Problem("Payment failed.", statusCode: StatusCodes.Status400BadRequest);
                 }
-                return TypedResults.Ok("Payment created successfully.");
+                payment.Status = PaymentStatus.Completed; // Assuming online payment is completed immediately
             }
-            else
+
+            var createdPayment = await repository.CreatePaymentAsync(payment);
+
+            if (createdPayment == null)
             {
-                await repository.CreateAsync(payment);
-                return TypedResults.Ok("Payment created successfully.");
+                return TypedResults.Problem("Failed to create the payment.", statusCode: StatusCodes.Status400BadRequest);
             }
+
+            return TypedResults.Ok("Payment created successfully.");
         }
         catch (Exception ex)
         {

@@ -86,15 +86,8 @@ public class NotificationsApiEndpoints : IEndpoint
     {
         try
         {
-            var result = await repository.SendNotificationToMultipleUsersAsync(notificationList);
-            if (result)
-            {
-                return TypedResults.Ok("Notifications sent successfully.");
-            }
-            else
-            {
-                return TypedResults.Problem("Failed to send notifications.", statusCode: StatusCodes.Status400BadRequest);
-            }
+            await repository.SendNotificationToMultipleUsersAsync(notificationList);
+            return TypedResults.Ok("Notifications sent successfully.");
         }
         catch (Exception ex)
         {

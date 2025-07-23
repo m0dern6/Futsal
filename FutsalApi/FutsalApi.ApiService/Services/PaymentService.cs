@@ -24,7 +24,7 @@ public class PaymentService : IPaymentService
             throw new ArgumentNullException(nameof(payment), "Payment cannot be null.");
         }
         decimal RemainingAmount;
-        decimal paidAmount = await _paymentRepository.GetPaidAmount(payment.BookingId);
+        decimal paidAmount = await _paymentRepository.GetPaidAmountAsync(payment.BookingId);
         if (paidAmount == 0)
         {
             RemainingAmount = payment.Booking.TotalAmount - payment.AmountPaid;
@@ -55,6 +55,6 @@ public class PaymentService : IPaymentService
         }
 
 
-        return await _paymentRepository.CreateAsync(payment);
+        return await _paymentRepository.CreatePaymentAsync(payment);
     }
 }

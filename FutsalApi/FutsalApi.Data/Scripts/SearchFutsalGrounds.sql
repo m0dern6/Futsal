@@ -1,0 +1,40 @@
+CREATE OR REPLACE FUNCTION search_futsal_grounds(
+    p_name TEXT,
+    p_location TEXT,
+    p_min_rating NUMERIC,
+    p_max_rating NUMERIC,
+    p_page INT,
+    p_page_size INT
+)
+RETURNS TABLE (
+    id INT,
+    name TEXT,
+    location TEXT,
+    price_per_hour NUMERIC,
+    open_time TIME,
+    close_time TIME,
+    average_rating NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        g."Id",
+        g."Name",
+        g."Location",
+        g."PricePerHour",
+        g."OpenTime",
+        g."CloseTime",
+        g."AverageRating"
+    FROM
+        "FutsalGrounds" AS g
+    WHERE
+        (p_name IS NULL OR g."Name" ILIKE '%' || p_name || '%') AND
+        (p_location IS NULL OR g."Location" ILIKE '%' || p_location || '%') AND
+        (p_min_rating IS NULL OR g."AverageRating" >= p_min_rating) AND
+        (p_max_rating IS NULL OR g."AverageRating" <= p_max_rating)
+    ORDER BY
+        g."CreatedAt" DESC
+    OFFSET (p_page - 1) * p_page_size
+    LIMIT p_page_size;
+END;
+$$ LANGUAGE plpgsql;

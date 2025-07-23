@@ -67,7 +67,8 @@ builder.Services.AddFluentValidationAutoValidation() // Enables automatic valida
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans & registers all validators
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddRepositories(typeof(Program).Assembly); // Registers all repositories in the assembly
+var connectionString = builder.Configuration.GetConnectionString("futsaldb");
+builder.Services.AddRepositories(typeof(Program).Assembly, connectionString); // Registers all repositories in the assembly
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();

@@ -142,9 +142,8 @@ public class ReviewApiEndpoints : IEndpoint
         }
     }
 
-    internal async Task<Results<Ok<Review>, ProblemHttpResult>> CreateReview(
+    internal async Task<Results<Ok<int>, ProblemHttpResult>> CreateReview(
         [FromServices] IReviewRepository repository,
-        [FromServices] IFutsalGroundRepository groundRepository,
         [FromServices] UserManager<User> userManager,
         ClaimsPrincipal claimsPrincipal,
         [FromBody] ReviewRequest reviewRequest)
@@ -155,25 +154,30 @@ public class ReviewApiEndpoints : IEndpoint
             {
                 return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
             }
+
             var existingReview = await repository.GetByIdAsync(e => e.GroundId == reviewRequest.GroundId && e.UserId == user.Id);
             if (existingReview is not null)
             {
                 return TypedResults.Problem("You have already reviewed this ground.", statusCode: StatusCodes.Status400BadRequest);
             }
+
             Review review = new Review
             {
                 UserId = user.Id,
                 GroundId = reviewRequest.GroundId,
                 Rating = reviewRequest.Rating,
-                Comment = reviewRequest.Comment
+                Comment = reviewRequest.Comment,
+                ImageUrl = reviewRequest.ImageUrl
             };
-            var result = await repository.CreateAsync(review);
-            if (result is null)
+
+            var reviewId = await repository.CreateReviewAsync(review);
+
+            if (reviewId == 0)
             {
                 return TypedResults.Problem("Failed to create the review.", statusCode: StatusCodes.Status400BadRequest);
             }
-            await groundRepository.UpdateRatingAsync(reviewRequest.GroundId);
-            return TypedResults.Ok(result);
+
+            return TypedResults.Ok(reviewId);
         }
         catch (Exception ex)
         {
@@ -183,7 +187,6 @@ public class ReviewApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<string>, NotFound, ProblemHttpResult>> UpdateReview(
         [FromServices] IReviewRepository repository,
-        [FromServices] IFutsalGroundRepository groundRepository,
         [FromServices] UserManager<User> userManager,
         ClaimsPrincipal claimsPrincipal,
         int id,
@@ -195,19 +198,25 @@ public class ReviewApiEndpoints : IEndpoint
             {
                 return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
             }
+
             var existingReview = await repository.GetByIdAsync(e => e.Id == id && e.UserId == user.Id);
             if (existingReview is null)
             {
                 return TypedResults.NotFound();
             }
+
             Review updatedReview = new Review
             {
+                Id = id,
+                UserId = user.Id,
                 GroundId = updatedReviewRequest.GroundId,
                 Rating = updatedReviewRequest.Rating,
-                Comment = updatedReviewRequest.Comment
+                Comment = updatedReviewRequest.Comment,
+                ImageUrl = updatedReviewRequest.ImageUrl
             };
-            var result = await repository.UpdateAsync(e => e.Id == id, updatedReview);
-            await groundRepository.UpdateRatingAsync(updatedReviewRequest.GroundId);
+
+            await repository.UpdateReviewAsync(updatedReview);
+
             return TypedResults.Ok("Review updated successfully.");
         }
         catch (Exception ex)

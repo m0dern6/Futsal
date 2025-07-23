@@ -1,0 +1,14 @@
+CREATE OR REPLACE FUNCTION create_review(p_user_id TEXT, p_ground_id INT, p_rating INT, p_comment TEXT, p_image_url TEXT)
+RETURNS TABLE (review_id INT) AS $$
+BEGIN
+    -- Insert the new review
+    INSERT INTO "Reviews" ("UserId", "GroundId", "Rating", "Comment", "ImageUrl", "CreatedAt")
+    VALUES (p_user_id, p_ground_id, p_rating, p_comment, p_image_url, NOW())
+    RETURNING "Id" INTO review_id;
+
+    -- Update the futsal ground's rating
+    CALL update_futsal_ground_rating(p_ground_id);
+
+    RETURN QUERY SELECT review_id;
+END;
+$$ LANGUAGE plpgsql;

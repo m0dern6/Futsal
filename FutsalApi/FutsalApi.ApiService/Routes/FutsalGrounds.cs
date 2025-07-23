@@ -114,7 +114,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
     }
 
-    internal async Task<Results<Ok<List<FutsalGroundResponse>>, ProblemHttpResult>> SearchFutsalGrounds(
+    internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> SearchFutsalGrounds(
     [FromServices] IFutsalGroundRepository repository,
     [FromQuery] string? name,
     [FromQuery] string? location,
@@ -130,35 +130,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
         try
         {
-            var query = repository.Query();
-
-            if (!string.IsNullOrWhiteSpace(name))
-                query = query.Where(f => f.Name.Contains(name));
-
-            if (!string.IsNullOrWhiteSpace(location))
-                query = query.Where(f => f.Location.Contains(location));
-
-            if (minRating.HasValue)
-                query = query.Where(f => f.AverageRating >= minRating.Value);
-
-            if (maxRating.HasValue)
-                query = query.Where(f => f.AverageRating <= maxRating.Value);
-
-            var futsalGrounds = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(f => new FutsalGroundResponse
-                {
-                    Id = f.Id,
-                    Name = f.Name,
-                    Location = f.Location,
-                    PricePerHour = f.PricePerHour,
-                    OpenTime = f.OpenTime,
-                    CloseTime = f.CloseTime,
-                    AverageRating = f.AverageRating,
-                })
-                .ToListAsync();
-
+            var futsalGrounds = await repository.SearchFutsalGroundsAsync(name, location, minRating, maxRating, page, pageSize);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)

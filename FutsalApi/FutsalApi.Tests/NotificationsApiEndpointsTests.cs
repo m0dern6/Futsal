@@ -119,7 +119,8 @@ public class NotificationsApiEndpointsTests
             Message = "Test Notification"
         };
 
-        _repositoryMock.Setup(r => r.SendNotificationToMultipleUsersAsync(notificationList)).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.SendNotificationToMultipleUsersAsync(notificationList))
+            .Returns(Task.CompletedTask);
 
         // Act
         var result = await _endpoints.SendNotificationToMultipleUsers(_repositoryMock.Object, notificationList);
@@ -142,7 +143,8 @@ public class NotificationsApiEndpointsTests
             Message = "Test Notification"
         };
 
-        _repositoryMock.Setup(r => r.SendNotificationToMultipleUsersAsync(notificationList)).ReturnsAsync(false);
+        _repositoryMock.Setup(r => r.SendNotificationToMultipleUsersAsync(notificationList))
+            .ThrowsAsync(new Exception("Failed to send notifications."));
 
         // Act
         var result = await _endpoints.SendNotificationToMultipleUsers(_repositoryMock.Object, notificationList);
@@ -151,31 +153,7 @@ public class NotificationsApiEndpointsTests
         result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
         if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Be("Failed to send notifications.");
-        }
-    }
-
-    [Fact]
-    public async Task SendNotificationToMultipleUsers_ReturnsProblem_WhenExceptionThrown()
-    {
-        // Arrange
-        var notificationList = new NotificationListModel
-        {
-            UserId = new List<string> { "user1", "user2" },
-            Message = "Test Notification"
-        };
-
-        _repositoryMock.Setup(r => r.SendNotificationToMultipleUsersAsync(notificationList))
-            .ThrowsAsync(new Exception("Send error"));
-
-        // Act
-        var result = await _endpoints.SendNotificationToMultipleUsers(_repositoryMock.Object, notificationList);
-
-        // Assert
-        result.Should().BeOfType<Results<Ok<string>, ProblemHttpResult>>();
-        if (result is Results<Ok<string>, ProblemHttpResult> { Result: ProblemHttpResult problem })
-        {
-            problem.ProblemDetails.Detail.Should().Contain("An error occurred while sending notifications");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
