@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION search_futsal_grounds(
+﻿CREATE OR REPLACE FUNCTION search_futsal_grounds(
     p_name TEXT,
     p_location TEXT,
     p_min_rating NUMERIC,
@@ -37,4 +37,3 @@ BEGIN
     OFFSET (p_page - 1) * p_page_size
     LIMIT p_page_size;
 END;
-$$ LANGUAGE plpgsql;

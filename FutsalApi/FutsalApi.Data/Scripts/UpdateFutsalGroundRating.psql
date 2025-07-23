@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE update_futsal_ground_rating(p_ground_id INT)
+﻿CREATE OR REPLACE PROCEDURE update_futsal_ground_rating(p_ground_id INT)
 AS $$
 BEGIN
     -- Update the rating count and average rating for the specified futsal ground
@@ -16,4 +16,3 @@ BEGIN
         )
     WHERE "Id" = p_ground_id;
 END;
-$$ LANGUAGE plpgsql;

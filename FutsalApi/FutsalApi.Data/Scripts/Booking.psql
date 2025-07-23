@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION create_booking(
+﻿CREATE OR REPLACE FUNCTION create_booking(
     p_user_id TEXT,
     p_ground_id INT,
     p_booking_date DATE,
@@ -27,4 +27,3 @@ BEGIN
 
     RETURN QUERY SELECT booking_id;
 END;
-$$ LANGUAGE plpgsql;

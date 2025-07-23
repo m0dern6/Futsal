@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION get_all_bookings(
+﻿CREATE OR REPLACE FUNCTION get_all_bookings(
     p_page INT,
     p_page_size INT
 )
@@ -32,4 +32,3 @@ BEGIN
     OFFSET (p_page - 1) * p_page_size
     LIMIT p_page_size;
 END;
-$$ LANGUAGE plpgsql;

@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION get_payments_by_user_id(
+﻿CREATE OR REPLACE FUNCTION get_payments_by_user_id(
     p_user_id TEXT,
     p_page INT,
     p_page_size INT
@@ -33,4 +33,3 @@ BEGIN
     OFFSET (p_page - 1) * p_page_size
     LIMIT p_page_size;
 END;
-$$ LANGUAGE plpgsql;

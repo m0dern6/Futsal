@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION create_payment(
+﻿CREATE OR REPLACE FUNCTION create_payment(
     p_amount_paid NUMERIC,
     p_booking_id INT,
     p_method INT,
@@ -23,4 +23,3 @@ BEGIN
 
     RETURN v_payment_id;
 END;
-$$ LANGUAGE plpgsql;

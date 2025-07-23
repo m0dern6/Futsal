@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION delete_review_by_user(p_review_id INT, p_user_id TEXT)
+﻿CREATE OR REPLACE FUNCTION delete_review_by_user(p_review_id INT, p_user_id TEXT)
 RETURNS BOOLEAN AS $$
 DECLARE
     deleted_rows INT;
@@ -13,4 +13,3 @@ BEGIN
     -- Return true if a row was deleted, otherwise false
     RETURN deleted_rows > 0;
 END;
-$$ LANGUAGE plpgsql;

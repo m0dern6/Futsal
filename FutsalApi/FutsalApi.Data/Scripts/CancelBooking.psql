@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION cancel_booking(p_booking_id INT, p_user_id TEXT)
+﻿CREATE OR REPLACE FUNCTION cancel_booking(p_booking_id INT, p_user_id TEXT)
 RETURNS BOOLEAN AS $$
 DECLARE
     updated_rows INT;
@@ -14,4 +14,3 @@ BEGIN
     -- Return true if a row was updated, otherwise false
     RETURN updated_rows > 0;
 END;
-$$ LANGUAGE plpgsql;

@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE update_review(p_review_id INT, p_user_id TEXT, p_rating INT, p_comment TEXT, p_image_url TEXT)
+﻿CREATE OR REPLACE PROCEDURE update_review(p_review_id INT, p_user_id TEXT, p_rating INT, p_comment TEXT, p_image_url TEXT)
 AS $$
 DECLARE
     v_ground_id INT;
@@ -18,4 +18,3 @@ BEGIN
         CALL update_futsal_ground_rating(v_ground_id);
     END IF;
 END;
-$$ LANGUAGE plpgsql;
