@@ -1,11 +1,12 @@
-﻿using FutsalApi.Data.DTO;
+﻿using System.Reflection;
+using System.Threading.Tasks;
+
+using FutsalApi.Data.DTO;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using System.Threading.Tasks;
 
 namespace FutsalApi.ApiService.Extensions
 {
@@ -16,12 +17,12 @@ namespace FutsalApi.ApiService.Extensions
         {
             using var scope = host.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
-            // dbContext.Database.EnsureCreatedAsync();
             dbContext.Database.Migrate();
             DbSetInitializer.Initialize(dbContext);
         }
     }
 }
+
 public static class DbSetInitializer
 {
     public static void Initialize<TContext>(TContext context) where TContext : DbContext
@@ -40,5 +41,25 @@ public static class DbSetInitializer
         }
 
         context.SaveChanges();
+
+        // --- Run all SQL scripts from the Scripts folder in the data project ---
+        var assembly = Assembly.Load("FutsalApi.Data");
+        var resourceNames = assembly.GetManifestResourceNames()
+            .Where(name => name.Contains(".Scripts.") && (name.EndsWith(".sql") || name.EndsWith(".psql")))
+            .ToList();
+
+        foreach (var resourceName in resourceNames)
+        {
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream != null)
+            {
+                using var reader = new StreamReader(stream);
+                var sql = reader.ReadToEnd();
+                if (!string.IsNullOrWhiteSpace(sql))
+                {
+                    context.Database.ExecuteSqlRaw(sql);
+                }
+            }
+        }
     }
 }
