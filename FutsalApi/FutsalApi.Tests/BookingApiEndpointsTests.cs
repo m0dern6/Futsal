@@ -9,6 +9,7 @@ using Moq;
 using FluentAssertions;
 using FutsalApi.ApiService.Repositories.Interfaces;
 using FutsalApi.Data.DTO;
+using FutsalApi.Auth.Models;
 
 namespace FutsalApi.Tests;
 

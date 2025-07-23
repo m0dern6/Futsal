@@ -9,6 +9,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using FutsalApi.Data.DTO;
 using FutsalApi.Auth.Routes;
+using FutsalApi.Auth.Models;
 
 namespace FutsalApi.Tests;
 

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Moq;
 using FluentAssertions;
 using FutsalApi.Data.DTO;
+using FutsalApi.Auth.Models;
 
 namespace FutsalApi.Tests;
 

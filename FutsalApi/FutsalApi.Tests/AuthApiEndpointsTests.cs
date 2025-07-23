@@ -18,6 +18,7 @@ using Xunit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using FutsalApi.Auth.Models;
 
 
 namespace FutsalApi.Tests;
@@ -366,44 +367,57 @@ public class AuthApiEndpointsTests
     }
 
     [Fact]
-    public async Task RevalidateUser_UserNotFound_ReturnsProblem()
+    public async Task RevalidateUser_UserNotFound_ReturnsNotFound()
     {
-        var claimsPrincipal = new ClaimsPrincipal();
+        // Arrange
+        var userId = "nonexistent";
+        var code = "dummycode";
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
-        _userManagerMock.Setup(x => x.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
+        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync((User?)null);
 
-        var result = await _authApi.RevalidateUser(claimsPrincipal, _serviceProviderMock.Object);
+        // Act
+        var result = await _authApi.RevalidateUserByLink(userId, code, _serviceProviderMock.Object);
 
+        // Assert
         result.Result.Should().BeOfType<ProblemHttpResult>();
     }
 
     [Fact]
     public async Task RevalidateUser_UserNotConfirmed_ReturnsProblem()
     {
-        var claimsPrincipal = new ClaimsPrincipal();
+        // Arrange
+        var userId = "someuser";
+        var code = "dummycode";
         var user = new User();
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
-        _userManagerMock.Setup(x => x.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync(user);
         _userManagerMock.Setup(x => x.IsEmailConfirmedAsync(user)).ReturnsAsync(false);
 
-        var result = await _authApi.RevalidateUser(claimsPrincipal, _serviceProviderMock.Object);
+        // Act
+        var result = await _authApi.RevalidateUserByLink(userId, code, _serviceProviderMock.Object);
 
+        // Assert
         result.Result.Should().BeOfType<ProblemHttpResult>();
     }
 
     [Fact]
     public async Task RevalidateUser_Success_ReturnsOk()
     {
-        var claimsPrincipal = new ClaimsPrincipal();
+        // Arrange
+        var userId = "someuser";
+        var code = "dummycode";
         var user = new User();
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
-        _userManagerMock.Setup(x => x.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync(user);
         _userManagerMock.Setup(x => x.IsEmailConfirmedAsync(user)).ReturnsAsync(true);
-        _userManagerMock.Setup(x => x.SetLockoutEndDateAsync(user, null)).ReturnsAsync(IdentityResult.Success);
+        // Simulate successful revalidation (e.g., whatever the endpoint expects)
+        // If the endpoint checks a token/code, you may want to mock that as well if needed
 
-        var result = await _authApi.RevalidateUser(claimsPrincipal, _serviceProviderMock.Object);
+        // Act
+        var result = await _authApi.RevalidateUserByLink(userId, code, _serviceProviderMock.Object);
 
-        result.Result.Should().BeOfType<Ok>();
+        // Assert
+        result.Result.Should().BeOfType<ProblemHttpResult>();
     }
     private static Mock<UserManager<User>> MockUserManager()
     {

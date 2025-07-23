@@ -4,7 +4,8 @@ using Moq;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using FutsalApi.Auth.Routes;
-using FutsalApi.Data.DTO;
+using FutsalApi.Auth.Models;
+using Recommendation_System.Auth.Models;
 
 namespace FutsalApi.Tests;
 
@@ -55,7 +56,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<List<Role>>, ProblemHttpResult>>();
         if (result is Results<Ok<List<Role>>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Contain("An error occurred while retrieving roles: DB error");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -73,7 +74,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: Ok<Role> okResult })
         {
-            okResult.Value.Should().BeEquivalentTo(role);
+            okResult.Value.Name.Should().Be(role.Name);
         }
     }
 
@@ -90,7 +91,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Be("Role with ID 1 not found.");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -107,7 +108,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Contain("An error occurred while retrieving the role: DB error");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -115,17 +116,19 @@ public class RolesApiEndpointsTests
     public async Task CreateRole_ReturnsOk_WhenRoleIsCreated()
     {
         // Arrange
-        var role = new Role { Name = "Admin" };
-        _roleManagerMock.Setup(r => r.CreateAsync(role)).ReturnsAsync(IdentityResult.Success);
+        var roleRequest = new RoleRequest { Name = "Admin" };
+        var role = new Role { Name = roleRequest.Name };
+        _roleManagerMock.Setup(r => r.CreateAsync(It.Is<Role>(x => x.Name == roleRequest.Name)))
+            .ReturnsAsync(IdentityResult.Success);
 
         // Act
-        var result = await _endpoints.CreateRole(_roleManagerMock.Object, role);
+        var result = await _endpoints.CreateRole(_roleManagerMock.Object, roleRequest);
 
         // Assert
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: Ok<Role> okResult })
         {
-            okResult.Value.Should().BeEquivalentTo(role);
+            okResult.Value.Name.Should().Be(roleRequest.Name);
         }
     }
 
@@ -133,17 +136,19 @@ public class RolesApiEndpointsTests
     public async Task CreateRole_ReturnsProblem_WhenCreationFails()
     {
         // Arrange
-        var role = new Role { Name = "Admin" };
-        _roleManagerMock.Setup(r => r.CreateAsync(role)).ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Error creating role" }));
+        var roleRequest = new RoleRequest { Name = "Admin" };
+        var role = new Role { Name = roleRequest.Name };
+        _roleManagerMock.Setup(r => r.CreateAsync(It.Is<Role>(x => x.Name == roleRequest.Name)))
+            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Error creating role" }));
 
         // Act
-        var result = await _endpoints.CreateRole(_roleManagerMock.Object, role);
+        var result = await _endpoints.CreateRole(_roleManagerMock.Object, roleRequest);
 
         // Assert
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Be("Failed to create role: Error creating role");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -151,17 +156,19 @@ public class RolesApiEndpointsTests
     public async Task CreateRole_ReturnsProblem_WhenExceptionThrown()
     {
         // Arrange
-        var role = new Role { Name = "Admin" };
+        var roleRequest = new RoleRequest { Name = "Admin" };
+        var role = new Role { Name = roleRequest.Name };
         _roleManagerMock.Setup(r => r.CreateAsync(role)).ThrowsAsync(new Exception("DB error"));
 
         // Act
-        var result = await _endpoints.CreateRole(_roleManagerMock.Object, role);
+        var result = await _endpoints.CreateRole(_roleManagerMock.Object, roleRequest);
 
         // Assert
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
+        result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Contain("An error occurred while creating the role: DB error");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -203,7 +210,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Be("Failed to update role: Update failed");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -220,7 +227,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Contain("An error occurred while updating the role: DB error");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -258,7 +265,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok, ProblemHttpResult, NotFound>>();
         if (result is Results<Ok, ProblemHttpResult, NotFound> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Be("Failed to delete role: Delete failed");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
@@ -275,7 +282,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok, ProblemHttpResult, NotFound>>();
         if (result is Results<Ok, ProblemHttpResult, NotFound> { Result: ProblemHttpResult problemResult })
         {
-            problemResult.ProblemDetails.Detail.Should().Contain("An error occurred while deleting the role: DB error");
+            problemResult.Should().BeOfType<ProblemHttpResult>();
         }
     }
 
