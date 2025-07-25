@@ -1,0 +1,51 @@
+
+@page "/create-payment"
+@using FutsalApi.ApiService.Models
+@using FutsalApi.Data.DTO
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Payment</PageTitle>
+
+<h1>Create Payment</h1>
+
+<EditForm Model="@paymentRequest" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="booking-id">Booking ID</label>
+        <InputNumber id="booking-id" @bind-Value="paymentRequest.BookingId" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="amount-paid">Amount Paid</label>
+        <InputNumber id="amount-paid" @bind-Value="paymentRequest.AmountPaid" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="method">Payment Method</label>
+        <InputSelect id="method" @bind-Value="paymentRequest.Method" class="form-control">
+            @foreach (var method in Enum.GetValues<PaymentMethod>())
+            {
+                <option value="@method">@method</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit Payment</button>
+</EditForm>
+
+@code {
+    private PaymentRequest paymentRequest = new();
+
+    private async Task HandleValidSubmit()
+    {
+        var result = await Http.PostAsJsonAsync("Payment", paymentRequest);
+        if (result.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/my-payments");
+        }
+        // Handle error cases
+    }
+}

@@ -1,0 +1,57 @@
+@page "/futsal-search"
+@using FutsalApi.UI.Shared.Services
+@using FutsalApi.UI.Shared.Models
+@inject FutsalService FutsalService
+
+<h1>Futsal Search</h1>
+
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="Search for futsal grounds..." @bind="searchTerm" />
+    <div class="input-group-append">
+        <button class="btn btn-primary" type="button" @onclick="Search">Search</button>
+    </div>
+</div>
+
+@if (futsalGrounds != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Price per Hour</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ground in futsalGrounds)
+            {
+                <tr>
+                    <td>@ground.Name</td>
+                    <td>@ground.Location</td>
+                    <td>@ground.PricePerHour</td>
+                    <td>
+                        <a href="/futsal-details/@ground.Id" class="btn btn-info">View Details</a>
+                        <a href="/book-futsal/@ground.Id" class="btn btn-success">Book Now</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string searchTerm;
+    private IEnumerable<FutsalGroundResponse> futsalGrounds;
+
+    private async Task Search()
+    {
+        var futsalGroundsFromApi = await FutsalService.SearchFutsalGrounds(searchTerm);
+        futsalGrounds = futsalGroundsFromApi.Select(g => new FutsalApi.UI.Shared.Models.FutsalGroundResponse
+        {
+            Id = g.Id,
+            Name = g.Name,
+            Location = g.Location,
+            PricePerHour = g.PricePerHour
+        });
+    }
+}

@@ -1,0 +1,78 @@
+
+@page "/futsal-grounds"
+@using FutsalApi.ApiService.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Futsal Grounds</PageTitle>
+
+<h1>Futsal Grounds</h1>
+
+<div class="mb-3">
+    <InputText @bind-Value="searchQuery" placeholder="Search by name or location" class="form-control" />
+</div>
+<div class="mb-3">
+    <InputNumber @bind-Value="minRating" placeholder="Minimum Rating" class="form-control" />
+</div>
+<div class="mb-3">
+    <InputNumber @bind-Value="maxRating" placeholder="Maximum Rating" class="form-control" />
+</div>
+<button class="btn btn-primary mb-3" @onclick="SearchFutsalGrounds">Search</button>
+
+@if (futsalGrounds == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var ground in futsalGrounds)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="@ground.ImageUrl" class="card-img-top" alt="@ground.Name">
+                    <div class="card-body">
+                        <h5 class="card-title">@ground.Name</h5>
+                        <p class="card-text">@ground.Location</p>
+                        <p class="card-text"><strong>@ground.PricePerHour.ToString("C")</strong> per hour</p>
+                        <button class="btn btn-primary" @onclick="() => ViewDetails(ground.Id)">View Details</button>
+                        <button class="btn btn-success" @onclick="() => BookNow(ground.Id)">Book Now</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private FutsalGroundResponse[]? futsalGrounds;
+    private string searchQuery = string.Empty;
+    private double? minRating;
+    private double? maxRating;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFutsalGrounds();
+    }
+
+    private async Task LoadFutsalGrounds()
+    {
+        futsalGrounds = await Http.GetFromJsonAsync<FutsalGroundResponse[]>("FutsalGround");
+    }
+
+    private async Task SearchFutsalGrounds()
+    {
+        var url = $"FutsalGround/search?name={searchQuery}&location={searchQuery}&minRating={minRating}&maxRating={maxRating}";
+        futsalGrounds = await Http.GetFromJsonAsync<FutsalGroundResponse[]>(url);
+    }
+
+    private void ViewDetails(int groundId)
+    {
+        NavigationManager.NavigateTo($"/futsal-grounds/{groundId}");
+    }
+
+    private void BookNow(int groundId)
+    {
+        NavigationManager.NavigateTo($"/bookings/new/{groundId}");
+    }
+}
