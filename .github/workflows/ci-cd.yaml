@@ -64,6 +64,10 @@ jobs:
           DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
           EOF
 
+          # Create latest apiservice image
+          echo "Building apiservice image..."
+          echo "$SUDO_PASSWORD" | sudo -S docker build -f FutsalApi/FutsalApi.ApiService/Dockerfile -t futsal/apiservice:latest .
+
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build --force-recreate
 
           # Health check loop for apiservice
