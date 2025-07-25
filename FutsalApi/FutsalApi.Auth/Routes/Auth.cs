@@ -17,13 +17,16 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
+
+
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using IdentityData = Microsoft.AspNetCore.Identity.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-using Recommendation_System.Auth.Models;
+
 
 [assembly: InternalsVisibleTo("FutsalApi.Tests")]
 namespace FutsalApi.Auth.Routes;
@@ -258,7 +261,7 @@ public class AuthApiEndpointRouteBuilderExtensions
     }
 
     internal async Task<Results<Ok, ValidationProblem>> RegisterUser(
-        [FromBody] RegisterRequest registration,
+        [FromBody] FutsalApi.Auth.Models.RegisterRequest registration,
         HttpContext context,
         [FromServices] IServiceProvider sp,
         string? confirmEmailEndpointName,
@@ -290,7 +293,7 @@ public class AuthApiEndpointRouteBuilderExtensions
     }
 
     internal async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> LoginUser(
-        [FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
+        [FromBody] FutsalApi.Auth.Models.LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
     {
         var signInManager = sp.GetRequiredService<SignInManager<User>>();
         var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
@@ -432,7 +435,7 @@ public class AuthApiEndpointRouteBuilderExtensions
     }
 
     internal async Task<Ok> ResendConfirmationEmail(
-        [FromBody] ResendConfirmationEmailRequest resendRequest,
+        [FromBody] FutsalApi.Auth.Models.ResendConfirmationEmailRequest resendRequest,
         HttpContext context,
         [FromServices] IServiceProvider sp,
         string? confirmEmailEndpointName,
@@ -797,7 +800,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         return TypedResults.ValidationProblem(errorDictionary);
     }
 
-    private async Task<InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager)
+    private async Task<FutsalApi.Auth.Models.InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager)
     {
         return new()
         {
@@ -819,20 +822,9 @@ public class AuthApiEndpointRouteBuilderExtensions
     {
     }
 
-    [AttributeUsage(AttributeTargets.Parameter)]
-    private sealed class FromServicesAttribute : Attribute, IFromServiceMetadata
-    {
-    }
+    
 
-    [AttributeUsage(AttributeTargets.Parameter)]
-    private sealed class FromQueryAttribute : Attribute, IFromQueryMetadata
-    {
-        public string? Name => null;
-    }
+    
 
-    public class VerifyResetCodeRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string ResetCode { get; set; } = string.Empty;
-    }
+    
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace Recommendation_System.Auth.Models;
+namespace FutsalApi.Auth.Models;
 
 public class RoleRequest
 {

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FutsalApi.Auth.Models;
-using Recommendation_System.Auth.Models;
+
 
 namespace FutsalApi.Auth.Routes;
 
