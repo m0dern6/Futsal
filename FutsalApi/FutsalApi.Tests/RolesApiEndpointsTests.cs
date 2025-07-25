@@ -5,7 +5,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using FutsalApi.Auth.Routes;
 using FutsalApi.Auth.Models;
-using Recommendation_System.Auth.Models;
+
 
 namespace FutsalApi.Tests;
 

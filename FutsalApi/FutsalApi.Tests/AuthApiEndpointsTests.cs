@@ -16,7 +16,7 @@ using Moq;
 
 using Xunit;
 using FluentAssertions;
-using Microsoft.AspNetCore.Identity.Data;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using FutsalApi.Auth.Models;
 
@@ -80,7 +80,7 @@ public class AuthApiEndpointsTests
     public async Task RegisterUser_ValidEmail_ReturnsOk()
     {
         // Arrange
-        var registration = new RegisterRequest { Email = "test@example.com", Password = "Password123!" };
+        var registration = new FutsalApi.Auth.Models.RegisterRequest { Email = "test@example.com", Password = "Password123!" };
         var emailStore = new Mock<IUserEmailStore<User>>();
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
         _serviceProviderMock.Setup(x => x.GetService(typeof(IUserStore<User>))).Returns(emailStore.Object);
@@ -254,7 +254,7 @@ public class AuthApiEndpointsTests
     [Fact]
     public async Task ResetPassword_UserNotFound_ReturnsValidationProblem()
     {
-        var request = new ResetPasswordRequest { Email = "notfound@example.com", ResetCode = "code", NewPassword = "pass" };
+        var request = new FutsalApi.Auth.Models.ResetPasswordRequest { Email = "notfound@example.com", ResetCode = "code", NewPassword = "pass" };
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync((User?)null);
 
@@ -278,7 +278,7 @@ public class AuthApiEndpointsTests
     [Fact]
     public async Task ResetPassword_InvalidToken_ReturnsValidationProblem()
     {
-        var request = new ResetPasswordRequest { Email = "user@example.com", ResetCode = "!!!", NewPassword = "pass" };
+                                var request = new FutsalApi.Auth.Models.ResetPasswordRequest { Email = "user@example.com", ResetCode = "!!!", NewPassword = "pass" };
         var user = new User { Email = request.Email };
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(user);
@@ -313,7 +313,7 @@ public class AuthApiEndpointsTests
         _userManagerMock.Setup(x => x.ResetPasswordAsync(user, "token", request.NewPassword)).ReturnsAsync(IdentityResult.Success);
 
         var result = await _authApi.ResetPassword(
-            new ResetPasswordRequest
+            new FutsalApi.Auth.Models.ResetPasswordRequest
             {
                 Email = request.Email,
                 ResetCode = WebEncoders.Base64UrlEncode(System.Text.Encoding.UTF8.GetBytes("token")),
