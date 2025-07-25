@@ -15,6 +15,21 @@ builder.AddRedisOutputCache("cache");
 // Add device-specific services used by the FutsalApi.UI.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+builder.Services.AddHttpClient<FutsalService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5485");
+});
+
+builder.Services.AddHttpClient<BookingService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5485");
+});
+
+builder.Services.AddHttpClient<AuthService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:63007");
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
