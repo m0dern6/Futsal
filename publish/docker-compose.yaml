@@ -1,7 +1,7 @@
 services:
   aspire-dashboard:
     container_name: "aspire-dashboard"
-    image: "mcr.microsoft.com/dotnet/aspire-dashboard:9.0"
+    image: "mcr.microsoft.com/dotnet/aspire-dashboard:latest"
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "false"
       ASPNETCORE_URLS: "http://+:18888"
@@ -10,6 +10,7 @@ services:
       DASHBOARD__FRONTEND__BROWSERTOKEN: ${DASHBOARD_PASSWORD}
       DASHBOARD__OTLP__AUTHMODE: "ApiKey"
       DASHBOARD__OTLP__PRIMARYAPIKEY: ${DASHBOARD_API_KEY}
+      DASHBOARD__OTLP__ENABLEHTTPRECEIVER: "true"
     ports:
     - target: 18888
       published: 18888
@@ -17,10 +18,11 @@ services:
 
   cache:
     container_name: "cache"
-    image: "docker.io/library/redis:7.4"
+    image: "docker.io/library/redis:latest"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       OTEL_SERVICE_NAME: "cache"
     ports:
     - target: 6379
@@ -33,7 +35,7 @@ services:
 
   db:
     container_name: "db"
-    image: "docker.io/library/postgres:17.4"
+    image: "docker.io/library/postgres:latest"
     environment:
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
@@ -41,8 +43,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: "futsaldb"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       OTEL_SERVICE_NAME: "db"
-      OTLP_API_KEY: ${DASHBOARD_API_KEY}
+    # OTLP_API_KEY: ${DASHBOARD_API_KEY}
     volumes:
     - "pgdata:/var/lib/postgresql/data"
     ports:
@@ -52,12 +55,13 @@ services:
 
   pgadmin:
     container_name: "pgadmin"
-    image: "dpage/pgadmin4:8.5"
+    image: "dpage/pgadmin4:latest"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_SERVER_MODE: "True"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_SETUP_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_SETUP_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_WTF_CSRF_ENABLED: "False"
     ports:
     - target: 80
       published: 8081
@@ -69,6 +73,9 @@ services:
 
   apiservice:
     container_name: "apiservice"
+    # build:
+    #   context: ../FutsalApi
+    #   dockerfile: FutsalApi.ApiService/Dockerfile
     image: "futsal/apiservice:latest"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
@@ -79,8 +86,11 @@ services:
       ConnectionStrings__futsaldb: "Host=db;Port=5432;Username=postgres;Password=${POSTGRES_PASSWORD};Database=futsaldb"
       ConnectionStrings__cache: "cache:6379,password=${REDIS_PASSWORD}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       OTEL_SERVICE_NAME: "apiservice"
-      OTLP_API_KEY: ${DASHBOARD_API_KEY}
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=apiservice,service.version=1.0.0"
+
     ports:
     - target: 8080
       published: 10000
