@@ -22,6 +22,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       OTEL_SERVICE_NAME: "cache"
     ports:
@@ -43,6 +44,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: "futsaldb"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       OTEL_SERVICE_NAME: "db"
     # OTLP_API_KEY: ${DASHBOARD_API_KEY}
@@ -59,9 +61,20 @@ services:
     environment:
       PGADMIN_CONFIG_SERVER_MODE: "True"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_SETUP_DEFAULT_SERVER: "PostgreSQL"
+      PGADMIN_SETUP_SERVER_HOST: "db"
+      PGADMIN_SETUP_SERVER_PORT: "5432"
+      PGADMIN_SETUP_SERVER_USERNAME: "postgres"
+      PGADMIN_SETUP_SERVER_PASSWORD: ${POSTGRES_PASSWORD}
+      PGADMIN_SETUP_SERVER_SSLMODE: "prefer"
+      PGADMIN_DEFAULT_EMAIL: "disabled@localhost"
+      PGADMIN_DEFAULT_PASSWORD: "disabled"
       PGADMIN_SETUP_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_SETUP_PASSWORD: ${PGADMIN_PASSWORD}
       PGADMIN_CONFIG_WTF_CSRF_ENABLED: "False"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
     ports:
     - target: 80
       published: 8081
@@ -73,9 +86,6 @@ services:
 
   apiservice:
     container_name: "apiservice"
-    # build:
-    #   context: ../FutsalApi
-    #   dockerfile: FutsalApi.ApiService/Dockerfile
     image: "futsal/apiservice:latest"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
