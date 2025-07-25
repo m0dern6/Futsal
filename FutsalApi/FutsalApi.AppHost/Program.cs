@@ -12,7 +12,7 @@ var futsaldb = db.AddDatabase("futsaldb");
 var apiService = builder.AddProject<Projects.FutsalApi_ApiService>("apiservice")
    .WithExternalHttpEndpoints()
     .WithReference(futsaldb)
-    .WaitFor(db)
+    .WaitFor(futsaldb)
     .WithReference(cache)
     .WaitFor(cache);
 
