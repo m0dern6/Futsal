@@ -43,16 +43,16 @@ jobs:
           DASHBOARD_API_KEY: ${{ secrets.DASHBOARD_API_KEY }}
           DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: |
-          APP_DIR="/home/${{ secrets.DO_USERNAME }}/app"
-          echo "$SUDO_PASSWORD" | sudo -S mkdir -p $APP_DIR
-          echo "$SUDO_PASSWORD" | sudo -S chown -R $USER:$USER $APP_DIR
-          cd $APP_DIR
+          # APP_DIR="/home/${{ secrets.DO_USERNAME }}/app"
+          # echo "$SUDO_PASSWORD" | sudo -S mkdir -p $APP_DIR
+          # echo "$SUDO_PASSWORD" | sudo -S chown -R $USER:$USER $APP_DIR
+          cd ${{ github.workspace }}/publish/
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsal down || true
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi down || true
           echo "$SUDO_PASSWORD" | sudo -S docker system prune -f || true
           echo "$SUDO_PASSWORD" | sudo -S docker volume prune -f || true
           echo "$SUDO_PASSWORD" | sudo -S docker container prune -f || true
-          echo "$SUDO_PASSWORD" | sudo -S cp -r ${{ github.workspace }}/publish/* .
+          # echo "$SUDO_PASSWORD" | sudo -S cp -r ${{ github.workspace }}/publish/* .
 
           # Create .env file with environment variables
           cat > .env << EOF
@@ -66,7 +66,7 @@ jobs:
 
           # Create latest apiservice image
           echo "Building apiservice image..."
-          echo "$SUDO_PASSWORD" | sudo -S docker build -f FutsalApi/FutsalApi.ApiService/Dockerfile -t futsal/apiservice:latest .
+          echo "$SUDO_PASSWORD" | sudo -S docker build -f ../FutsalApi/FutsalApi.ApiService/Dockerfile -t futsal/apiservice:latest ${{ github.workspace }}
 
           echo "$SUDO_PASSWORD" | sudo -S docker-compose -p futsalapi up -d --build --force-recreate
 
