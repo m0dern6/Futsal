@@ -68,7 +68,20 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans &
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 var connectionString = builder.Configuration.GetConnectionString("futsaldb");
-builder.Services.AddRepositories(typeof(Program).Assembly, connectionString); // Registers all repositories in the assembly
+if (string.IsNullOrEmpty(connectionString))
+{
+    foreach (var kvp in builder.Configuration.GetSection("ConnectionStrings").GetChildren())
+    {
+        Console.WriteLine($"{kvp.Key} = {kvp.Value}");
+    }
+
+    throw new InvalidOperationException("The connection string for 'futsaldb' was not provided. Ensure service discovery is configured and the database is referenced in AppHost." + connectionString);
+}
+else
+{
+    Console.WriteLine($"Using connection string: {connectionString}");
+}
+    builder.Services.AddRepositories(typeof(Program).Assembly, connectionString); // Registers all repositories in the assembly
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
