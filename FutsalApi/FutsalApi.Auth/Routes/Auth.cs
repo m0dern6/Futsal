@@ -35,6 +35,7 @@ public class AuthApiEndpointRouteBuilderExtensions
 {
     private readonly EmailAddressAttribute _emailAddressAttribute = new();
 
+    private readonly string confirmEmailEndpointName = "ConfirmEmail";
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -44,7 +45,6 @@ public class AuthApiEndpointRouteBuilderExtensions
         var emailSender = endpoints.ServiceProvider.GetRequiredService<IEmailSender<User>>();
         var linkGenerator = endpoints.ServiceProvider.GetRequiredService<LinkGenerator>();
 
-        string? confirmEmailEndpointName = null;
 
         var routeGroup = endpoints.MapGroup("User")
             .WithTags("User");
@@ -264,7 +264,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         [FromBody] FutsalApi.Auth.Models.RegisterRequest registration,
         HttpContext context,
         [FromServices] IServiceProvider sp,
-        string? confirmEmailEndpointName,
+        // string? confirmEmailEndpointName,
         LinkGenerator linkGenerator,
         IEmailSender<User> emailSender)
     {
@@ -291,6 +291,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         await SendConfirmationEmailAsync(user, userManager, context, email, confirmEmailEndpointName, linkGenerator, emailSender);
         return TypedResults.Ok();
     }
+
 
     internal async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> LoginUser(
         [FromBody] FutsalApi.Auth.Models.LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
@@ -594,6 +595,12 @@ public class AuthApiEndpointRouteBuilderExtensions
         // Generate a QR code URI for authenticator apps (e.g., Google Authenticator)
         var email = await userManager.GetEmailAsync(user) ?? "user";
         var issuer = "RecommendationSystem"; // Change to your app's name
+
+        if (string.IsNullOrEmpty(authenticatorKey))
+        {
+            return TypedResults.Problem("Authenticator key could not be generated.", statusCode: StatusCodes.Status500InternalServerError);
+        }
+
         var qrCodeUri = GenerateQrCodeUri(issuer, email, authenticatorKey);
 
         // Return all setup info
@@ -822,9 +829,9 @@ public class AuthApiEndpointRouteBuilderExtensions
     {
     }
 
-    
 
-    
 
-    
+
+
+
 }

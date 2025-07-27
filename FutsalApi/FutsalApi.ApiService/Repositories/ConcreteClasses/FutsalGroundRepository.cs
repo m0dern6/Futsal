@@ -99,7 +99,9 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
             p_page = page,
             p_page_size = pageSize
         };
-
-        return await _dbConnection.QueryAsync<FutsalGroundResponse>("search_futsal_grounds", parameters, commandType: CommandType.StoredProcedure);
+        return await _dbConnection.QueryAsync<FutsalGroundResponse>(
+            "SELECT * FROM search_futsal_grounds(@p_name, @p_location, @p_min_rating, @p_max_rating, @p_page, @p_page_size)",
+            parameters,
+            commandType: CommandType.Text);
     }
 }

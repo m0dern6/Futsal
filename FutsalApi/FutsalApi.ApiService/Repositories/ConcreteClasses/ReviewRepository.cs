@@ -95,7 +95,10 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
     public async Task<bool> DeleteReviewByUserAsync(int reviewId, string userId)
     {
         var parameters = new { p_review_id = reviewId, p_user_id = userId };
-        return await _dbConnection.ExecuteScalarAsync<bool>("delete_review_by_user", parameters, commandType: CommandType.StoredProcedure);
+        return await _dbConnection.ExecuteScalarAsync<bool>(
+            "SELECT delete_review_by_user(@p_review_id, @p_user_id)",
+            parameters,
+            commandType: CommandType.Text);
     }
 
     public async Task<int> CreateReviewAsync(Review review)
@@ -108,8 +111,10 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
             p_comment = review.Comment,
             p_image_url = review.ImageUrl
         };
-
-        return await _dbConnection.ExecuteScalarAsync<int>("create_review", parameters, commandType: CommandType.StoredProcedure);
+        return await _dbConnection.ExecuteScalarAsync<int>(
+            "SELECT create_review(@p_user_id, @p_ground_id, @p_rating, @p_comment, @p_image_url)",
+            parameters,
+            commandType: CommandType.Text);
     }
 
     public async Task UpdateReviewAsync(Review review)

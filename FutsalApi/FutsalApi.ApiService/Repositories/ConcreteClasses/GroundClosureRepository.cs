@@ -26,7 +26,9 @@ public class GroundClosureRepository : GenericRepository<GroundClosure>, IGround
             p_start_time = startTime,
             p_end_time = endTime
         };
-
-        return await _dbConnection.ExecuteScalarAsync<bool>("is_ground_closed", parameters, commandType: CommandType.StoredProcedure);
+        return await _dbConnection.ExecuteScalarAsync<bool>(
+            "SELECT is_ground_closed(@p_ground_id, @p_date, @p_start_time, @p_end_time)",
+            parameters,
+            commandType: CommandType.Text);
     }
 }
