@@ -27,3 +27,4 @@ BEGIN
 
     RETURN QUERY SELECT booking_id;
 END;
+$$ LANGUAGE plpgsql;

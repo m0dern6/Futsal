@@ -16,3 +16,4 @@ BEGIN
         )
     WHERE "Id" = p_ground_id;
 END;
+$$ LANGUAGE plpgsql;

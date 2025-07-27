@@ -13,3 +13,4 @@ BEGIN
     -- Return true if a row was deleted, otherwise false
     RETURN deleted_rows > 0;
 END;
+$$ LANGUAGE plpgsql;

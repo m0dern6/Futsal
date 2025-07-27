@@ -5,3 +5,4 @@ BEGIN
     SELECT user_id, p_message, FALSE, NOW()
     FROM unnest(p_user_ids) AS user_id;
 END;
+$$ LANGUAGE plpgsql;

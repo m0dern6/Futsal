@@ -11,3 +11,4 @@ BEGIN
 
     RETURN QUERY SELECT review_id;
 END;
+$$ LANGUAGE plpgsql;

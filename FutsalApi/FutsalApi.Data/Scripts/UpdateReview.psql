@@ -18,3 +18,4 @@ BEGIN
         CALL update_futsal_ground_rating(v_ground_id);
     END IF;
 END;
+$$ LANGUAGE plpgsql;

@@ -14,3 +14,4 @@ BEGIN
     -- Return true if a row was updated, otherwise false
     RETURN updated_rows > 0;
 END;
+$$ LANGUAGE plpgsql;
