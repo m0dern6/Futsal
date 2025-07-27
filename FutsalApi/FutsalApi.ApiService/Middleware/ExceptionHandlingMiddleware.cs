@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace FutsalApi.ApiService.Middleware;
@@ -36,6 +37,7 @@ public class ExceptionHandlingMiddleware
         var problemDetails = new ProblemDetails();
         problemDetails.Instance = context.Request.Path;
         problemDetails.Title = "An error occurred while processing your request.";
+        problemDetails.Detail = exception.Message;
         problemDetails.Status = context.Response.StatusCode;
         problemDetails.Extensions.Add("traceId", context.TraceIdentifier);
 

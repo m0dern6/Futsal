@@ -48,8 +48,11 @@ public static class DbSetInitializer
             .Where(name => name.Contains(".Scripts.") && (name.EndsWith(".sql") || name.EndsWith(".psql")))
             .ToList();
 
+        Console.WriteLine($"Found {resourceNames.Count} SQL scripts to execute with file names:");
+
         foreach (var resourceName in resourceNames)
         {
+            Console.WriteLine($" - {resourceName}");
             using var stream = assembly.GetManifestResourceStream(resourceName);
             if (stream != null)
             {

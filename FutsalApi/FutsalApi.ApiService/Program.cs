@@ -67,21 +67,8 @@ builder.Services.AddFluentValidationAutoValidation() // Enables automatic valida
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Scans & registers all validators
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-var connectionString = builder.Configuration.GetConnectionString("futsaldb");
-if (string.IsNullOrEmpty(connectionString))
-{
-    foreach (var kvp in builder.Configuration.GetSection("ConnectionStrings").GetChildren())
-    {
-        Console.WriteLine($"{kvp.Key} = {kvp.Value}");
-    }
+builder.Services.AddRepositories(typeof(Program).Assembly, builder.Configuration); // Registers all repositories in the assembly
 
-    throw new InvalidOperationException("The connection string for 'futsaldb' was not provided. Ensure service discovery is configured and the database is referenced in AppHost." + connectionString);
-}
-else
-{
-    Console.WriteLine($"Using connection string: {connectionString}");
-}
-    builder.Services.AddRepositories(typeof(Program).Assembly, connectionString); // Registers all repositories in the assembly
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();

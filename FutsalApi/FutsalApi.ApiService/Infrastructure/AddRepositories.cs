@@ -8,7 +8,7 @@ namespace FutsalApi.Auth.Infrastructure;
 
 public static class RepositoryExtension
 {
-    public static IServiceCollection AddRepositories(this IServiceCollection services, Assembly assembly, string connectionString)
+    public static IServiceCollection AddRepositories(this IServiceCollection services, Assembly assembly, IConfiguration configuration)
     {
         // Register all repositories in the assembly that inherits from GenericRepository
         var repositoryTypes = assembly.GetTypes()
@@ -25,7 +25,7 @@ public static class RepositoryExtension
             }
         }
 
-        services.AddScoped<IDbConnection>(db => new NpgsqlConnection(connectionString));
+        services.AddScoped<IDbConnection>(sp => new NpgsqlConnection(sp.GetRequiredService<IConfiguration>().GetConnectionString("futsaldb")));
 
         return services;
     }
