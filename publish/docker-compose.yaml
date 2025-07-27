@@ -23,10 +23,10 @@ services:
     image: "docker.io/library/redis:latest"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
-      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
-      OTEL_SERVICE_NAME: "cache"
+      # OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      # OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      # OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
+      # OTEL_SERVICE_NAME: "cache"
     ports:
     - target: 6379
       published: 6379
@@ -47,11 +47,10 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: "futsaldb"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
-      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
-      OTEL_SERVICE_NAME: "db"
-    # OTLP_API_KEY: ${DASHBOARD_API_KEY}
+      # OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      # OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      # OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
+      # OTEL_SERVICE_NAME: "db"
     volumes:
     - "pgdata:/var/lib/postgresql/data"
     ports:
@@ -67,9 +66,9 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}       
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD} 
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
-      OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
+      # OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      # OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      # OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
     ports:
       - target: 80
         published: 8081
