@@ -51,7 +51,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_native_splash: ^2.4.0
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -76,23 +75,6 @@ flutter:
     - assets/images/
     - assets/icons/
   #   - images/a_dot_ham.jpeg
-flutter_native_splash:
-  # The background color for your splash screen.
-  color: "#0B1B2B"
-
-  # The image asset for your splash screen.
-  image: assets/logo/inapplogo1.png
-
-  # Android 12 specific settings
-  android_12:
-    image: assets/logo/inapplogo1.png
-    color: "#0B1B2B"
-
-  # iOS specific settings
-  ios: true
-  
-  # Web specific settings
-  web: false
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
