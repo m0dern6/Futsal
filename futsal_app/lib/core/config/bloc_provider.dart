@@ -3,6 +3,8 @@ import 'package:futsalpay/features/auth/domain/repository/auth_repository.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/login/login_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/logout/logout_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/register/register_bloc.dart';
+import 'package:futsalpay/features/home/domain/futsal_ground_repository.dart';
+import 'package:futsalpay/features/home/presentation/bloc/futsal_ground_bloc.dart';
 import 'package:futsalpay/features/splash/presentation/bloc/splash_bloc.dart';
 
 class AppBlocProviders {
@@ -21,6 +23,10 @@ class AppBlocProviders {
     BlocProvider<LogoutBloc>(
       create: (context) =>
           LogoutBloc(authRepository: context.read<AuthRepository>()),
+    ),
+    BlocProvider<FutsalGroundBloc>(
+      create: (context) =>
+          FutsalGroundBloc(context.read<FutsalGroundRepository>()),
     ),
   ];
 }

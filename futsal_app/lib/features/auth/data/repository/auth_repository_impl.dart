@@ -18,60 +18,120 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _apiService.post('User/register', data: userData);
 
-      // Check for a successful HTTP status code (e.g., 200, 201)
-      if (response.statusCode! >= 200 && response.statusCode! < 300) {
-        // Registration was successful, but the response body might not be JSON.
-        // We return a success model with a default status.
-        return RegisterResponseModel(
-          status: response.statusCode,
-          title: "Success",
-        );
-      } else {
-        // Handle non-successful status codes that might still return a body
-        return RegisterResponseModel.fromJson(jsonDecode(response.data));
-      }
+      // Debug: Print the response type and structure
+      print('Register Response type: ${response.runtimeType}');
+      print('Register Response: $response');
+
+      // Since the response is successful (no exception thrown),
+      // we assume registration was successful
+      return RegisterResponseModel(
+        status: 200, // Default success status
+        title: "Success",
+      );
     } on DioException catch (e) {
       // Handle Dio-specific errors (e.g., network issues, error responses)
-      if (e.response != null && e.response!.data is String) {
-        // If the error response is a string, try to parse it.
-        // This is common for validation errors (e.g., "Email already taken").
+      print('DioException details: ${e.response?.data}');
+      print('DioException type: ${e.response?.data.runtimeType}');
+
+      if (e.response != null && e.response!.data != null) {
         try {
-          final errorData = jsonDecode(e.response!.data);
-          return RegisterResponseModel.fromJson(errorData);
-        } catch (_) {
-          // If parsing fails, throw a generic error with the server's message.
-          throw Exception(e.response!.data);
+          // If the error response data is a string, try to parse it
+          if (e.response!.data is String) {
+            final errorData = jsonDecode(e.response!.data);
+            return RegisterResponseModel.fromJson(errorData);
+          } else if (e.response!.data is Map<String, dynamic>) {
+            // If it's already a Map, use it directly
+            return RegisterResponseModel.fromJson(e.response!.data);
+          } else {
+            // If we can't parse the error, throw a generic error
+            throw Exception(
+              'Registration failed: ${e.response!.statusMessage}',
+            );
+          }
+        } catch (parseError) {
+          // If parsing fails, throw a generic error with the server's message
+          print('Parse error: $parseError');
+          throw Exception('Registration failed: ${e.response!.data}');
         }
       }
-      // Re-throw the error if it's not a parsable response.
-      rethrow;
+      // Re-throw the error if it's not a parsable response
+      throw Exception('Registration failed: ${e.message}');
     } catch (e) {
       // Catch any other unexpected errors
-      rethrow;
+      print('Register error details: $e');
+      print('Error type: ${e.runtimeType}');
+      throw Exception('Registration failed: $e');
     }
   }
 
   @override
   Future<LoginResponseModel> login(String email, String password) async {
-    final prefs = await SharedPreferences.getInstance();
-    final response = await _apiService.post(
-      ApiConst.login,
-      data: {'email': email, 'password': password},
-    );
-    if (response.statusCode == 200) {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final response = await _apiService.post(
+        ApiConst.login,
+        data: {'email': email, 'password': password},
+      );
+
+      // Debug: Print the response type and structure
+      print('Response type: ${response.runtimeType}');
+      print('Response: $response');
+
+      // Handle different response types
+      Map<String, dynamic> loginData;
+
+      if (response is Map<String, dynamic>) {
+        // If response is already a Map (parsed JSON)
+        loginData = response;
+      } else if (response.data != null) {
+        // If response has a data property (Dio Response object)
+        loginData = response.data;
+      } else {
+        // Fallback - try to use response directly
+        loginData = response as Map<String, dynamic>;
+      }
+
       // Save token to SharedPreferences
-      await prefs.setString('token', response.data['accessToken']);
-      print('Token saved: ${response.data['accessToken']}');
+      if (loginData['accessToken'] != null) {
+        await prefs.setString('token', loginData['accessToken']);
+        print('Token saved: ${loginData['accessToken']}');
+      }
+
+      return LoginResponseModel.fromJson(loginData);
+    } on DioException catch (e) {
+      // Handle Dio-specific errors
+      if (e.response != null) {
+        throw Exception(
+          'Login failed: ${e.response!.statusMessage ?? e.message}',
+        );
+      }
+      throw Exception('Login failed: ${e.message}');
+    } catch (e) {
+      // Catch any other unexpected errors
+      print('Login error details: $e');
+      print('Error type: ${e.runtimeType}');
+      throw Exception('Login failed: $e');
     }
-    return LoginResponseModel.fromJson(response.data);
   }
 
   @override
   Future<void> logout() async {
-    final response = await _apiService.post(ApiConst.logout);
-    if (response.statusCode == 200) {
+    try {
+      await _apiService.post(ApiConst.logout);
+      // If no exception was thrown, logout was successful
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('token');
+    } on DioException catch (e) {
+      // Handle Dio-specific errors
+      if (e.response != null) {
+        throw Exception(
+          'Logout failed: ${e.response!.statusMessage ?? e.message}',
+        );
+      }
+      throw Exception('Logout failed: ${e.message}');
+    } catch (e) {
+      // Catch any other unexpected errors
+      throw Exception('Logout failed: $e');
     }
   }
 }

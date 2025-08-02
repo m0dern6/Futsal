@@ -6,6 +6,7 @@ class SearchBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SearchBar(
+      enabled: false,
       backgroundColor: WidgetStateProperty.all(Color(0xff013109)),
       leading: Icon(Icons.search, color: Colors.white),
       hintText: 'Search Futsal name or area...',

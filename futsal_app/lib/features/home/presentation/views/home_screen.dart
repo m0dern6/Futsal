@@ -10,27 +10,32 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff03340d).withOpacity(0.6),
+      backgroundColor: const Color(0xff03340d).withOpacity(0.6),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+        ), // Reduced padding slightly for better fit
         child: Column(
           children: [
-            SizedBox(height: 40),
-            TopBar(),
-            SizedBox(height: 20),
-            SearchBox(),
-            SizedBox(height: 20),
-            Align(
+            const SizedBox(height: 40),
+            const TopBar(),
+            const SizedBox(height: 20),
+            SearchBox(), // Will be updated for search functionality
+            const SizedBox(height: 20),
+            const Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Top Futsal Venues',
                 style: TextStyle(color: Color(0xff91A693), fontSize: 18),
               ),
             ),
-            Venues(),
-            SizedBox(height: 20),
-            Tabs(),
-            SizedBox(height: 100),
+            const SizedBox(height: 10), // Added a small gap
+            // 1. Wrap the Venues widget in Expanded to make it fill the remaining space
+            const Expanded(child: Venues()),
+
+            // The Tabs widget is now at the bottom
+            const Tabs(),
+            const SizedBox(height: 100),
           ],
         ),
       ),
