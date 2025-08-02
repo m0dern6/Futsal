@@ -4,8 +4,8 @@ using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Data.DTO;
-using FutsalApi.Auth.Models;
+using FutsalApi.Core.Models;
+using FutsalApi.ApiService.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -212,7 +212,7 @@ public class ReviewApiEndpoints : IEndpoint
                 GroundId = updatedReviewRequest.GroundId,
                 Rating = updatedReviewRequest.Rating,
                 Comment = updatedReviewRequest.Comment,
-                ImageUrl = updatedReviewRequest.ImageUrl
+                ReviewImageId = updatedReviewRequest.ImageId
             };
 
             await repository.UpdateReviewAsync(updatedReview);

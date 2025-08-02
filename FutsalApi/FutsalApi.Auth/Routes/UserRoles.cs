@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Claims;
 
-using FutsalApi.Auth.Models;
+using FutsalApi.Core.Models;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;

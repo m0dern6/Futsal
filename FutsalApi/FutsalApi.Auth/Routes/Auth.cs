@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.ComponentModel.DataAnnotations;
+using FutsalApi.Core.Models;
+using FutsalApi.ApiService.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -9,7 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 
-using FutsalApi.Auth.Models;
+using FutsalApi.Core.Models;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
@@ -685,14 +687,14 @@ public class AuthApiEndpointRouteBuilderExtensions
     }
 
     internal async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>> GetUserInfo(
-        ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp)
+        ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp, [FromServices] FutsalApi.Data.DTO.FutsalApi.ApiService.Data.AppDbContext dbContext)
     {
         var userManager = sp.GetRequiredService<UserManager<User>>();
         if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
         {
             return TypedResults.NotFound();
         }
-        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
+        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager, dbContext));
     }
 
     internal async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>> UpdateUserInfo(
@@ -702,7 +704,8 @@ public class AuthApiEndpointRouteBuilderExtensions
         [FromServices] IServiceProvider sp,
         string? confirmEmailEndpointName,
         LinkGenerator linkGenerator,
-        IEmailSender<User> emailSender)
+        IEmailSender<User> emailSender,
+        [FromServices] FutsalApi.Data.DTO.FutsalApi.ApiService.Data.AppDbContext dbContext)
     {
         var userManager = sp.GetRequiredService<UserManager<User>>();
         if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
@@ -734,7 +737,28 @@ public class AuthApiEndpointRouteBuilderExtensions
                 await SendConfirmationEmailAsync(user, userManager, context, infoRequest.NewEmail, confirmEmailEndpointName, linkGenerator, emailSender, isChange: true);
             }
         }
-        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
+        if (infoRequest.ProfileImageId.HasValue)
+        {
+            user.ProfileImageId = infoRequest.ProfileImageId.Value;
+        }
+        if (!string.IsNullOrEmpty(infoRequest.Username) && user.UserName != infoRequest.Username)
+        {
+            var setUserNameResult = await userManager.SetUserNameAsync(user, infoRequest.Username);
+            if (!setUserNameResult.Succeeded)
+            {
+                return CreateValidationProblem(setUserNameResult);
+            }
+        }
+        if (!string.IsNullOrEmpty(infoRequest.PhoneNumber) && user.PhoneNumber != infoRequest.PhoneNumber)
+        {
+            var setPhoneNumberResult = await userManager.SetPhoneNumberAsync(user, infoRequest.PhoneNumber);
+            if (!setPhoneNumberResult.Succeeded)
+            {
+                return CreateValidationProblem(setPhoneNumberResult);
+            }
+        }
+        await userManager.UpdateAsync(user);
+        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager, dbContext));
     }
     internal async Task<Ok> SendRevalidateEmailEndpoint(
         [FromBody] ResendConfirmationEmailRequest request,
@@ -807,12 +831,17 @@ public class AuthApiEndpointRouteBuilderExtensions
         return TypedResults.ValidationProblem(errorDictionary);
     }
 
-    private async Task<FutsalApi.Auth.Models.InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager)
+    private async Task<FutsalApi.Auth.Models.InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, FutsalApi.Data.DTO.FutsalApi.ApiService.Data.AppDbContext dbContext)
     {
+        var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
         return new()
         {
+            Id = user.Id,
             Email = await userManager.GetEmailAsync(user) ?? throw new NotSupportedException("Users must have an email."),
             IsEmailConfirmed = await userManager.IsEmailConfirmedAsync(user),
+            ProfileImageUrl = profileImage?.FilePath,
+            Username = await userManager.GetUserNameAsync(user),
+            PhoneNumber = await userManager.GetPhoneNumberAsync(user)
         };
     }
 

@@ -5,8 +5,8 @@ using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Data.DTO;
-using FutsalApi.Auth.Models;
+using FutsalApi.Core.Models;
+using FutsalApi.ApiService.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -230,7 +230,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 Latitude = updatedGroundRequest.Latitude,
                 Longitude = updatedGroundRequest.Longitude,
                 Description = updatedGroundRequest.Description,
-                ImageUrl = updatedGroundRequest.ImageUrl,
+                MainImageId = updatedGroundRequest.ImageId,
             };
 
 

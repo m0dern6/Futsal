@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FutsalApi.Auth.Models;
+using FutsalApi.Core.Models;
 
 
 namespace FutsalApi.Auth.Routes;

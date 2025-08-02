@@ -2,7 +2,8 @@
 using System.Data;
 using System.Linq.Expressions;
 using Dapper;
-using FutsalApi.Data.DTO;
+using FutsalApi.Core.Models;
+using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,6 +28,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
         }
 
         return await _dbContext.FutsalGrounds
+            .Include(g => g.MainImage)
             .OrderByDescending(g => g.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -39,7 +41,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 PricePerHour = g.PricePerHour,
                 OpenTime = g.OpenTime,
                 CloseTime = g.CloseTime,
-                ImageUrl = g.ImageUrl,
+                ImageUrl = g.MainImage != null ? g.MainImage.FilePath : null,
                 Description = g.Description,
                 Latitude = g.Latitude,
                 Longitude = g.Longitude,
@@ -60,6 +62,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
     public async new Task<FutsalGroundResponse?> GetByIdAsync(Expression<Func<FutsalGround, bool>> predicate)
     {
         return await _dbContext.FutsalGrounds
+            .Include(g => g.MainImage)
             .Where(predicate)
             .Select(g => new FutsalGroundResponse
             {
@@ -70,7 +73,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 PricePerHour = g.PricePerHour,
                 OpenTime = g.OpenTime,
                 CloseTime = g.CloseTime,
-                ImageUrl = g.ImageUrl,
+                ImageUrl = g.MainImage != null ? g.MainImage.FilePath : null,
                 Description = g.Description,
                 Latitude = g.Latitude,
                 Longitude = g.Longitude,
