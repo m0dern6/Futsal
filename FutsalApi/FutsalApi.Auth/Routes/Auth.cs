@@ -2,21 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.ComponentModel.DataAnnotations;
-using FutsalApi.Core.Models;
-using FutsalApi.ApiService.Data;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 
-using FutsalApi.Core.Models;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
 
@@ -24,9 +17,8 @@ using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using IdentityData = Microsoft.AspNetCore.Identity.Data;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using FutsalApi.Auth.Models;
 
 
 
@@ -687,7 +679,7 @@ public class AuthApiEndpointRouteBuilderExtensions
     }
 
     internal async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>> GetUserInfo(
-        ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp, [FromServices] FutsalApi.Data.DTO.FutsalApi.ApiService.Data.AppDbContext dbContext)
+        ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp, [FromServices] AuthDbContext dbContext)
     {
         var userManager = sp.GetRequiredService<UserManager<User>>();
         if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
@@ -705,7 +697,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         string? confirmEmailEndpointName,
         LinkGenerator linkGenerator,
         IEmailSender<User> emailSender,
-        [FromServices] FutsalApi.Data.DTO.FutsalApi.ApiService.Data.AppDbContext dbContext)
+        [FromServices] AuthDbContext dbContext)
     {
         var userManager = sp.GetRequiredService<UserManager<User>>();
         if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
@@ -831,7 +823,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         return TypedResults.ValidationProblem(errorDictionary);
     }
 
-    private async Task<FutsalApi.Auth.Models.InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, FutsalApi.Data.DTO.FutsalApi.ApiService.Data.AppDbContext dbContext)
+    private async Task<InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, AuthDbContext dbContext)
     {
         var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
         return new()
@@ -839,9 +831,10 @@ public class AuthApiEndpointRouteBuilderExtensions
             Id = user.Id,
             Email = await userManager.GetEmailAsync(user) ?? throw new NotSupportedException("Users must have an email."),
             IsEmailConfirmed = await userManager.IsEmailConfirmedAsync(user),
-            ProfileImageUrl = profileImage?.FilePath,
-            Username = await userManager.GetUserNameAsync(user),
-            PhoneNumber = await userManager.GetPhoneNumberAsync(user)
+            ProfileImageUrl = profileImage?.FilePath, // imageurl
+            Username = await userManager.GetUserNameAsync(user), // username
+            PhoneNumber = await userManager.GetPhoneNumberAsync(user), // phone number
+            IsPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(user) // isphoneverified
         };
     }
 

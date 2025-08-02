@@ -1,11 +1,14 @@
+
 using FutsalApi.Data.DTO;
 
-namespace FutsalApi.ApiService.Repositories.Interfaces;
-
-public interface IImageRepository
+namespace FutsalApi.ApiService.Repositories
 {
-    Task<Image> AddImageAsync(Image image);
-    Task<Image?> GetImageByIdAsync(int imageId);
-    Task<bool> DeleteImageAsync(int imageId);
-    Task<List<Image>> GetAllImagesAsync();
+    public interface IImageRepository : IGenericRepository<Image>
+    {
+        void Add(Image image);
+        void Update(Image image);
+        Task SaveChangesAsync();
+        IQueryable<Image> Where(System.Linq.Expressions.Expression<System.Func<Image, bool>> predicate);
+        Task<List<Image>> GetImagesByUserIdAsync(string userId);
+    }
 }

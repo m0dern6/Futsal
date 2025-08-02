@@ -1,45 +1,40 @@
 using FutsalApi.Data.DTO;
-using FutsalApi.ApiService.Repositories.Interfaces;
+using FutsalApi.ApiService.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace FutsalApi.ApiService.Repositories.ConcreteClasses;
-
-public class ImageRepository : IImageRepository
+namespace FutsalApi.ApiService.Repositories
 {
-    private readonly AppDbContext _dbContext;
-
-    public ImageRepository(AppDbContext dbContext)
+    public class ImageRepository : GenericRepository<Image>, IImageRepository
     {
-        _dbContext = dbContext;
-    }
-
-    public async Task<Image> AddImageAsync(Image image)
-    {
-        _dbContext.Images.Add(image);
-        await _dbContext.SaveChangesAsync();
-        return image;
-    }
-
-    public async Task<Image?> GetImageByIdAsync(int imageId)
-    {
-        return await _dbContext.Images.FindAsync(imageId);
-    }
-
-    public async Task<bool> DeleteImageAsync(int imageId)
-    {
-        var image = await _dbContext.Images.FindAsync(imageId);
-        if (image == null)
+        private readonly FutsalApi.Data.DTO.AppDbContext _context;
+        public ImageRepository(FutsalApi.Data.DTO.AppDbContext context) : base(context)
         {
-            return false;
+            _context = context;
         }
 
-        _dbContext.Images.Remove(image);
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
+        public void Add(Image image)
+        {
+            _context.Images?.Add(image);
+        }
 
-    public async Task<List<Image>> GetAllImagesAsync()
-    {
-        return await _dbContext.Images.ToListAsync();
+        public void Update(Image image)
+        {
+            _context.Images?.Update(image);
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        public IQueryable<Image> Where(System.Linq.Expressions.Expression<System.Func<Image, bool>> predicate)
+        {
+            return _context.Images?.Where(predicate) ?? Enumerable.Empty<Image>().AsQueryable();
+        }
+
+        public async Task<List<Image>> GetImagesByUserIdAsync(string userId)
+        {
+            return await (_context.Images?.Where(i => i.UserId == userId && !i.IsDeleted).ToListAsync() ?? Task.FromResult(new List<Image>()));
+        }
     }
 }

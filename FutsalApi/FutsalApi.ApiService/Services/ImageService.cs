@@ -1,10 +1,8 @@
-using FutsalApi.Core.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using FutsalApi.Auth.Models;
 using Microsoft.AspNetCore.Identity;
+using FutsalApi.ApiService.Repositories;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Services
 {
@@ -23,7 +21,7 @@ namespace FutsalApi.ApiService.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        private string GetCurrentUserId()
+        private string? GetCurrentUserId()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
@@ -127,7 +125,7 @@ namespace FutsalApi.ApiService.Services
                 throw new UnauthorizedAccessException("User not authenticated.");
             }
 
-            return await _imageRepository.Where(i => i.UserId == userId && !i.IsDeleted).ToListAsync();
+            return await _imageRepository.GetImagesByUserIdAsync(userId);
         }
     }
 }

@@ -1,4 +1,3 @@
-using FutsalApi.Core.Models;
 
 public class InfoResponse
 {
@@ -8,4 +7,5 @@ public class InfoResponse
     public string? ProfileImageUrl { get; set; }
     public string? Username { get; set; }
     public string? PhoneNumber { get; set; }
+    public bool IsPhoneNumberConfirmed { get; set; } // isphoneverified
 }
