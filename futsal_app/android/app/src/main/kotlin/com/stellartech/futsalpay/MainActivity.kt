@@ -1,4 +1,4 @@
-package com.example.futsalpay
+package com.stellartech.futsalpay
 
 import io.flutter.embedding.android.FlutterActivity
 
