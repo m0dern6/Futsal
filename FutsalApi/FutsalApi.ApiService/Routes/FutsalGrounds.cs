@@ -5,12 +5,13 @@ using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Core.Models;
-using FutsalApi.ApiService.Data;
-using Microsoft.AspNetCore.Http.HttpResults;
+
+using FutsalApi.Auth.Models;
+using FutsalApi.Data.DTO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.HttpResults;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Routes;
 
@@ -176,7 +177,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 Latitude = futsalGroundRequest.Latitude,
                 Longitude = futsalGroundRequest.Longitude,
                 Description = futsalGroundRequest.Description,
-                ImageUrl = futsalGroundRequest.ImageUrl
+                ImageUrl = futsalGroundRequest.ImageId.ToString()
             };
             var result = await repository.CreateAsync(futsalGround);
             if (result is null)
@@ -230,7 +231,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 Latitude = updatedGroundRequest.Latitude,
                 Longitude = updatedGroundRequest.Longitude,
                 Description = updatedGroundRequest.Description,
-                MainImageId = updatedGroundRequest.ImageId,
+                ImageUrl = updatedGroundRequest.ImageId.ToString(),
             };
 
 

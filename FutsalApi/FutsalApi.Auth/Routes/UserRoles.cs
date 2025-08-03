@@ -1,7 +1,4 @@
-﻿using System;
-using System.Security.Claims;
-
-using FutsalApi.Core.Models;
+﻿using FutsalApi.Auth.Models;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -10,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.Auth.Routes;
 
-public class UserRolesApiEndpoints 
+public class UserRolesApiEndpoints
 {
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {

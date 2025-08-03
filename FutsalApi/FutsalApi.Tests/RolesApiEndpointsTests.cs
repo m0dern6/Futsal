@@ -37,9 +37,9 @@ public class RolesApiEndpointsTests
 
         // Assert
         result.Should().BeOfType<Results<Ok<List<Role>>, ProblemHttpResult>>();
-        if (result is Results<Ok<List<Role>>, ProblemHttpResult> { Result: Ok<List<Role>> okResult })
+        if (result.Result is Ok<List<Role>> okResult)
         {
-            okResult.Value.Should().BeEquivalentTo(roles.ToList());
+            okResult.Value!.Should().BeEquivalentTo(roles.ToList());
         }
     }
 
@@ -74,7 +74,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: Ok<Role> okResult })
         {
-            okResult.Value.Name.Should().Be(role.Name);
+            okResult.Value!.Name.Should().Be(role.Name);
         }
     }
 
@@ -128,7 +128,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: Ok<Role> okResult })
         {
-            okResult.Value.Name.Should().Be(roleRequest.Name);
+            okResult.Value!.Name.Should().Be(roleRequest.Name);
         }
     }
 
@@ -189,7 +189,7 @@ public class RolesApiEndpointsTests
         result.Should().BeOfType<Results<Ok<Role>, ProblemHttpResult>>();
         if (result is Results<Ok<Role>, ProblemHttpResult> { Result: Ok<Role> okResult })
         {
-            okResult.Value.Name.Should().Be("SuperAdmin");
+            okResult.Value!.Name.Should().Be("SuperAdmin");
         }
     }
 

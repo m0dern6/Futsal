@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+
 using Dapper;
-using FutsalApi.Core.Models;
+
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Models;
+
 using Microsoft.EntityFrameworkCore;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Repositories;
 
 public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGroundRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly FutsalApi.Data.DTO.AppDbContext _dbContext;
     private readonly IDbConnection _dbConnection;
 
-    public FutsalGroundRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
+    public FutsalGroundRepository(FutsalApi.Data.DTO.AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
         _dbConnection = dbConnection;
@@ -28,7 +31,6 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
         }
 
         return await _dbContext.FutsalGrounds
-            .Include(g => g.MainImage)
             .OrderByDescending(g => g.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -41,7 +43,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 PricePerHour = g.PricePerHour,
                 OpenTime = g.OpenTime,
                 CloseTime = g.CloseTime,
-                ImageUrl = g.MainImage != null ? g.MainImage.FilePath : null,
+                ImageUrl = g.ImageUrl,
                 Description = g.Description,
                 Latitude = g.Latitude,
                 Longitude = g.Longitude,
@@ -62,7 +64,6 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
     public async new Task<FutsalGroundResponse?> GetByIdAsync(Expression<Func<FutsalGround, bool>> predicate)
     {
         return await _dbContext.FutsalGrounds
-            .Include(g => g.MainImage)
             .Where(predicate)
             .Select(g => new FutsalGroundResponse
             {
@@ -73,7 +74,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 PricePerHour = g.PricePerHour,
                 OpenTime = g.OpenTime,
                 CloseTime = g.CloseTime,
-                ImageUrl = g.MainImage != null ? g.MainImage.FilePath : null,
+                ImageUrl = g.ImageUrl,
                 Description = g.Description,
                 Latitude = g.Latitude,
                 Longitude = g.Longitude,

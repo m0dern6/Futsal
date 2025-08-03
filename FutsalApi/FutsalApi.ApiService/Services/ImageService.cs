@@ -11,28 +11,16 @@ namespace FutsalApi.ApiService.Services
         private readonly IImageRepository _imageRepository;
         private readonly IWebHostEnvironment _env;
         private readonly UserManager<User> _userManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public ImageService(IImageRepository imageRepository, IWebHostEnvironment env, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
+        public ImageService(IImageRepository imageRepository, IWebHostEnvironment env, UserManager<User> userManager)
         {
             _imageRepository = imageRepository;
             _env = env;
             _userManager = userManager;
-            _httpContextAccessor = httpContextAccessor;
         }
 
-        private string? GetCurrentUserId()
+        public async Task<Image> UploadSingleFile(User user, IFormFile file)
         {
-            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        }
-
-        public async Task<Image> UploadSingleFile(IFormFile file)
-        {
-            var userId = GetCurrentUserId();
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated.");
-            }
+            string? userId = user?.Id;
 
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
             if (!Directory.Exists(uploadsFolder))
@@ -65,23 +53,19 @@ namespace FutsalApi.ApiService.Services
             return image;
         }
 
-        public async Task<List<Image>> UploadMultipleFiles(List<IFormFile> files)
+        public async Task<List<Image>> UploadMultipleFiles(User user, List<IFormFile> files)
         {
             var uploadedImages = new List<Image>();
             foreach (var file in files)
             {
-                uploadedImages.Add(await UploadSingleFile(file));
+                uploadedImages.Add(await UploadSingleFile(user, file));
             }
             return uploadedImages;
         }
 
-        public async Task<bool> DeleteSingleFile(int imageId)
+        public async Task<bool> DeleteSingleFile(User user, int imageId)
         {
-            var userId = GetCurrentUserId();
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated.");
-            }
+            string? userId = user?.Id;
 
             var image = await _imageRepository.GetByIdAsync(i => i.Id == imageId && i.UserId == userId && !i.IsDeleted);
             if (image == null)
@@ -104,12 +88,12 @@ namespace FutsalApi.ApiService.Services
             return true;
         }
 
-        public async Task<bool> DeleteMultipleFiles(List<int> imageIds)
+        public async Task<bool> DeleteMultipleFiles(User user, List<int> imageIds)
         {
             bool allDeleted = true;
             foreach (var imageId in imageIds)
             {
-                if (!await DeleteSingleFile(imageId))
+                if (!await DeleteSingleFile(user, imageId))
                 {
                     allDeleted = false;
                 }
@@ -117,14 +101,9 @@ namespace FutsalApi.ApiService.Services
             return allDeleted;
         }
 
-        public async Task<List<Image>> GetImagesByUserId()
+        public async Task<List<Image>> GetImagesByUserId(User user)
         {
-            var userId = GetCurrentUserId();
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated.");
-            }
-
+            string? userId = user?.Id;
             return await _imageRepository.GetImagesByUserIdAsync(userId);
         }
     }

@@ -1,15 +1,14 @@
-# Use the official .NET 8 runtime as base image
+# Use the official .NET 9 runtime as base image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8443
 
-# Use the .NET 8 SDK for building
+# Use the .NET 9 SDK for building
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Copy solution file and project files
 COPY ["FutsalApi.sln", "./"]
 COPY ["FutsalApi.ApiService/FutsalApi.ApiService.csproj", "FutsalApi.ApiService/"]
 COPY ["FutsalApi.Auth/FutsalApi.Auth.csproj", "FutsalApi.Auth/"]
@@ -35,12 +34,14 @@ RUN dotnet publish "FutsalApi.ApiService.csproj" -c $BUILD_CONFIGURATION -o /app
 FROM base AS final
 WORKDIR /app
 
-# Create a non-root user for security
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
-USER appuser
-
 # Copy the published application
 COPY --from=publish /app/publish .
+
+# Create uploads directory and set permissions before creating user
+RUN mkdir -p /app/wwwroot/uploads && chmod 755 /app/wwwroot/uploads
+
+# Create a non-root user for security (but don't switch to it yet - docker-compose will handle this)
+RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:8080

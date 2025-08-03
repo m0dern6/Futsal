@@ -1,19 +1,22 @@
 ﻿using System.Data;
 using System.Linq.Expressions;
+
 using Dapper;
-using FutsalApi.Core.Models;
+
 using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Models;
+using FutsalApi.Data.DTO;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
 
 public class ReviewRepository : GenericRepository<Review>, IReviewRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly FutsalApi.Data.DTO.AppDbContext _dbContext;
     private readonly IDbConnection _dbConnection;
 
-    public ReviewRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
+    public ReviewRepository(FutsalApi.Data.DTO.AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
         _dbConnection = dbConnection;
@@ -27,7 +30,6 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
         }
 
         return await _dbContext.Reviews
-            .Include(r => r.ReviewImage)
             .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -38,8 +40,8 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 GroundId = r.GroundId,
                 Rating = r.Rating,
                 UserName = r.User.UserName ?? string.Empty,
-                UserImageUrl = r.User.ImageUrl ?? string.Empty,
-                ReviewImageUrl = r.ReviewImage != null ? r.ReviewImage.FilePath : null,
+                UserImageId = r.User.ProfileImageId,
+                ReviewImageUrl = r.ImageUrl,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })
@@ -49,7 +51,6 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
     public new async Task<ReviewResponse?> GetByIdAsync(Expression<Func<Review, bool>> predicate)
     {
         var review = await _dbContext.Reviews
-            .Include(r => r.ReviewImage)
             .Where(predicate)
             .Select(r => new ReviewResponse
             {
@@ -58,8 +59,8 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 GroundId = r.GroundId,
                 Rating = r.Rating,
                 UserName = r.User.UserName ?? string.Empty,
-                UserImageUrl = r.User.ImageUrl ?? string.Empty,
-                ReviewImageUrl = r.ReviewImage != null ? r.ReviewImage.FilePath : null,
+                UserImageId = r.User.ProfileImageId,
+                ReviewImageUrl = r.ImageUrl,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })
@@ -76,7 +77,6 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
         }
 
         return await _dbContext.Reviews
-            .Include(r => r.ReviewImage)
             .Where(r => r.GroundId == groundId)
             .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -88,8 +88,8 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 GroundId = r.GroundId,
                 Rating = r.Rating,
                 UserName = r.User.UserName ?? string.Empty,
-                UserImageUrl = r.User.ImageUrl ?? string.Empty,
-                ReviewImageUrl = r.ReviewImage != null ? r.ReviewImage.FilePath : null,
+                UserImageId = r.User.ProfileImageId,
+                ReviewImageUrl = r.ImageUrl,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })

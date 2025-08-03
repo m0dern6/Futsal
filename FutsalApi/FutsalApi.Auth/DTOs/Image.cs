@@ -16,7 +16,6 @@ public class Image
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public string Url { get; set; } = default!;
     public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
     public string FilePath { get; set; } = default!;
     public string FileName { get; set; } = default!;
