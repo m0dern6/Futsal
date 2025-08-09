@@ -4,8 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FutsalApi.Auth.Models;
 
-public class User : IdentityUser
+public class Role : IdentityRole
 {
-    public string? ImageUrl { get; set; } = null;
 
 }
