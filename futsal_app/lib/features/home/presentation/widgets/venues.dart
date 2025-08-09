@@ -122,7 +122,7 @@ class _VenuesState extends State<Venues> {
                       ),
                     ),
                     onPressed: () {
-                      context.push('/bookNow');
+                      context.push('/bookNow', extra: ground);
                     },
                     child: Text(
                       'Book Now',
