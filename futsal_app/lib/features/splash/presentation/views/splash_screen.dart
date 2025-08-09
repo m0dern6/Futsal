@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/features/splash/presentation/bloc/splash_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,6 +43,40 @@ class _SplashScreenState extends State<SplashScreen> {
         builder: (context, state) {
           if (state is SplashLoaded) {
             WidgetsBinding.instance.addPostFrameCallback((_) async {
+              // Check for in-app update before navigation
+              try {
+                final updateInfo = await InAppUpdate.checkForUpdate();
+                if (updateInfo.updateAvailability ==
+                    UpdateAvailability.updateAvailable) {
+                  // Show dialog to user
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Update Available'),
+                      content: const Text(
+                        'A new version of the app is available. Please update to continue.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                            try {
+                              await InAppUpdate.performImmediateUpdate();
+                            } catch (e) {
+                              // Optionally handle update error
+                            }
+                          },
+                          child: const Text('Update'),
+                        ),
+                      ],
+                    ),
+                  );
+                  return;
+                }
+              } catch (e) {
+                // Optionally handle check error
+              }
               final prefs = await SharedPreferences.getInstance();
               final token = prefs.getString('token');
               if (token != null) {
