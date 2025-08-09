@@ -7,4 +7,6 @@ class ApiConst {
   static const String futsalGround = '/FutsalGround';
   //
   static const String userInfo = 'User/manage/info';
+  //
+  static const String bookFutsal = 'Booking';
 }
