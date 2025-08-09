@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:futsalpay/core/config/dimension.dart';
 
 class TopBar extends StatelessWidget {
   const TopBar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    Dimension.init(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -12,18 +14,22 @@ class TopBar extends StatelessWidget {
           'Hello, Modern',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 26,
+            fontSize: Dimension.font(20),
             fontWeight: FontWeight.bold,
           ),
         ),
         Column(
           children: [
-            Image.asset('assets/logo/inapplogo.png', width: 65, height: 50),
+            Image.asset(
+              'assets/logo/inapplogo.png',
+              width: Dimension.width(65),
+              height: Dimension.height(35),
+            ),
             Text(
-              'Booksal',
+              'Futsal Pay',
               style: TextStyle(
                 color: Color(0xff618E6A),
-                fontSize: 18,
+                fontSize: Dimension.font(14),
                 fontWeight: FontWeight.bold,
               ),
             ),

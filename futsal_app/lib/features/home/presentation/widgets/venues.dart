@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:futsalpay/core/config/dimension.dart';
 import 'package:futsalpay/features/home/data/model/futsal_ground_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:futsalpay/features/home/presentation/bloc/futsal_ground_bloc.dart';
@@ -21,6 +22,7 @@ class _VenuesState extends State<Venues> {
 
   @override
   Widget build(BuildContext context) {
+    Dimension.init(context);
     return BlocBuilder<FutsalGroundBloc, FutsalGroundState>(
       builder: (context, state) {
         if (state is FutsalGroundLoading) {
@@ -29,8 +31,8 @@ class _VenuesState extends State<Venues> {
         if (state is FutsalGroundLoaded) {
           return SingleChildScrollView(
             child: Wrap(
-              spacing: 4.0, // Horizontal space between cards
-              runSpacing: 4.0, // Vertical space between lines
+              spacing: Dimension.width(20),
+              runSpacing: Dimension.height(10),
               children: state.grounds
                   .map((ground) => _buildVenueCard(context, ground))
                   .toList(),
@@ -50,42 +52,47 @@ class _VenuesState extends State<Venues> {
   // Helper widget to build the exact card design from your spec
   Widget _buildVenueCard(BuildContext context, FutsalGroundModel ground) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Container(
-        width: 170, // Set a fixed width to control wrapping
+        width: Dimension.width(150), // Set a fixed width to control wrapping
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xff04340B), width: 0.5),
-          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: const Color(0xff04340B),
+            width: Dimension.width(0.5),
+          ),
+          borderRadius: BorderRadius.circular(Dimension.width(4)),
         ),
         child: Column(
           children: [
             // Using ClipRRect to contain the image within the border radius
             ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(Dimension.width(4)),
+                topRight: Radius.circular(Dimension.width(4)),
               ),
               child: Image.network(
                 ground.imageUrl,
                 width: double.infinity, // Image takes full width of container
-                height: 130, // Fixed height as per your design
+                height: Dimension.height(
+                  120,
+                ), // Fixed height as per your design
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(
-                  height: 130,
+                errorBuilder: (context, error, stackTrace) => SizedBox(
+                  height: Dimension.height(120),
                   child: Icon(Icons.error, color: Colors.grey),
                 ),
               ),
             ),
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(Dimension.width(8)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     ground.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Color(0xff91A693),
-                      fontSize: 16,
+                      fontSize: Dimension.font(14),
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -93,33 +100,36 @@ class _VenuesState extends State<Venues> {
                   ),
                   Text(
                     'Rs.${ground.pricePerHour}/hr',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Color(0xff91A693),
-                      fontSize: 14,
+                      fontSize: Dimension.font(11.5),
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  SizedBox(height: Dimension.height(4)),
                   _buildRatingStars(ground.averageRating), // Dynamic stars
-                  const SizedBox(height: 10),
+                  SizedBox(height: Dimension.height(8)),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       foregroundColor: const Color(0xff156F1F),
                       backgroundColor: const Color(0xff156F1F),
                       padding: EdgeInsets.zero,
-                      minimumSize: const Size(
+                      minimumSize: Size(
                         double.infinity,
-                        35,
+                        Dimension.height(30),
                       ), // Full width button
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(Dimension.width(4)),
                       ),
                     ),
                     onPressed: () {
                       context.push('/bookNow');
                     },
-                    child: const Text(
+                    child: Text(
                       'Book Now',
-                      style: TextStyle(fontSize: 14, color: Color(0xff9CC49F)),
+                      style: TextStyle(
+                        fontSize: Dimension.font(11.5),
+                        color: Color(0xff9CC49F),
+                      ),
                     ),
                   ),
                 ],
@@ -140,7 +150,7 @@ class _VenuesState extends State<Venues> {
         return Icon(
           index < numberOfStars ? Icons.star : Icons.star_border,
           color: Colors.yellow,
-          size: 14,
+          size: Dimension.font(11.5),
         );
       }),
     );
@@ -153,57 +163,59 @@ class _VenuesState extends State<Venues> {
       highlightColor: Colors.grey[100]!,
       child: SingleChildScrollView(
         child: Wrap(
-          spacing: 4.0,
-          runSpacing: 4.0,
+          spacing: Dimension.width(20),
+          runSpacing: Dimension.height(10),
           children: List.generate(6, (index) {
             return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6.0,
-                vertical: 6.0,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
               child: Container(
-                width: 170,
+                width: Dimension.width(150),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: const Color(0xff04340B),
-                    width: 0.5,
+                    width: Dimension.width(0.5),
                   ),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(Dimension.width(4)),
                 ),
                 child: Column(
                   children: [
                     Container(
-                      height: 130,
-                      decoration: const BoxDecoration(
+                      width: double.infinity,
+                      height: Dimension.height(120),
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
+                          topLeft: Radius.circular(Dimension.width(4)),
+                          topRight: Radius.circular(Dimension.width(4)),
                         ),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(10.0),
+                      padding: EdgeInsets.all(Dimension.width(8)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
                             width: double.infinity,
-                            height: 16,
+                            height: Dimension.height(16),
                             color: Colors.white,
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: Dimension.height(4)),
                           Container(
-                            width: 100,
-                            height: 14,
+                            width: Dimension.width(80),
+                            height: Dimension.height(12),
                             color: Colors.white,
                           ),
-                          const SizedBox(height: 5),
-                          Container(width: 80, height: 14, color: Colors.white),
-                          const SizedBox(height: 10),
+                          SizedBox(height: Dimension.height(4)),
+                          Container(
+                            width: Dimension.width(60),
+                            height: Dimension.height(11.5),
+                            color: Colors.white,
+                          ),
+                          SizedBox(height: Dimension.height(8)),
                           Container(
                             width: double.infinity,
-                            height: 35,
+                            height: Dimension.height(30),
                             color: Colors.white,
                           ),
                         ],

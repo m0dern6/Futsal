@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:futsalpay/core/config/dimension.dart';
 import 'package:futsalpay/features/home/presentation/widgets/search_box.dart';
 import 'package:futsalpay/features/home/presentation/widgets/tabs.dart';
 import 'package:futsalpay/features/home/presentation/widgets/top_bar.dart';
@@ -9,33 +10,32 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Dimension.init(context);
     return Scaffold(
       backgroundColor: const Color(0xff03340d).withOpacity(0.6),
       body: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-        ), // Reduced padding slightly for better fit
+        padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            SizedBox(height: Dimension.height(40)),
             const TopBar(),
-            const SizedBox(height: 20),
-            SearchBox(), // Will be updated for search functionality
-            const SizedBox(height: 20),
-            const Align(
+            SizedBox(height: Dimension.height(20)),
+            SearchBox(),
+            SizedBox(height: Dimension.height(20)),
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Top Futsal Venues',
-                style: TextStyle(color: Color(0xff91A693), fontSize: 18),
+                style: TextStyle(
+                  color: Color(0xff91A693),
+                  fontSize: Dimension.font(14),
+                ),
               ),
             ),
-            const SizedBox(height: 10), // Added a small gap
-            // 1. Wrap the Venues widget in Expanded to make it fill the remaining space
+            SizedBox(height: Dimension.height(10)),
             const Expanded(child: Venues()),
-
-            // The Tabs widget is now at the bottom
             const Tabs(),
-            const SizedBox(height: 100),
+            SizedBox(height: Dimension.height(100)),
           ],
         ),
       ),
