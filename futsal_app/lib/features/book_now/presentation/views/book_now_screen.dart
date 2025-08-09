@@ -1,8 +1,12 @@
+import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:futsalpay/core/config/dimension.dart';
 
 class BookNowScreen extends StatefulWidget {
-  const BookNowScreen({super.key});
+  final dynamic ground;
+  const BookNowScreen({super.key, this.ground});
 
   @override
   State<BookNowScreen> createState() => _BookNowScreenState();
@@ -10,7 +14,8 @@ class BookNowScreen extends StatefulWidget {
 
 class _BookNowScreenState extends State<BookNowScreen> {
   int selectedDateIndex = 0;
-  int selectedTimeIndex = 0;
+  int selectedStartTimeIndex = 0;
+  int selectedEndTimeIndex = 1;
   final List<String> times = [
     '12:00 PM',
     '1:00 PM',
@@ -23,6 +28,8 @@ class _BookNowScreenState extends State<BookNowScreen> {
   ];
   @override
   Widget build(BuildContext context) {
+    // Initialize responsive dimensions
+    Dimension.init(context);
     final today = DateTime.now();
     final List<DateTime> weekDates = List.generate(
       7,
@@ -33,53 +40,27 @@ class _BookNowScreenState extends State<BookNowScreen> {
       backgroundColor: const Color(0xFF0B1B2B),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: Dimension.width(18), // was 24
+            vertical: Dimension.height(10), // was 16
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
+              SizedBox(height: Dimension.height(6)),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Select a Date',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: Dimension.font(18),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  // const Spacer(),
-                  // IconButton(
-                  //   icon: const Icon(Icons.calendar_today, color: Colors.white),
-                  //   onPressed: () async {
-                  //     showModalBottomSheet(
-                  //       context: context,
-                  //       builder: (ctx) => SizedBox(
-                  //         height: 250,
-                  //         child: CupertinoDatePicker(
-                  //           mode: CupertinoDatePickerMode.date,
-                  //           initialDateTime: weekDates[selectedDateIndex],
-                  //           minimumDate: today,
-                  //           maximumDate: weekDates.last,
-                  //           onDateTimeChanged: (date) {
-                  //             final idx = weekDates.indexWhere(
-                  //               (d) =>
-                  //                   d.year == date.year &&
-                  //                   d.month == date.month &&
-                  //                   d.day == date.day,
-                  //             );
-                  //             if (idx != -1) {
-                  //               setState(() => selectedDateIndex = idx);
-                  //             }
-                  //           },
-                  //         ),
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: Dimension.height(8)),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -97,21 +78,23 @@ class _BookNowScreenState extends State<BookNowScreen> {
                       'Sun',
                     ][date.weekday - 1];
                     return Padding(
-                      padding: const EdgeInsets.only(right: 16.0),
+                      padding: EdgeInsets.only(right: Dimension.width(10)),
                       child: GestureDetector(
                         onTap: () => setState(() => selectedDateIndex = index),
                         child: Column(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: Dimension.width(12),
+                                vertical: Dimension.height(6),
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? const Color(0xFF7CFF6B)
                                     : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(
+                                  Dimension.width(12),
+                                ),
                               ),
                               child: Text(
                                 date.day.toString(),
@@ -120,16 +103,16 @@ class _BookNowScreenState extends State<BookNowScreen> {
                                       ? Colors.black
                                       : Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 20,
+                                  fontSize: Dimension.font(16),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: Dimension.height(2)),
                             Text(
                               dayName,
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
-                                fontSize: 14,
+                                fontSize: Dimension.font(11.5),
                               ),
                             ),
                           ],
@@ -139,14 +122,14 @@ class _BookNowScreenState extends State<BookNowScreen> {
                   }),
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: Dimension.height(20)),
 
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(Dimension.width(14)),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(Dimension.width(14)),
                 ),
                 child: Row(
                   children: [
@@ -154,55 +137,57 @@ class _BookNowScreenState extends State<BookNowScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'TIMESLOT',
+                          Text(
+                            'GROUND',
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 12,
+                              fontSize: Dimension.font(10),
                               letterSpacing: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'City Futsal',
+                          SizedBox(height: Dimension.height(5)),
+                          Text(
+                            widget.ground.name ?? 'ByteWise Futsal',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: Dimension.font(16.5),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: Dimension.height(5)),
                           Row(
-                            children: const [
+                            children: [
                               Icon(
                                 Icons.location_on,
                                 color: Colors.white54,
-                                size: 18,
+                                size: Dimension.width(13),
                               ),
-                              SizedBox(width: 4),
+                              SizedBox(width: Dimension.width(3)),
                               Text(
                                 '123 Example St',
                                 style: TextStyle(
                                   color: Colors.white70,
-                                  fontSize: 14,
+                                  fontSize: Dimension.font(10.5),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: Dimension.height(2)),
                           Row(
-                            children: const [
-                              Icon(
-                                Icons.attach_money,
-                                color: Colors.white54,
-                                size: 18,
-                              ),
-                              SizedBox(width: 4),
+                            children: [
                               Text(
-                                '40/hour',
+                                'Rs.',
                                 style: TextStyle(
                                   color: Colors.white70,
-                                  fontSize: 14,
+                                  fontSize: Dimension.font(10.5),
+                                ),
+                              ),
+                              SizedBox(width: Dimension.width(3)),
+                              Text(
+                                '${widget.ground.pricePerHour} / hour',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Dimension.font(10.5),
                                 ),
                               ),
                             ],
@@ -214,16 +199,16 @@ class _BookNowScreenState extends State<BookNowScreen> {
                       children: [
                         Image.asset(
                           'assets/logo/inapplogo1.png',
-                          width: 75,
-                          height: 75,
+                          width: Dimension.width(54),
+                          height: Dimension.width(54),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        SizedBox(height: Dimension.height(5)),
+                        Text(
                           'BOOKSAL',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: Dimension.font(10.5),
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -232,84 +217,395 @@ class _BookNowScreenState extends State<BookNowScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  const Text(
-                    'Select a Time',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.access_time, color: Colors.white),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (ctx) => SizedBox(
-                          height: 250,
-                          child: CupertinoDatePicker(
-                            mode: CupertinoDatePickerMode.time,
-                            initialDateTime: DateTime(
-                              today.year,
-                              today.month,
-                              today.day,
-                              12 +
-                                  selectedTimeIndex, // Example: 12:00 PM, 1:00 PM, etc.
-                            ),
-                            use24hFormat: false,
-                            onDateTimeChanged: (date) {
-                              // Find the closest time index
-                              final hour = date.hour;
-                              int idx = hour - 12;
-                              if (idx < 0) idx = 0;
-                              if (idx >= 4) idx = 3;
-                              setState(() => selectedTimeIndex = idx);
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                children: List.generate(times.length, (index) {
-                  final isSelected = selectedTimeIndex == index;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0,
-                      vertical: 8.0,
-                    ),
-                    child: GestureDetector(
-                      onTap: () => setState(() => selectedTimeIndex = index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF7CFF6B)
-                              : Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          times[index],
-                          style: TextStyle(
-                            color: isSelected ? Colors.black : Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
+              SizedBox(height: Dimension.height(20)),
+
+              // Time Selection Section
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(Dimension.width(14)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(Dimension.width(14)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SELECT TIME SLOT',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: Dimension.font(10),
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  );
-                }),
+                    SizedBox(height: Dimension.height(12)),
+
+                    // Start and End Time Row
+                    Row(
+                      children: [
+                        // Start Time
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Start Time',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Dimension.font(11.5),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: Dimension.height(5)),
+                              GestureDetector(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: const Color(0xFF1A2B3D),
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(20),
+                                      ),
+                                    ),
+                                    builder: (ctx) => Container(
+                                      height: Dimension.height(210),
+                                      padding: EdgeInsets.all(
+                                        Dimension.width(12),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: Dimension.width(28),
+                                            height: Dimension.height(3),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.3,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    Dimension.width(1.5),
+                                                  ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: Dimension.height(10),
+                                          ),
+                                          Text(
+                                            'Select Start Time',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: Dimension.font(13.5),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: Dimension.height(10),
+                                          ),
+                                          Expanded(
+                                            child: CupertinoDatePicker(
+                                              mode:
+                                                  CupertinoDatePickerMode.time,
+                                              initialDateTime: DateTime(
+                                                today.year,
+                                                today.month,
+                                                today.day,
+                                                12 + selectedStartTimeIndex,
+                                              ),
+                                              use24hFormat: false,
+                                              onDateTimeChanged: (date) {
+                                                setState(() {
+                                                  selectedStartTimeIndex =
+                                                      date.hour >= 12
+                                                      ? date.hour - 12
+                                                      : date.hour;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: Dimension.width(16),
+                                    vertical: Dimension.height(14),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF7CFF6B,
+                                    ).withOpacity(0.15),
+                                    border: Border.all(
+                                      color: const Color(
+                                        0xFF7CFF6B,
+                                      ).withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      Dimension.width(12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        selectedStartTimeIndex < times.length
+                                            ? times[selectedStartTimeIndex]
+                                            : '${12 + selectedStartTimeIndex}:00 PM',
+                                        style: TextStyle(
+                                          color: const Color(0xFF7CFF6B),
+                                          fontSize: Dimension.font(12),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.access_time,
+                                        color: const Color(0xFF7CFF6B),
+                                        size: Dimension.width(14),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Separator
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: Dimension.width(10),
+                            vertical: Dimension.height(5),
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white54,
+                            size: Dimension.width(16),
+                          ),
+                        ),
+
+                        // End Time
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'End Time',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Dimension.font(11.5),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: Dimension.height(5)),
+                              GestureDetector(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: const Color(0xFF1A2B3D),
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(20),
+                                      ),
+                                    ),
+                                    builder: (ctx) => Container(
+                                      height: Dimension.height(210),
+                                      padding: EdgeInsets.all(
+                                        Dimension.width(12),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: Dimension.width(28),
+                                            height: Dimension.height(3),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.3,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    Dimension.width(1.5),
+                                                  ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: Dimension.height(10),
+                                          ),
+                                          Text(
+                                            'Select End Time',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: Dimension.font(13.5),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: Dimension.height(10),
+                                          ),
+                                          Expanded(
+                                            child: CupertinoDatePicker(
+                                              mode:
+                                                  CupertinoDatePickerMode.time,
+                                              initialDateTime: DateTime(
+                                                today.year,
+                                                today.month,
+                                                today.day,
+                                                12 + selectedEndTimeIndex,
+                                              ),
+                                              use24hFormat: false,
+                                              onDateTimeChanged: (date) {
+                                                setState(() {
+                                                  selectedEndTimeIndex =
+                                                      date.hour >= 12
+                                                      ? date.hour - 12
+                                                      : date.hour;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: Dimension.width(16),
+                                    vertical: Dimension.height(14),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF7CFF6B,
+                                    ).withOpacity(0.15),
+                                    border: Border.all(
+                                      color: const Color(
+                                        0xFF7CFF6B,
+                                      ).withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      Dimension.width(12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        selectedEndTimeIndex < times.length
+                                            ? times[selectedEndTimeIndex]
+                                            : '${12 + selectedEndTimeIndex}:00 PM',
+                                        style: TextStyle(
+                                          color: const Color(0xFF7CFF6B),
+                                          fontSize: Dimension.font(12),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.access_time,
+                                        color: const Color(0xFF7CFF6B),
+                                        size: Dimension.width(14),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: Dimension.height(12)),
+
+                    // Duration Display
+                    Container(
+                      padding: EdgeInsets.all(Dimension.width(10)),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(Dimension.width(8)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.schedule,
+                            color: Colors.white70,
+                            size: Dimension.width(13),
+                          ),
+                          SizedBox(width: Dimension.width(7)),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Duration',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Dimension.font(9),
+                                ),
+                              ),
+                              SizedBox(height: Dimension.height(1)),
+                              Text(
+                                '${_calculateDuration()} hour${_calculateDuration() > 1 ? 's' : ''}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Dimension.font(12),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Total Cost',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Dimension.font(9),
+                                ),
+                              ),
+                              SizedBox(height: Dimension.height(1)),
+                              Text(
+                                '\Rs.${_calculateDuration() * widget.ground.pricePerHour}',
+                                style: TextStyle(
+                                  color: const Color(0xFF7CFF6B),
+                                  fontSize: Dimension.font(13),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: Dimension.height(16)),
+
+                    // Quick Time Options
+                    Text(
+                      'Quick Select',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: Dimension.font(10.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: Dimension.height(5)),
+                    Wrap(
+                      spacing: Dimension.width(5),
+                      runSpacing: Dimension.height(5),
+                      children: [
+                        _buildQuickTimeButton('1 Hour', 1),
+                        _buildQuickTimeButton('2 Hours', 2),
+                        _buildQuickTimeButton('3 Hours', 3),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
               SizedBox(
@@ -318,20 +614,67 @@ class _BookNowScreenState extends State<BookNowScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF7CFF6B),
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    padding: EdgeInsets.symmetric(
+                      vertical: Dimension.height(18),
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(Dimension.width(12)),
                     ),
                   ),
                   onPressed: () {},
-                  child: const Text(
+                  child: Text(
                     'Continue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: Dimension.font(18),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: Dimension.height(7)),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  int _calculateDuration() {
+    int startHour = selectedStartTimeIndex;
+    int endHour = selectedEndTimeIndex;
+
+    // Handle case where end time might be less than start time
+    if (endHour <= startHour) {
+      endHour += times.length;
+    }
+
+    return endHour - startHour;
+  }
+
+  Widget _buildQuickTimeButton(String label, int duration) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedEndTimeIndex =
+              (selectedStartTimeIndex + duration) % times.length;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: Dimension.width(10),
+          vertical: Dimension.height(5),
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(Dimension.width(14)),
+          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: Dimension.font(9),
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
