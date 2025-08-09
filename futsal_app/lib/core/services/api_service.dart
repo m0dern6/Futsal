@@ -46,27 +46,81 @@ class ApiService {
     );
   }
 
-  // Existing POST method for login/register
+  // POST method
   Future<dynamic> post(String path, {dynamic data}) async {
     try {
       final response = await _dio.post(path, data: data);
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed: ${response.statusCode} ${response.statusMessage}',
+        );
+      }
       return response.data;
     } on DioException catch (e) {
-      // You can add more robust error handling here
       throw Exception('Failed to post data: ${e.message}');
     }
   }
 
-  // ** ADD THIS NEW GET METHOD **
+  // GET method
   Future<dynamic> get(
     String path, {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed: ${response.statusCode} ${response.statusMessage}',
+        );
+      }
       return response.data;
     } on DioException catch (e) {
       throw Exception('Failed to get data: ${e.message}');
+    }
+  }
+
+  // PUT method
+  Future<dynamic> put(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.put(path, data: data);
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed: ${response.statusCode} ${response.statusMessage}',
+        );
+      }
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception('Failed to put data: ${e.message}');
+    }
+  }
+
+  // PATCH method
+  Future<dynamic> patch(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.patch(path, data: data);
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed: ${response.statusCode} ${response.statusMessage}',
+        );
+      }
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception('Failed to patch data: ${e.message}');
+    }
+  }
+
+  // DELETE method
+  Future<dynamic> delete(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.delete(path, data: data);
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed: ${response.statusCode} ${response.statusMessage}',
+        );
+      }
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception('Failed to delete data: ${e.message}');
     }
   }
 }
