@@ -24,7 +24,7 @@ class Dimension {
   }
 
   // Responsive font size based on geometric mean of width and height
-  static double fontSize(double value) {
+  static double font(double value) {
     // 812 and 375 are reference height and width (iPhone X)
     double scale = sqrt((deviceHeight / 812.0) * (deviceWidth / 375.0));
     return value * scale;

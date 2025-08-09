@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:futsalpay/core/config/dimension.dart';
 import 'package:go_router/go_router.dart';
 
 class BottomNavBar extends StatefulWidget {
@@ -20,6 +21,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    Dimension.init(context);
     final String location = GoRouterState.of(context).uri.toString();
     final int currentIndex = _locationToTabIndex(location);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -37,7 +39,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40, vertical: 30),
         child: Container(
-          height: 75,
+          height: Dimension.height(65),
           padding: EdgeInsets.only(top: 0),
           decoration: BoxDecoration(
             color: Color(0xff03340d),
@@ -47,13 +49,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
             alignment: Alignment.center,
             child: BottomNavigationBar(
               elevation: 100,
-
               backgroundColor: Colors.transparent,
               selectedItemColor: Color(0xff1a8931),
               unselectedItemColor: Colors.white,
-              iconSize: 35,
-              unselectedLabelStyle: TextStyle(fontSize: 18),
-              selectedLabelStyle: TextStyle(fontSize: 18),
+              iconSize: Dimension.height(30),
+              unselectedLabelStyle: TextStyle(fontSize: Dimension.font(14)),
+              selectedLabelStyle: TextStyle(fontSize: Dimension.font(14)),
               currentIndex: currentIndex,
               onTap: (index) {
                 if (index != currentIndex) {

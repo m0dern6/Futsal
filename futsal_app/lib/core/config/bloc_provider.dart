@@ -6,6 +6,8 @@ import 'package:futsalpay/features/auth/presentation/bloc/register/register_bloc
 import 'package:futsalpay/features/home/domain/futsal_ground_repository.dart';
 import 'package:futsalpay/features/home/presentation/bloc/futsal_ground_bloc.dart';
 import 'package:futsalpay/features/splash/presentation/bloc/splash_bloc.dart';
+import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
+import 'package:futsalpay/shared/user_info/data/repository/user_info_repository.dart';
 
 class AppBlocProviders {
   static List<BlocProvider> get all => [
@@ -27,6 +29,10 @@ class AppBlocProviders {
     BlocProvider<FutsalGroundBloc>(
       create: (context) =>
           FutsalGroundBloc(context.read<FutsalGroundRepository>()),
+    ),
+    BlocProvider<UserInfoBloc>(
+      create: (context) =>
+          UserInfoBloc(context.read<UserInfoRepository>())..add(LoadUserInfo()),
     ),
   ];
 }
