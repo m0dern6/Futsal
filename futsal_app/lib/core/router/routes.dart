@@ -55,6 +55,9 @@ final GoRouter router = GoRouter(
         GoRoute(path: '/profile', builder: (context, state) => ProfileScreen()),
       ],
     ),
-    GoRoute(path: '/bookNow', builder: (context, state) => BookNowScreen()),
+    GoRoute(
+      path: '/bookNow',
+      builder: (context, state) => BookNowScreen(ground: state.extra),
+    ),
   ],
 );
