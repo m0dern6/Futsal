@@ -22,7 +22,7 @@ public static class AuthExtensions
         services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
             options =>
             {
-                options.BearerTokenExpiration = TimeSpan.FromDays(1);
+                options.BearerTokenExpiration = TimeSpan.FromDays(15);
                 options.RefreshTokenExpiration = TimeSpan.FromDays(30);
             });
         //.AddGoogleAuthentication();

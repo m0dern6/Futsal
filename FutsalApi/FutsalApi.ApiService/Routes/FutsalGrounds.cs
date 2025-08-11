@@ -33,12 +33,12 @@ public class FutsalGroundApiEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapGet("/search", SearchFutsalGrounds)
-       .WithName("SearchFutsalGrounds")
-       .WithSummary("Search futsal grounds by name and filters.")
-       .WithDescription("Searches futsal grounds by name, location, and average rating with pagination.")
-       .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
-       .ProducesProblem(StatusCodes.Status400BadRequest)
-       .ProducesProblem(StatusCodes.Status500InternalServerError);
+            .WithName("SearchFutsalGrounds")
+            .WithSummary("Search futsal grounds by name and proximity.")
+            .WithDescription("Searches futsal grounds by name, proximity to coordinates, and average rating with pagination.")
+            .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         routeGroup.MapGet("/{id:int}", GetFutsalGroundById)
             .WithName("GetFutsalGroundById")
@@ -72,6 +72,22 @@ public class FutsalGroundApiEndpoints : IEndpoint
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        routeGroup.MapGet("/trending", GetTrendingFutsalGrounds)
+            .WithName("GetTrendingFutsalGrounds")
+            .WithSummary("Get trending (most booked) futsal grounds.")
+            .WithDescription("Returns a paginated list of trending futsal grounds based on booking count in the last 30 days.")
+            .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        routeGroup.MapGet("/top-reviewed", GetTopReviewedFutsalGrounds)
+            .WithName("GetTopReviewedFutsalGrounds")
+            .WithSummary("Get top reviewed futsal grounds.")
+            .WithDescription("Returns a paginated list of futsal grounds with the highest average rating and most reviews.")
+            .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetAllFutsalGrounds(
@@ -97,6 +113,7 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<FutsalGroundResponse>, NotFound, ProblemHttpResult>> GetFutsalGroundById(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] IBookingRepository bookingRepository,
         int id)
     {
         try
@@ -107,6 +124,21 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 return TypedResults.NotFound();
             }
 
+            // Fetch booked time slots for this ground (for today and future, and not cancelled)
+            var now = DateTime.UtcNow.Date;
+            var bookings = await bookingRepository.GetAllAsync(
+                b => b.GroundId == id && b.BookingDate >= now && b.Status != BookingStatus.Cancelled,
+                1, 1000 // fetch up to 1000 future bookings
+            );
+            futsalGround.BookedTimeSlots = bookings
+                .Select(b => new BookedTimeSlot
+                {
+                    BookingDate = b.BookingDate,
+                    StartTime = b.StartTime,
+                    EndTime = b.EndTime
+                })
+                .ToList();
+
             return TypedResults.Ok(futsalGround);
         }
         catch (Exception ex)
@@ -116,22 +148,40 @@ public class FutsalGroundApiEndpoints : IEndpoint
     }
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> SearchFutsalGrounds(
-    [FromServices] IFutsalGroundRepository repository,
-    [FromQuery] string? name,
-    [FromQuery] string? location,
-    [FromQuery] double? minRating,
-    [FromQuery] double? maxRating,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10)
+        [FromServices] IFutsalGroundRepository repository,
+        [FromQuery] string? name,
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
+        [FromQuery] double? minRating,
+        [FromQuery] double? maxRating,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
         {
             return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
         }
 
+        // Validate latitude and longitude if provided
+        if (latitude.HasValue && (latitude < -90 || latitude > 90))
+        {
+            return TypedResults.Problem(detail: "Latitude must be between -90 and 90.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        if (longitude.HasValue && (longitude < -180 || longitude > 180))
+        {
+            return TypedResults.Problem(detail: "Longitude must be between -180 and 180.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        // If only one of latitude/longitude is provided, require both
+        if ((latitude.HasValue && !longitude.HasValue) || (!latitude.HasValue && longitude.HasValue))
+        {
+            return TypedResults.Problem(detail: "Both latitude and longitude must be provided together.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
         try
         {
-            var futsalGrounds = await repository.SearchFutsalGroundsAsync(name, location, minRating, maxRating, page, pageSize);
+            var futsalGrounds = await repository.SearchFutsalGroundsAsync(name, latitude, longitude, minRating, maxRating, page, pageSize);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)
@@ -219,7 +269,6 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 return TypedResults.Problem("Open and close time must be between 0 and 24.", statusCode: StatusCodes.Status400BadRequest);
             }
 
-
             FutsalGround updatedGround = new FutsalGround
             {
                 OwnerId = user.Id,
@@ -233,7 +282,6 @@ public class FutsalGroundApiEndpoints : IEndpoint
                 Description = updatedGroundRequest.Description,
                 ImageUrl = updatedGroundRequest.ImageId.ToString(),
             };
-
 
             var result = await repository.UpdateAsync(e => e.Id == id, updatedGround);
             return TypedResults.Ok("Futsal ground updated successfully.");
@@ -279,6 +327,46 @@ public class FutsalGroundApiEndpoints : IEndpoint
         catch (Exception ex)
         {
             return TypedResults.Problem($"An error occurred while deleting the futsal ground: {ex.Message}");
+        }
+    }
+
+    internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetTrendingFutsalGrounds(
+        [FromServices] IFutsalGroundRepository repository,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
+        }
+        try
+        {
+            var futsalGrounds = await repository.GetTrendingFutsalGroundsAsync(page, pageSize);
+            return TypedResults.Ok(futsalGrounds);
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"An error occurred while retrieving trending futsal grounds: {ex.Message}");
+        }
+    }
+
+    internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetTopReviewedFutsalGrounds(
+        [FromServices] IFutsalGroundRepository repository,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
+        }
+        try
+        {
+            var futsalGrounds = await repository.GetTopReviewedFutsalGroundsAsync(page, pageSize);
+            return TypedResults.Ok(futsalGrounds);
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"An error occurred while retrieving top reviewed futsal grounds: {ex.Message}");
         }
     }
 }

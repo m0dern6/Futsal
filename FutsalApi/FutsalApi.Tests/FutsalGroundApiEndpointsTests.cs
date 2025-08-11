@@ -16,11 +16,13 @@ public class FutsalGroundApiEndpointsTests
 {
     private readonly Mock<IFutsalGroundRepository> _repositoryMock;
     private readonly Mock<UserManager<User>> _userManagerMock;
+    private readonly Mock<IBookingRepository> _bookingRepositoryMock;
     private readonly FutsalGroundApiEndpoints _endpoints;
 
     public FutsalGroundApiEndpointsTests()
     {
         _repositoryMock = new Mock<IFutsalGroundRepository>();
+        _bookingRepositoryMock = new Mock<IBookingRepository>();
         _userManagerMock = MockUserManager();
         _endpoints = new FutsalGroundApiEndpoints();
     }
@@ -66,9 +68,10 @@ public class FutsalGroundApiEndpointsTests
         // Arrange
         var futsalGround = new FutsalGroundResponse { Id = 1, Name = "Ground 1", Location = "Location 1", OwnerId = "Owner1" };
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<FutsalGround, bool>>>())).ReturnsAsync(futsalGround);
+        _bookingRepositoryMock.Setup(r => r.GetAllAsync(It.IsAny<Expression<Func<Booking, bool>>>(), 1, 1000)).ReturnsAsync(new List<BookingResponse>());
 
         // Act
-        var result = await _endpoints.GetFutsalGroundById(_repositoryMock.Object, 1);
+        var result = await _endpoints.GetFutsalGroundById(_repositoryMock.Object, _bookingRepositoryMock.Object, 1);
 
         // Assert
         result.Should().BeOfType<Results<Ok<FutsalGroundResponse>, NotFound, ProblemHttpResult>>();
@@ -85,7 +88,7 @@ public class FutsalGroundApiEndpointsTests
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Expression<Func<FutsalGround, bool>>>())).ReturnsAsync((FutsalGroundResponse?)null);
 
         // Act
-        var result = await _endpoints.GetFutsalGroundById(_repositoryMock.Object, 1);
+        var result = await _endpoints.GetFutsalGroundById(_repositoryMock.Object, _bookingRepositoryMock.Object, 1);
 
         // Assert
         result.Should().BeOfType<Results<Ok<FutsalGroundResponse>, NotFound, ProblemHttpResult>>();

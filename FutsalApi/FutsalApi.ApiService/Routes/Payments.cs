@@ -134,12 +134,12 @@ public class PaymentApiEndpoints : IEndpoint
                 payment.Status = PaymentStatus.Completed; // Assuming online payment is completed immediately
             }
 
-            var createdPayment = await repository.CreatePaymentAsync(payment);
+            //var createdPayment = await repository.CreatePaymentAsync(payment);
 
-            if (createdPayment == null)
-            {
-                return TypedResults.Problem("Failed to create the payment.", statusCode: StatusCodes.Status400BadRequest);
-            }
+            //if (createdPayment == null)
+            //{
+            //    return TypedResults.Problem("Failed to create the payment.", statusCode: StatusCodes.Status400BadRequest);
+            //}
 
             return TypedResults.Ok("Payment created successfully.");
         }

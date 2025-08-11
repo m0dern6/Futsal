@@ -1,4 +1,4 @@
-namespace FutsalApi.UI.Shared.Models
+﻿namespace FutsalApi.UI.Shared.Models
 {
     public class FutsalGroundResponse
     {
@@ -17,5 +17,6 @@ namespace FutsalApi.UI.Shared.Models
         public TimeSpan CloseTime { get; set; }
         public DateTime CreatedAt { get; set; }
         public string OwnerName { get; set; } = string.Empty;
+        public double? DistanceKm { get; set; } // Distance from search coordinates in kilometers
     }
 }

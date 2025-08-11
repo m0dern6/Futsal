@@ -4,6 +4,7 @@ using FluentValidation.AspNetCore;
 using FutsalApi.ApiService.Extensions;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services;
+using FutsalApi.ApiService.Services.PaymentGateway;
 using FutsalApi.Auth.Infrastructure;
 using FutsalApi.Auth.Services;
 using FutsalApi.Data.DTO;
@@ -22,6 +23,17 @@ builder.AddRedisOutputCache("cache");
 builder.AddNpgsqlDbContext<AppDbContext>("futsaldb");
 
 builder.Services.AddAuthConfig(builder.Configuration);
+
+// Add CORS and allow all
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
@@ -73,6 +85,12 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
+// Payment Gateway Services
+builder.Services.Configure<ESewaConfig>(builder.Configuration.GetSection("ESewa"));
+builder.Services.Configure<KhaltiConfig>(builder.Configuration.GetSection("Khalti"));
+builder.Services.AddHttpClient<IESewaService, ESewaService>();
+builder.Services.AddHttpClient<IKhaltiService, KhaltiService>();
+
 builder.Services.AddScoped<ImageService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -85,6 +103,9 @@ app.UseOutputCache();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseStaticFiles();
+
+// Enable CORS for all origins, headers, and methods
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {

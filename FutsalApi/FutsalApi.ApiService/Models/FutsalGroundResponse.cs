@@ -1,6 +1,14 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FutsalApi.ApiService.Models;
+
+public class BookedTimeSlot
+{
+    public DateTime BookingDate { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+}
 
 public class FutsalGroundResponse
 {
@@ -19,7 +27,10 @@ public class FutsalGroundResponse
     public TimeSpan OpenTime { get; set; }
     public TimeSpan CloseTime { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int? BookingCount { get; set; } = 0;
     public string OwnerName { get; set; } = string.Empty;
+    public double? DistanceKm { get; set; } // Distance from search coordinates in kilometers
 
-
+    // New property for booked time slots
+    public List<BookedTimeSlot> BookedTimeSlots { get; set; } = new();
 }
