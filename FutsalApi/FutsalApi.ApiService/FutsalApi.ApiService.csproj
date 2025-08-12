@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FutsalApi.ServiceDefaults\FutsalApi.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\FutsalApi.Auth\FutsalApi.Auth.csproj" />
     <ProjectReference Include="..\FutsalApi.Data\FutsalApi.Data.csproj" />
   </ItemGroup>
 

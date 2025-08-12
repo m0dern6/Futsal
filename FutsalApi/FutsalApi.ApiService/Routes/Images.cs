@@ -1,15 +1,15 @@
-using FutsalApi.ApiService.Services;
+﻿using FutsalApi.ApiService.Services;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using FutsalApi.Data.DTO;
 using Microsoft.AspNetCore.Mvc;
-using FutsalApi.Auth.Infrastructure;
+using FutsalApi.ApiService.Infrastructure;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using FutsalApi.Auth.Models;
+using FutsalApi.Data.Models;
 
 namespace FutsalApi.ApiService.Routes
 {

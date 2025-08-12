@@ -3,7 +3,7 @@ using System.Data;
 using System.Linq.Expressions;
 using Dapper;
 using FutsalApi.Data.DTO;
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using Microsoft.EntityFrameworkCore;
 

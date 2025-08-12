@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using FutsalApi.ApiService.Models.PaymentGateway;
+using PaymentGateway;
 using Microsoft.Extensions.Options;
 
 namespace FutsalApi.ApiService.Services.PaymentGateway;

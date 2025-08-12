@@ -2,7 +2,7 @@
 using System.Data;
 using Dapper;
 using FutsalApi.Data.DTO;
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;

@@ -1,8 +1,8 @@
 ﻿using System.Security.Claims;
-using FutsalApi.Auth.Infrastructure;
-using FutsalApi.ApiService.Models.PaymentGateway;
+using FutsalApi.ApiService.Infrastructure;
+using PaymentGateway;
 using FutsalApi.ApiService.Services;
-using FutsalApi.Auth.Models;
+using FutsalApi.Data.DTO;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -76,8 +76,8 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             }
 
             var response = await paymentService.InitiateESewaPaymentAsync(
-                request.BookingId, 
-                request.SuccessUrl, 
+                request.BookingId,
+                request.SuccessUrl,
                 request.FailureUrl);
 
             if (response.Success)
@@ -100,7 +100,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
         try
         {
             var payment = await paymentService.ProcessESewaCallbackAsync(callback);
-            
+
             if (payment != null)
             {
                 return TypedResults.Ok("Payment processed successfully");
@@ -128,8 +128,8 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             }
 
             var response = await paymentService.InitiateKhaltiPaymentAsync(
-                request.BookingId, 
-                request.ReturnUrl, 
+                request.BookingId,
+                request.ReturnUrl,
                 request.WebsiteUrl);
 
             if (response.Success)
@@ -157,7 +157,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             }
 
             var payment = await paymentService.ProcessKhaltiCallbackAsync(pidx);
-            
+
             if (payment != null)
             {
                 return TypedResults.Ok("Payment processed successfully");
@@ -182,7 +182,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             if (webhookPayload.Status == "Completed")
             {
                 var payment = await paymentService.ProcessKhaltiCallbackAsync(webhookPayload.Pidx);
-                
+
                 if (payment != null)
                 {
                     return TypedResults.Ok("Webhook processed successfully");

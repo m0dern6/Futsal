@@ -1,5 +1,5 @@
 ﻿using System;
-using FutsalApi.ApiService.Models.PaymentGateway;
+using PaymentGateway;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services.PaymentGateway;
 using FutsalApi.Data.DTO;

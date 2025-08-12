@@ -5,8 +5,8 @@ using FutsalApi.ApiService.Extensions;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services;
 using FutsalApi.ApiService.Services.PaymentGateway;
-using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Auth.Services;
+using FutsalApi.ApiService.Infrastructure;
+using FutsalApi.ApiService.Services;
 using FutsalApi.Data.DTO;
 
 using Microsoft.EntityFrameworkCore;

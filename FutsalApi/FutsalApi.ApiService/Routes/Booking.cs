@@ -2,22 +2,24 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 
-using FutsalApi.ApiService.Data;
+
 using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Infrastructure.Auth;
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Repositories.Interfaces;
-using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Auth.Models;
+using FutsalApi.ApiService.Infrastructure;
+using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Auth;
 
 [assembly: InternalsVisibleTo("FutsalApi.Tests")]
 namespace FutsalApi.ApiService.Routes;
+
 public class BookingApiEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
