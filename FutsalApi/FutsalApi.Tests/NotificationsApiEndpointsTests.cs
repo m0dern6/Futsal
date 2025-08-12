@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Routes;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Moq;
 using FluentAssertions;
 using FutsalApi.Data.DTO;
-using FutsalApi.Auth.Models;
+using FutsalApi.Data.Models;
 
 namespace FutsalApi.Tests;
 

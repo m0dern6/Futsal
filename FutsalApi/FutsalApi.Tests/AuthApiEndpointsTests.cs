@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,9 +18,9 @@ using Xunit;
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Http.HttpResults;
-using FutsalApi.Auth.Models;
-using FutsalApi.Auth.Routes;
-using FutsalApi.Auth;
+using FutsalApi.Data.Models;
+using FutsalApi.ApiService.Routes;
+using Auth;
 
 
 
@@ -85,7 +85,7 @@ public class AuthApiEndpointsTests
     public async Task RegisterUser_ValidEmail_ReturnsOk()
     {
         // Arrange
-        var registration = new FutsalApi.Auth.Models.RegisterRequest { Email = "test@example.com", Password = "Password123!" };
+        var registration = new RegisterRequest { Email = "test@example.com", Password = "Password123!" };
         var emailStore = new Mock<IUserEmailStore<User>>();
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
         _serviceProviderMock.Setup(x => x.GetService(typeof(IUserStore<User>))).Returns(emailStore.Object);
@@ -104,7 +104,7 @@ public class AuthApiEndpointsTests
             .ReturnsAsync("dummy-confirm-token");
 
         // Provide a valid endpoint name and mock LinkGenerator to avoid NotSupportedException
-        
+
 
         // Fix the LinkGenerator mock to use the correct parameter types
         _linkGeneratorMock
@@ -185,7 +185,7 @@ public class AuthApiEndpointsTests
             .ReturnsAsync((User?)null);
 
         // Act
-        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object, new Mock<AuthDbContext>().Object);
+        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object, new Mock<AppDbContext>().Object);
 
         // Assert
         result.Result.Should().BeOfType<NotFound>();
@@ -205,7 +205,7 @@ public class AuthApiEndpointsTests
         _userManagerMock.Setup(x => x.IsEmailConfirmedAsync(user)).ReturnsAsync(true);
 
         // Act
-        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object, new Mock<AuthDbContext>().Object);
+        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object, new Mock<AppDbContext>().Object);
 
         // Assert
         result.Result.Should().BeOfType<Ok<InfoResponse>>();
@@ -258,7 +258,7 @@ public class AuthApiEndpointsTests
     [Fact]
     public async Task ResetPassword_UserNotFound_ReturnsValidationProblem()
     {
-        var request = new FutsalApi.Auth.Models.ResetPasswordRequest { Email = "notfound@example.com", ResetCode = "code", NewPassword = "pass" };
+        var request = new ResetPasswordRequest { Email = "notfound@example.com", ResetCode = "code", NewPassword = "pass" };
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync((User?)null);
 
@@ -282,7 +282,7 @@ public class AuthApiEndpointsTests
     [Fact]
     public async Task ResetPassword_InvalidToken_ReturnsValidationProblem()
     {
-                                var request = new FutsalApi.Auth.Models.ResetPasswordRequest { Email = "user@example.com", ResetCode = "!!!", NewPassword = "pass" };
+        var request = new ResetPasswordRequest { Email = "user@example.com", ResetCode = "!!!", NewPassword = "pass" };
         var user = new User { Email = request.Email };
         _serviceProviderMock.Setup(x => x.GetService(typeof(UserManager<User>))).Returns(_userManagerMock.Object);
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(user);
@@ -317,7 +317,7 @@ public class AuthApiEndpointsTests
         _userManagerMock.Setup(x => x.ResetPasswordAsync(user, "token", request.NewPassword)).ReturnsAsync(IdentityResult.Success);
 
         var result = await _authApi.ResetPassword(
-            new FutsalApi.Auth.Models.ResetPasswordRequest
+            new ResetPasswordRequest
             {
                 Email = request.Email,
                 ResetCode = WebEncoders.Base64UrlEncode(System.Text.Encoding.UTF8.GetBytes("token")),
