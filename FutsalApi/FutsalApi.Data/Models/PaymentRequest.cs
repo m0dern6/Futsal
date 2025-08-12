@@ -1,9 +1,9 @@
 ﻿using System;
 
-using FutsalApi.ApiService.Data;
+
 using FutsalApi.Data.DTO;
 
-namespace FutsalApi.ApiService.Models;
+namespace FutsalApi.Data.Models;
 
 public class PaymentRequest
 {

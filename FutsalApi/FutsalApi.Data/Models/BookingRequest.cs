@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace FutsalApi.ApiService.Models;
+namespace FutsalApi.Data.Models;
 
 public class BookingRequest
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FutsalApi.ApiService.Models.PaymentGateway;
+namespace PaymentGateway;
 
 // Khalti Request Models
 public class KhaltiInitiateRequest

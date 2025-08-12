@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using FutsalApi.Data.DTO;
 
-namespace FutsalApi.ApiService.Models;
+namespace FutsalApi.Data.Models;
 
 public class ImageUploadMultipleRequest
 {
