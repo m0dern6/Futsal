@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/core/config/dimension.dart';
 import 'package:futsalpay/features/home/data/model/futsal_ground_model.dart';
 import 'package:go_router/go_router.dart';
-import 'package:futsalpay/features/home/presentation/bloc/futsal_ground_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/futsal_ground/futsal_ground_bloc.dart';
 import 'package:shimmer/shimmer.dart';
 
 class Venues extends StatefulWidget {
