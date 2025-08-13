@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+
 using Dapper;
-using FutsalApi.Data.DTO;
+
+using FutsalApi.ApiService.Data;
 using FutsalApi.ApiService.Models;
+
 using Microsoft.EntityFrameworkCore;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Repositories;
 
 public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGroundRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly FutsalApi.Data.DTO.AppDbContext _dbContext;
     private readonly IDbConnection _dbConnection;
 
-    public FutsalGroundRepository(AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
+    public FutsalGroundRepository(FutsalApi.Data.DTO.AppDbContext dbContext, IDbConnection dbConnection) : base(dbContext)
     {
         _dbContext = dbContext;
         _dbConnection = dbConnection;

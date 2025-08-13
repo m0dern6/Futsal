@@ -3,18 +3,13 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 
-using FutsalApi.Auth.Models;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
 
@@ -22,9 +17,8 @@ using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using IdentityData = Microsoft.AspNetCore.Identity.Data;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using FutsalApi.Auth.Models;
 
 
 
@@ -685,14 +679,14 @@ public class AuthApiEndpointRouteBuilderExtensions
     }
 
     internal async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>> GetUserInfo(
-        ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp)
+        ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp, [FromServices] AuthDbContext dbContext)
     {
         var userManager = sp.GetRequiredService<UserManager<User>>();
         if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
         {
             return TypedResults.NotFound();
         }
-        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
+        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager, dbContext));
     }
 
     internal async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>> UpdateUserInfo(
@@ -702,7 +696,8 @@ public class AuthApiEndpointRouteBuilderExtensions
         [FromServices] IServiceProvider sp,
         string? confirmEmailEndpointName,
         LinkGenerator linkGenerator,
-        IEmailSender<User> emailSender)
+        IEmailSender<User> emailSender,
+        [FromServices] AuthDbContext dbContext)
     {
         var userManager = sp.GetRequiredService<UserManager<User>>();
         if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
@@ -734,7 +729,28 @@ public class AuthApiEndpointRouteBuilderExtensions
                 await SendConfirmationEmailAsync(user, userManager, context, infoRequest.NewEmail, confirmEmailEndpointName, linkGenerator, emailSender, isChange: true);
             }
         }
-        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
+        if (infoRequest.ProfileImageId.HasValue)
+        {
+            user.ProfileImageId = infoRequest.ProfileImageId.Value;
+        }
+        if (!string.IsNullOrEmpty(infoRequest.Username) && user.UserName != infoRequest.Username)
+        {
+            var setUserNameResult = await userManager.SetUserNameAsync(user, infoRequest.Username);
+            if (!setUserNameResult.Succeeded)
+            {
+                return CreateValidationProblem(setUserNameResult);
+            }
+        }
+        if (!string.IsNullOrEmpty(infoRequest.PhoneNumber) && user.PhoneNumber != infoRequest.PhoneNumber)
+        {
+            var setPhoneNumberResult = await userManager.SetPhoneNumberAsync(user, infoRequest.PhoneNumber);
+            if (!setPhoneNumberResult.Succeeded)
+            {
+                return CreateValidationProblem(setPhoneNumberResult);
+            }
+        }
+        await userManager.UpdateAsync(user);
+        return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager, dbContext));
     }
     internal async Task<Ok> SendRevalidateEmailEndpoint(
         [FromBody] ResendConfirmationEmailRequest request,
@@ -807,12 +823,18 @@ public class AuthApiEndpointRouteBuilderExtensions
         return TypedResults.ValidationProblem(errorDictionary);
     }
 
-    private async Task<FutsalApi.Auth.Models.InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager)
+    private async Task<InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, AuthDbContext dbContext)
     {
+        var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
         return new()
         {
+            Id = user.Id,
             Email = await userManager.GetEmailAsync(user) ?? throw new NotSupportedException("Users must have an email."),
             IsEmailConfirmed = await userManager.IsEmailConfirmedAsync(user),
+            ProfileImageUrl = profileImage?.FilePath, // imageurl
+            Username = await userManager.GetUserNameAsync(user), // username
+            PhoneNumber = await userManager.GetPhoneNumberAsync(user), // phone number
+            IsPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(user) // isphoneverified
         };
     }
 

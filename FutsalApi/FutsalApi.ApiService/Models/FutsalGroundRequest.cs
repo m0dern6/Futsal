@@ -10,7 +10,7 @@ public class FutsalGroundRequest
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public string Description { get; set; } = string.Empty;
-    public string ImageUrl { get; set; } = string.Empty;
+    public int? ImageId { get; set; }
     public decimal PricePerHour { get; set; }
     public TimeSpan OpenTime { get; set; }
     public TimeSpan CloseTime { get; set; }

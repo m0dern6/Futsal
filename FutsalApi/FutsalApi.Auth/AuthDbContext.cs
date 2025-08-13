@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using FutsalApi.Data.DTO;
 
 namespace FutsalApi.Auth;
 
@@ -10,6 +11,7 @@ public class AuthDbContext : IdentityDbContext<User, Role, string, IdentityUserC
     public AuthDbContext(DbContextOptions<AuthDbContext> options)
         : base(options)
     {
-
     }
+
+    public DbSet<Image> Images { get; set; }
 }

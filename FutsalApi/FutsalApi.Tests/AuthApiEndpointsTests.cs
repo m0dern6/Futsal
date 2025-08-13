@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FutsalApi.Auth.Routes;
+
 using FutsalApi.Data.DTO;
 
 using Microsoft.AspNetCore.Http;
@@ -19,6 +19,12 @@ using FluentAssertions;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using FutsalApi.Auth.Models;
+using FutsalApi.Auth.Routes;
+using FutsalApi.Auth;
+
+
+
+
 
 
 namespace FutsalApi.Tests;
@@ -67,7 +73,6 @@ public class AuthApiEndpointsTests
             registration,
             new DefaultHttpContext(),
             _serviceProviderMock.Object,
-            "confirmEmail",
             _linkGeneratorMock.Object,
             _emailSenderMock.Object
         );
@@ -99,7 +104,7 @@ public class AuthApiEndpointsTests
             .ReturnsAsync("dummy-confirm-token");
 
         // Provide a valid endpoint name and mock LinkGenerator to avoid NotSupportedException
-        var confirmEmailEndpointName = "confirmEmail";
+        
 
         // Fix the LinkGenerator mock to use the correct parameter types
         _linkGeneratorMock
@@ -121,7 +126,6 @@ public class AuthApiEndpointsTests
             registration,
             new DefaultHttpContext(),
             _serviceProviderMock.Object,
-            confirmEmailEndpointName,
             _linkGeneratorMock.Object,
             _emailSenderMock.Object
         );
@@ -181,7 +185,7 @@ public class AuthApiEndpointsTests
             .ReturnsAsync((User?)null);
 
         // Act
-        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object);
+        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object, new Mock<AuthDbContext>().Object);
 
         // Assert
         result.Result.Should().BeOfType<NotFound>();
@@ -201,7 +205,7 @@ public class AuthApiEndpointsTests
         _userManagerMock.Setup(x => x.IsEmailConfirmedAsync(user)).ReturnsAsync(true);
 
         // Act
-        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object);
+        var result = await _authApi.GetUserInfo(claimsPrincipal, _serviceProviderMock.Object, new Mock<AuthDbContext>().Object);
 
         // Assert
         result.Result.Should().BeOfType<Ok<InfoResponse>>();

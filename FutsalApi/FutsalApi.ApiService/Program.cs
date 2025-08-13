@@ -73,6 +73,8 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
+builder.Services.AddScoped<ImageService>();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -81,6 +83,8 @@ var app = builder.Build();
 app.UseOutputCache();
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
 {

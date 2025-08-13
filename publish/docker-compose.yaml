@@ -12,8 +12,8 @@ services:
       DASHBOARD__OTLP__PRIMARYAPIKEY: ${DASHBOARD_API_KEY}
       DASHBOARD__OTLP__ENABLEHTTPRECEIVER: "true"
     ports:
-    - target: 18888
-      published: 18888
+      - target: 18888
+        published: 18888
     restart: unless-stopped
     networks:
       - futsalnet
@@ -28,12 +28,12 @@ services:
       # OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       # OTEL_SERVICE_NAME: "cache"
     ports:
-    - target: 6379
-      published: 6379
+      - target: 6379
+        published: 6379
     command:
-    - "redis-server" 
-    - "--requirepass" 
-    - "${REDIS_PASSWORD}"
+      - "redis-server"
+      - "--requirepass"
+      - "${REDIS_PASSWORD}"
     restart: unless-stopped
     networks:
       - futsalnet
@@ -52,10 +52,10 @@ services:
       # OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       # OTEL_SERVICE_NAME: "db"
     volumes:
-    - "pgdata:/var/lib/postgresql/data"
+      - "pgdata:/var/lib/postgresql/data"
     ports:
-    - target: 5432
-      published: 5432
+      - target: 5432
+        published: 5432
     restart: unless-stopped
     networks:
       - futsalnet
@@ -64,8 +64,8 @@ services:
     container_name: "pgadmin"
     image: "dpage/pgadmin4:latest"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}       
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD} 
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
       # OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       # OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       # OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
@@ -80,10 +80,10 @@ services:
     networks:
       - futsalnet
 
-
   apiservice:
     container_name: "apiservice"
     image: "futsal/apiservice:latest"
+    user: "root"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
@@ -97,15 +97,23 @@ services:
       OTEL_EXPORTER_OTLP_HEADERS: "x-otlp-api-key=${DASHBOARD_API_KEY}"
       OTEL_SERVICE_NAME: "apiservice"
       OTEL_RESOURCE_ATTRIBUTES: "service.name=apiservice,service.version=1.0.0"
-
+    command: >
+      sh -c "
+        mkdir -p /app/wwwroot/uploads &&
+        chmod -R 777 /app/wwwroot/uploads &&
+        chown -R appuser:appuser /app/wwwroot/uploads &&
+        su appuser -c 'dotnet FutsalApi.ApiService.dll'
+      "
     ports:
-    - target: 8080
-      published: 10000
-    - target: 8443
-      published: 10001
+      - target: 8080
+        published: 10000
+      - target: 8443
+        published: 10001
+    volumes:
+      - "uploads_data:/app/wwwroot/uploads"
     depends_on:
-    - db
-    - cache
+      - db
+      - cache
     restart: unless-stopped
     networks:
       - futsalnet
@@ -113,6 +121,7 @@ services:
 volumes:
   pgdata: {}
   pgadmin_data: {}
+  uploads_data: {}
 
 networks:
   futsalnet:
