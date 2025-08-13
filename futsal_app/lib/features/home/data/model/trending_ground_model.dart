@@ -9,14 +9,14 @@ class TrendingGroundModel {
   final double latitude;
   final double longitude;
   final String description;
-  final int imageId;
+  final int? imageId; // Made nullable
   final String imageUrl;
   final String openTime;
   final String closeTime;
   final DateTime createdAt;
   final int bookingCount;
   final String ownerName;
-  final double distanceKm;
+  final double? distanceKm; // Made nullable
   final List<BookedTimeSlot> bookedTimeSlots;
 
   TrendingGroundModel({
@@ -30,14 +30,14 @@ class TrendingGroundModel {
     required this.latitude,
     required this.longitude,
     required this.description,
-    required this.imageId,
+    this.imageId, // Made nullable
     required this.imageUrl,
     required this.openTime,
     required this.closeTime,
     required this.createdAt,
     required this.bookingCount,
     required this.ownerName,
-    required this.distanceKm,
+    this.distanceKm, // Made nullable
     required this.bookedTimeSlots,
   });
 
@@ -53,14 +53,16 @@ class TrendingGroundModel {
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       description: json['description'] as String,
-      imageId: json['imageId'] as int,
+      imageId: json['imageId'] as int?, // Handle null
       imageUrl: json['imageUrl'] as String,
       openTime: json['openTime'] as String,
       closeTime: json['closeTime'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       bookingCount: json['bookingCount'] as int,
       ownerName: json['ownerName'] as String,
-      distanceKm: (json['distanceKm'] as num).toDouble(),
+      distanceKm: json['distanceKm'] != null
+          ? (json['distanceKm'] as num).toDouble()
+          : null, // Handle null
       bookedTimeSlots: (json['bookedTimeSlots'] as List<dynamic>)
           .map((e) => BookedTimeSlot.fromJson(e as Map<String, dynamic>))
           .toList(),
