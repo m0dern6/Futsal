@@ -19,39 +19,7 @@ public static class AuthExtensions
         // services.AddDbContext<AppDbContext>(options =>
         //    options.UseNpgsql(connectionString));
 
-        // Add Authentication
-        services.AddAuthentication()
-            .AddBearerToken(IdentityConstants.BearerScheme, options =>
-            {
-                options.BearerTokenExpiration = TimeSpan.FromDays(15);
-                options.RefreshTokenExpiration = TimeSpan.FromDays(30);
-            })
-            .AddCookie(IdentityConstants.ApplicationScheme, options =>
-            {
-                options.Events.OnRedirectToLogin = context =>
-                {
-                    context.Response.StatusCode = 401;
-                    return Task.CompletedTask;
-                };
-                options.Events.OnRedirectToAccessDenied = context =>
-                {
-                    context.Response.StatusCode = 403;
-                    return Task.CompletedTask;
-                };
-            });
-        //.AddGoogleAuthentication();
-
-        // Add Authorization
-        services.AddAuthorization(options =>
-        {
-            options.DefaultPolicy = new AuthorizationPolicyBuilder(
-                IdentityConstants.BearerScheme,
-                IdentityConstants.ApplicationScheme)
-                .RequireAuthenticatedUser()
-                .Build();
-        });
-
-        // Add Identity
+        // Add Identity (this automatically adds authentication schemes)
         services.AddIdentity<User, Role>(options =>
         {
             options.User.RequireUniqueEmail = true;
@@ -66,6 +34,39 @@ public static class AuthExtensions
         })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+        // Configure Authentication schemes after Identity is added
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Events.OnRedirectToLogin = context =>
+            {
+                context.Response.StatusCode = 401;
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                context.Response.StatusCode = 403;
+                return Task.CompletedTask;
+            };
+        });
+
+        // Add Bearer token authentication
+        services.AddAuthentication()
+            .AddBearerToken(IdentityConstants.BearerScheme, options =>
+            {
+                options.BearerTokenExpiration = TimeSpan.FromDays(15);
+                options.RefreshTokenExpiration = TimeSpan.FromDays(30);
+            });
+
+        // Add Authorization
+        services.AddAuthorization(options =>
+        {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder(
+                IdentityConstants.BearerScheme,
+                IdentityConstants.ApplicationScheme)
+                .RequireAuthenticatedUser()
+                .Build();
+        });
 
         // Add Permission Handler
         services.AddSingleton<IAuthorizationHandler, PermissionResourceHandler>();
