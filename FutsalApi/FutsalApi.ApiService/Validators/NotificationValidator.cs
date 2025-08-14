@@ -1,6 +1,6 @@
 ﻿using System;
 using FluentValidation;
-using FutsalApi.ApiService.Data;
+
 using FutsalApi.Data.DTO;
 
 namespace FutsalApi.ApiService.Validators;

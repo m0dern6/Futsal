@@ -11,7 +11,6 @@ WORKDIR /src
 
 COPY ["FutsalApi.sln", "./"]
 COPY ["FutsalApi.ApiService/FutsalApi.ApiService.csproj", "FutsalApi.ApiService/"]
-COPY ["FutsalApi.Auth/FutsalApi.Auth.csproj", "FutsalApi.Auth/"]
 COPY ["FutsalApi.Data/FutsalApi.Data.csproj", "FutsalApi.Data/"]
 COPY ["FutsalApi.ServiceDefaults/FutsalApi.ServiceDefaults.csproj", "FutsalApi.ServiceDefaults/"]
 

@@ -4,7 +4,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace FutsalApi.Auth.Infrastructure;
+namespace FutsalApi.ApiService.Infrastructure;
 
 public static class EndpointExtensions
 {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication;
 using FutsalApi.ApiService.Services;
 
-namespace FutsalApi.Auth.Infrastructure;
+namespace FutsalApi.ApiService.Infrastructure;
 
 public static class GoogleAuthConfiguration
 {

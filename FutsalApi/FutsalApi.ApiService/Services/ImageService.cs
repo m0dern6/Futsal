@@ -1,5 +1,5 @@
-using System.Security.Claims;
-using FutsalApi.Auth.Models;
+﻿using System.Security.Claims;
+using FutsalApi.Data.Models;
 using Microsoft.AspNetCore.Identity;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.Data.DTO;

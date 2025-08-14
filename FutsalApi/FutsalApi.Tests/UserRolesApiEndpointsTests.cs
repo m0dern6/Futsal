@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using FutsalApi.ApiService.Data;
+
 using FutsalApi.ApiService.Routes;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -8,8 +8,8 @@ using Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using FutsalApi.Data.DTO;
-using FutsalApi.Auth.Routes;
-using FutsalApi.Auth.Models;
+using FutsalApi.ApiService.Routes;
+using FutsalApi.Data.Models;
 
 namespace FutsalApi.Tests;
 

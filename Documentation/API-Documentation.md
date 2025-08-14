@@ -12,6 +12,7 @@ This document provides comprehensive information about all the endpoints availab
   - [Booking Management](#booking-management)
   - [Futsal Ground Management](#futsal-ground-management)
   - [Payment Management](#payment-management)
+  - [Payment Gateway Management](#payment-gateway-management)
   - [Review Management](#review-management)
   - [Notification Management](#notification-management)
 - [Data Models](#data-models)
@@ -166,6 +167,23 @@ Base URL: `/Payment`
 
 ---
 
+### Payment Gateway Management
+
+Base URL: `/PaymentGateway`
+**Authorization Required**
+
+#### Endpoints
+
+| Method | Endpoint                 | Description                    | Request Body                     | Response                   |
+| ------ | ------------------------ | ------------------------------ | -------------------------------- | -------------------------- |
+| POST   | `/esewa/initiate`        | Initiate eSewa payment         | `ESewaPaymentInitiateRequest`    | `ESewaInitiateResponse`    |
+| POST   | `/esewa/callback`        | Process eSewa callback         | `ESewaCallbackResponse`          | `string`                   |
+| POST   | `/khalti/initiate`       | Initiate Khalti payment        | `KhaltiPaymentInitiateRequest`   | `KhaltiInitiateResponse`   |
+| POST   | `/khalti/callback`       | Process Khalti callback        | -                                | `string`                   |
+| POST   | `/khalti/webhook`        | Process Khalti webhook         | `KhaltiWebhookPayload`           | `string`                   |
+
+---
+
 ### Review Management
 
 Base URL: `/Reviews`
@@ -257,6 +275,28 @@ public class PaymentRequest
 }
 ```
 
+#### ESewaPaymentInitiateRequest
+
+```csharp
+public class ESewaPaymentInitiateRequest
+{
+    public int BookingId { get; set; }
+    public string SuccessUrl { get; set; } = string.Empty;
+    public string FailureUrl { get; set; } = string.Empty;
+}
+```
+
+#### KhaltiPaymentInitiateRequest
+
+```csharp
+public class KhaltiPaymentInitiateRequest
+{
+    public int BookingId { get; set; }
+    public string ReturnUrl { get; set; } = string.Empty;
+    public string WebsiteUrl { get; set; } = string.Empty;
+}
+```
+
 #### ReviewRequest
 
 ```csharp
@@ -331,6 +371,18 @@ public class FutsalGroundResponse
     public TimeSpan CloseTime { get; set; }
     public DateTime CreatedAt { get; set; }
     public string OwnerName { get; set; } = string.Empty;
+    public List<BookedTimeSlot> BookedTimeSlots { get; set; } = new();
+}
+```
+
+#### BookedTimeSlot
+
+```csharp
+public class BookedTimeSlot
+{
+    public DateTime BookingDate { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
 }
 ```
 

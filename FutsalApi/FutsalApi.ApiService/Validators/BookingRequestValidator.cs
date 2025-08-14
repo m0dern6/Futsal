@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 
 using FluentValidation;
 
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 
 namespace FutsalApi.ApiService.Validators;
 
