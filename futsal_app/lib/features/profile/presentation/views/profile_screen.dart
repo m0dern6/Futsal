@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/core/config/dimension.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/logout/logout_bloc.dart';
+import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -62,88 +63,93 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    return Column(
-      children: [
-        // Profile Image with Edit Icon at top right, no container
-        Stack(
-          alignment: Alignment.topRight,
+    return BlocBuilder<UserInfoBloc, UserInfoState>(
+      builder: (context, state) {
+        final user = state is UserInfoLoaded ? state.userInfo : null;
+        return Column(
           children: [
-            CircleAvatar(
-              radius: Dimension.width(40), // reduced size
-              backgroundColor: const Color(0xff1A8931),
-              child: Icon(
-                Icons.person,
-                size: Dimension.font(45), // reduced size
+            // Profile Image with Edit Icon at top right, no container
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                CircleAvatar(
+                  radius: Dimension.width(40), // reduced size
+                  backgroundColor: const Color(0xff1A8931),
+                  child: Icon(
+                    Icons.person,
+                    size: Dimension.font(45), // reduced size
+                    color: Colors.white,
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Icon(
+                    Icons.edit,
+                    color: Colors.white,
+                    size: Dimension.font(18),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: Dimension.height(8)),
+
+            // Name
+            Text(
+              user?.username ?? 'Guest',
+              style: TextStyle(
                 color: Colors.white,
+                fontSize: Dimension.font(16), // reduced
+                fontWeight: FontWeight.bold,
               ),
             ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Icon(
-                Icons.edit,
-                color: Colors.white,
-                size: Dimension.font(18),
+            SizedBox(height: Dimension.height(3)),
+
+            // Email
+            Text(
+              user?.email ?? 'nomail@example.com',
+              style: TextStyle(
+                color: const Color(0xff91A693),
+                fontSize: Dimension.font(12), // reduced
+              ),
+            ),
+            SizedBox(height: Dimension.height(10)),
+
+            // Edit Profile Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff156F1F),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: Dimension.width(18),
+                  vertical: Dimension.height(7),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(Dimension.width(18)),
+                ),
+                elevation: 2,
+              ),
+              onPressed: () {
+                // Navigate to edit profile screen
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit, size: Dimension.font(12)),
+                  SizedBox(width: Dimension.width(5)),
+                  Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                      fontSize: Dimension.font(11),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
-        SizedBox(height: Dimension.height(8)),
-
-        // Name
-        Text(
-          'John Doe', // Replace with actual user name
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: Dimension.font(16), // reduced
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: Dimension.height(3)),
-
-        // Email
-        Text(
-          'john.doe@example.com', // Replace with actual user email
-          style: TextStyle(
-            color: const Color(0xff91A693),
-            fontSize: Dimension.font(12), // reduced
-          ),
-        ),
-        SizedBox(height: Dimension.height(10)),
-
-        // Edit Profile Button
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xff156F1F),
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              horizontal: Dimension.width(18),
-              vertical: Dimension.height(7),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(Dimension.width(18)),
-            ),
-            elevation: 2,
-          ),
-          onPressed: () {
-            // Navigate to edit profile screen
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.edit, size: Dimension.font(12)),
-              SizedBox(width: Dimension.width(5)),
-              Text(
-                'Edit Profile',
-                style: TextStyle(
-                  fontSize: Dimension.font(11),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
