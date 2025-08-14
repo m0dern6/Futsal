@@ -22,14 +22,15 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
         _dbConnection = dbConnection;
     }
 
-    public new async Task<IEnumerable<ReviewResponse>> GetAllAsync(int page = 1, int pageSize = 10)
+    public async Task<IEnumerable<ReviewResponse>> GetAllByUserAsync(string userId, int page = 1, int pageSize = 10)
     {
+        if (string.IsNullOrEmpty(userId))
+            throw new ArgumentNullException(nameof(userId));
         if (page <= 0 || pageSize <= 0)
-        {
             throw new ArgumentOutOfRangeException("Page and pageSize must be greater than 0.");
-        }
 
         return await _dbContext.Reviews
+            .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

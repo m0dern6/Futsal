@@ -6,10 +6,7 @@ using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services;
 using FutsalApi.ApiService.Services.PaymentGateway;
 using FutsalApi.ApiService.Infrastructure;
-using FutsalApi.ApiService.Services;
 using FutsalApi.Data.DTO;
-
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using FutsalApi.ApiService.Middleware;
 
@@ -98,14 +95,16 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Enable CORS for all origins, headers, and methods
+app.UseCors();
+
 app.UseOutputCache();
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseStaticFiles();
 
-// Enable CORS for all origins, headers, and methods
-app.UseCors();
+
 
 if (app.Environment.IsDevelopment())
 {

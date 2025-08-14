@@ -20,11 +20,24 @@ public static class AuthExtensions
            options.UseNpgsql(connectionString));
 
         // Add Authentication
-        services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
-            options =>
+        services.AddAuthentication()
+            .AddBearerToken(IdentityConstants.BearerScheme, options =>
             {
                 options.BearerTokenExpiration = TimeSpan.FromDays(15);
                 options.RefreshTokenExpiration = TimeSpan.FromDays(30);
+            })
+            .AddCookie(IdentityConstants.ApplicationScheme, options =>
+            {
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
             });
         //.AddGoogleAuthentication();
 

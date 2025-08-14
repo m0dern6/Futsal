@@ -8,8 +8,6 @@ using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Repositories.Interfaces;
-using FutsalApi.ApiService.Infrastructure;
-using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -29,7 +27,7 @@ public class BookingApiEndpoints : IEndpoint
             .RequireAuthorization();
 
         routeGroup.MapGet("/", GetBookingsByUserId)
-            .RequirePermissionResource(Permissions.CanView, Resources.Booking)
+            //.RequirePermissionResource(Permissions.CanView, Resources.Booking)
             .WithName("GetBookingsByUserId")
             .WithSummary("Get Bookings of a user")
             .WithDescription("Get all the Bookings for a particular user using userid")
