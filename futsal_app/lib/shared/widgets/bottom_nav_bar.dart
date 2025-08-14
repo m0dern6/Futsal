@@ -12,7 +12,7 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  static const tabs = ['/home', '/favorites', '/bookings', '/profile'];
+  static const tabs = ['/home', '/favorites', '/profile'];
 
   int _locationToTabIndex(String location) {
     final index = tabs.indexWhere((path) => location.startsWith(path));
@@ -70,10 +70,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
                   icon: Icon(Icons.favorite),
                   label: 'Favorites',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.article_outlined),
-                  label: 'Bookings',
-                ),
+
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),
                   label: 'Profile',

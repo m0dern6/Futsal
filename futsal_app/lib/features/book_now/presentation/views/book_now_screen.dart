@@ -50,6 +50,10 @@ class _BookNowScreenState extends State<BookNowScreen> {
               SizedBox(height: Dimension.height(6)),
               Row(
                 children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios_new),
+                    onPressed: () {},
+                  ),
                   Text(
                     'Select a Date',
                     style: TextStyle(
