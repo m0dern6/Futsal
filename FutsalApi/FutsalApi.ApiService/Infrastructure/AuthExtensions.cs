@@ -13,11 +13,11 @@ public static class AuthExtensions
 {
     public static IServiceCollection AddAuthConfig(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("futsaldb");
+        // var connectionString = configuration.GetConnectionString("futsaldb");
 
         // Add DbContext with PostgreSQL
-        services.AddDbContext<AppDbContext>(options =>
-           options.UseNpgsql(connectionString));
+        // services.AddDbContext<AppDbContext>(options =>
+        //    options.UseNpgsql(connectionString));
 
         // Add Authentication
         services.AddAuthentication()
