@@ -3,6 +3,7 @@ import 'package:futsalpay/core/config/bloc_provider.dart';
 import 'package:futsalpay/core/config/repository_provider.dart';
 import 'package:futsalpay/core/router/routes.dart';
 import 'package:futsalpay/core/services/api_service.dart';
+import 'package:futsalpay/core/theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -16,17 +17,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // 2. Provide dependencies in the correct order
-        // Level 1: Core services (no dependencies)
         Provider<ApiService>(create: (_) => ApiService()),
-
+        ChangeNotifierProvider(create: (_) => ThemeNotifier()..load()),
         ...AppRepositoryProviders.all,
-
         ...AppBlocProviders.all,
       ],
-      child: MaterialApp.router(
-        routerConfig: router,
-        debugShowCheckedModeBanner: false,
+      child: Consumer<ThemeNotifier>(
+        builder: (_, theme, __) => MaterialApp.router(
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+          theme: theme.lightTheme,
+          darkTheme: theme.darkTheme,
+          themeMode: theme.mode,
+        ),
       ),
     );
   }

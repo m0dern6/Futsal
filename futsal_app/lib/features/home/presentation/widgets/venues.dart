@@ -51,34 +51,33 @@ class _VenuesState extends State<Venues> {
 
   // Helper widget to build the exact card design from your spec
   Widget _buildVenueCard(BuildContext context, FutsalGroundModel ground) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Container(
-        width: Dimension.width(150), // Set a fixed width to control wrapping
+        width: Dimension.width(155), // Set a fixed width to control wrapping
         decoration: BoxDecoration(
-          border: Border.all(
-            color: const Color(0xff04340B),
-            width: Dimension.width(0.5),
-          ),
-          borderRadius: BorderRadius.circular(Dimension.width(4)),
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(Dimension.width(18)),
+          border: Border.all(color: theme.colorScheme.outline.withOpacity(.25)),
         ),
         child: Column(
           children: [
             // Using ClipRRect to contain the image within the border radius
             ClipRRect(
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(Dimension.width(4)),
-                topRight: Radius.circular(Dimension.width(4)),
+                topLeft: Radius.circular(Dimension.width(18)),
+                topRight: Radius.circular(Dimension.width(18)),
               ),
               child: Image.network(
                 ground.imageUrl,
                 width: double.infinity, // Image takes full width of container
                 height: Dimension.height(
-                  120,
+                  118,
                 ), // Fixed height as per your design
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => SizedBox(
-                  height: Dimension.height(120),
+                  height: Dimension.height(118),
                   child: Icon(Icons.error, color: Colors.grey),
                 ),
               ),
@@ -91,7 +90,7 @@ class _VenuesState extends State<Venues> {
                   Text(
                     ground.name,
                     style: TextStyle(
-                      color: Color(0xff91A693),
+                      color: theme.colorScheme.onSurface,
                       fontSize: Dimension.font(14),
                       fontWeight: FontWeight.bold,
                     ),
@@ -101,7 +100,7 @@ class _VenuesState extends State<Venues> {
                   Text(
                     'Rs.${ground.pricePerHour}/hr',
                     style: TextStyle(
-                      color: Color(0xff91A693),
+                      color: theme.colorScheme.onSurface.withOpacity(.7),
                       fontSize: Dimension.font(11.5),
                     ),
                   ),
@@ -110,15 +109,17 @@ class _VenuesState extends State<Venues> {
                   SizedBox(height: Dimension.height(8)),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: const Color(0xff156F1F),
-                      backgroundColor: const Color(0xff156F1F),
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
                       padding: EdgeInsets.zero,
                       minimumSize: Size(
                         double.infinity,
                         Dimension.height(30),
                       ), // Full width button
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Dimension.width(4)),
+                        borderRadius: BorderRadius.circular(
+                          Dimension.width(10),
+                        ),
                       ),
                     ),
                     onPressed: () {
@@ -128,7 +129,7 @@ class _VenuesState extends State<Venues> {
                       'Book Now',
                       style: TextStyle(
                         fontSize: Dimension.font(11.5),
-                        color: Color(0xff9CC49F),
+                        color: theme.colorScheme.onPrimary,
                       ),
                     ),
                   ),

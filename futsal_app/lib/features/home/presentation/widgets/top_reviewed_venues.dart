@@ -29,42 +29,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.star_rounded,
-                  color: Color(0xff0F7687),
-                  size: Dimension.font(18),
-                ),
-                SizedBox(width: Dimension.width(6)),
-                Text(
-                  'Top Reviews',
-                  style: TextStyle(
-                    color: Color(0xff91A693),
-                    fontSize: Dimension.font(14),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            GestureDetector(
-              onTap: () {
-                // Navigate to top reviews page
-              },
-              child: Text(
-                'View All',
-                style: TextStyle(
-                  color: Color(0xff0F7687),
-                  fontSize: Dimension.font(12),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
+        // header removed (provided by parent section)
         SizedBox(height: Dimension.height(10)),
 
         // Horizontal Slider
@@ -118,14 +83,13 @@ class _TopReviewSectionState extends State<TopReviewSection> {
     BuildContext context,
     TopReviewGroundModel ground,
   ) {
+    final theme = Theme.of(context);
     return Container(
-      width: Dimension.width(160),
+      width: Dimension.width(170),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: const Color(0xff04340B),
-          width: Dimension.width(0.5),
-        ),
-        borderRadius: BorderRadius.circular(Dimension.width(8)),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(Dimension.width(18)),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(.25)),
       ),
       child: Column(
         children: [
@@ -134,17 +98,17 @@ class _TopReviewSectionState extends State<TopReviewSection> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(Dimension.width(8)),
-                  topRight: Radius.circular(Dimension.width(8)),
+                  topLeft: Radius.circular(Dimension.width(18)),
+                  topRight: Radius.circular(Dimension.width(18)),
                 ),
                 child: Image.network(
                   ground.imageUrl,
                   width: double.infinity,
-                  height: Dimension.height(100),
+                  height: Dimension.height(110),
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
-                    height: Dimension.height(100),
-                    color: Color(0xff013109),
+                    height: Dimension.height(110),
+                    color: theme.colorScheme.surfaceContainer,
                     child: Icon(Icons.error, color: Colors.grey),
                   ),
                 ),
@@ -158,22 +122,22 @@ class _TopReviewSectionState extends State<TopReviewSection> {
                     vertical: Dimension.height(2),
                   ),
                   decoration: BoxDecoration(
-                    color: Color(0xff0F7687),
-                    borderRadius: BorderRadius.circular(Dimension.width(10)),
+                    color: theme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(Dimension.width(12)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.star_rounded,
-                        color: Colors.white,
+                        color: theme.colorScheme.onTertiary,
                         size: Dimension.font(10),
                       ),
                       SizedBox(width: Dimension.width(2)),
                       Text(
                         ground.averageRating.toStringAsFixed(1),
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.colorScheme.onTertiary,
                           fontSize: Dimension.font(8),
                           fontWeight: FontWeight.bold,
                         ),
@@ -281,7 +245,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
       children: List.generate(5, (index) {
         return Icon(
           index < numberOfStars ? Icons.star : Icons.star_border,
-          color: Colors.yellow,
+          color: Colors.amber,
           size: Dimension.font(10),
         );
       }),

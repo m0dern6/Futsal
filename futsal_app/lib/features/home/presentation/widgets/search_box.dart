@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:futsalpay/core/config/dimension.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchBox extends StatefulWidget {
   const SearchBox({super.key});
@@ -16,79 +17,68 @@ class _SearchBoxState extends State<SearchBox> {
   @override
   Widget build(BuildContext context) {
     Dimension.init(context);
-    return Row(
-      children: [
-        Expanded(
-          child: SearchBar(
-            enabled: false,
-            backgroundColor: WidgetStateProperty.all(Color(0xff013109)),
-            leading: Icon(Icons.search, color: Colors.white),
-            hintText: 'Search Futsal name or area...',
-            hintStyle: WidgetStateProperty.all(TextStyle(color: Colors.white)),
-            shape: WidgetStateProperty.all(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(Dimension.width(8)),
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          context.go('/home/search');
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: Dimension.width(16),
+            vertical: Dimension.height(10),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.search,
+                color: theme.colorScheme.onSurface.withOpacity(.7),
               ),
-            ),
+              SizedBox(width: Dimension.width(12)),
+              Expanded(
+                child: Text(
+                  'Search futsal name or area...',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(.55),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(.12),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.tune,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Filters',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        // SizedBox(width: Dimension.width(10)),
-        // Container(
-        //   height: Dimension.height(45),
-        //   decoration: BoxDecoration(
-        //     color: Color(0xff013109),
-        //     borderRadius: BorderRadius.circular(Dimension.width(8)),
-        //   ),
-        //   child: DropdownButtonHideUnderline(
-        //     child: DropdownButton<String>(
-        //       value: selectedCategory == 'Category' ? null : selectedCategory,
-        //       hint: Padding(
-        //         padding: EdgeInsets.symmetric(
-        //           horizontal: Dimension.width(12),
-        //           vertical: Dimension.height(8),
-        //         ),
-        //         child: Text(
-        //           selectedCategory,
-        //           style: TextStyle(
-        //             color: selectedCategory == 'Category'
-        //                 ? Color(0xff91A693)
-        //                 : Colors.white,
-        //             fontSize: Dimension.font(14),
-        //           ),
-        //         ),
-        //       ),
-        //       icon: Padding(
-        //         padding: EdgeInsets.only(right: Dimension.width(12)),
-        //         child: Icon(Icons.keyboard_arrow_down, color: Colors.white),
-        //       ),
-        //       dropdownColor: Color(0xff013109),
-        //       borderRadius: BorderRadius.circular(Dimension.width(8)),
-        //       items: categories.map((String category) {
-        //         return DropdownMenuItem<String>(
-        //           value: category,
-        //           child: Padding(
-        //             padding: EdgeInsets.symmetric(
-        //               horizontal: Dimension.width(12),
-        //             ),
-        //             child: Text(
-        //               category,
-        //               style: TextStyle(
-        //                 color: Colors.white,
-        //                 fontSize: Dimension.font(14),
-        //               ),
-        //             ),
-        //           ),
-        //         );
-        //       }).toList(),
-        //       onChanged: (String? newValue) {
-        //         setState(() {
-        //           selectedCategory = newValue ?? 'Category';
-        //         });
-        //       },
-        //     ),
-        //   ),
-        // ),
-      ],
+      ),
     );
   }
 }

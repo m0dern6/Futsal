@@ -3,6 +3,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/login/login_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/futsal_ground/futsal_ground_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/top_review_ground/top_review_ground_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/trending_ground/trending_ground_bloc.dart';
+import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,6 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
           if (state is LoginSuccess) {
             // Navigate to home and remove all previous routes
             context.go('/home');
+            context.read<UserInfoBloc>().add(LoadUserInfo());
+            context.read<TrendingGroundBloc>().add(LoadTrendingGrounds());
+            context.read<TopReviewGroundBloc>().add(LoadTopReviewGrounds());
+            context.read<FutsalGroundBloc>().add(LoadFutsalGrounds());
           } else if (state is LoginFailure) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()

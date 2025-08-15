@@ -2,9 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/core/config/dimension.dart';
+import 'package:futsalpay/core/const/api_const.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/logout/logout_bloc.dart';
 import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:futsalpay/core/theme/theme_notifier.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -12,20 +15,25 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Dimension.init(context);
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xff03340d).withOpacity(0.6),
       appBar: AppBar(
         title: Text(
           'My Profile',
           style: TextStyle(
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: Dimension.font(16), // reduced
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.symmetric(horizontal: Dimension.width(16)),
+        child: _buildLogoutButton(context),
       ),
       body: BlocListener<LogoutBloc, LogoutState>(
         listener: (context, state) {
@@ -42,20 +50,23 @@ class ProfileScreen extends StatelessWidget {
         },
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: Dimension.width(10)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: Dimension.height(10)),
-              _buildProfileHeader(context),
-              SizedBox(height: Dimension.height(15)),
-              _buildQuickActionButtons(context),
-              SizedBox(height: Dimension.height(15)),
-              _buildSettingsSection(context),
-              SizedBox(height: Dimension.height(10)),
-              _buildLogoutButton(context),
-              SizedBox(height: Dimension.height(20)),
-            ],
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: Dimension.height(10)),
+                _buildProfileHeader(context),
+                SizedBox(height: Dimension.height(20)),
+                _buildQuickActionButtons(context),
+                SizedBox(height: Dimension.height(20)),
+                _buildSettingsSection(context),
+                SizedBox(
+                  height: Dimension.height(120),
+                ), // space for FAB & nav bar
+              ],
+            ),
           ),
         ),
       ),
@@ -63,88 +74,87 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
+    final theme = Theme.of(context);
     return BlocBuilder<UserInfoBloc, UserInfoState>(
       builder: (context, state) {
         final user = state is UserInfoLoaded ? state.userInfo : null;
         return Column(
           children: [
-            // Profile Image with Edit Icon at top right, no container
             Stack(
-              alignment: Alignment.topRight,
+              alignment: Alignment.bottomRight,
               children: [
                 CircleAvatar(
-                  radius: Dimension.width(40), // reduced size
-                  backgroundColor: const Color(0xff1A8931),
-                  child: Icon(
-                    Icons.person,
-                    size: Dimension.font(45), // reduced size
-                    color: Colors.white,
+                  radius: Dimension.width(44),
+                  backgroundColor: theme.colorScheme.primary,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(Dimension.width(44)),
+                    child: Image.network(
+                      '${ApiConst.baseUrl}${user?.profileImageUrl}',
+
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.person,
+                        size: Dimension.font(42),
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Icon(
-                    Icons.edit,
-                    color: Colors.white,
-                    size: Dimension.font(18),
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.secondary,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.edit,
+                      size: Dimension.font(12),
+                      color: theme.colorScheme.onSecondary,
+                    ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: Dimension.height(8)),
-
-            // Name
+            SizedBox(height: Dimension.height(10)),
             Text(
               user?.username ?? 'Guest',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: Dimension.font(16), // reduced
-                fontWeight: FontWeight.bold,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
               ),
             ),
-            SizedBox(height: Dimension.height(3)),
-
-            // Email
+            SizedBox(height: Dimension.height(4)),
             Text(
               user?.email ?? 'nomail@example.com',
-              style: TextStyle(
-                color: const Color(0xff91A693),
-                fontSize: Dimension.font(12), // reduced
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(.65),
               ),
             ),
-            SizedBox(height: Dimension.height(10)),
-
-            // Edit Profile Button
-            ElevatedButton(
+            SizedBox(height: Dimension.height(12)),
+            ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff156F1F),
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primaryContainer,
+                foregroundColor: theme.colorScheme.onPrimaryContainer,
+                elevation: 0,
                 padding: EdgeInsets.symmetric(
-                  horizontal: Dimension.width(18),
-                  vertical: Dimension.height(7),
+                  horizontal: Dimension.width(20),
+                  vertical: Dimension.height(8),
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(Dimension.width(18)),
+                  borderRadius: BorderRadius.circular(Dimension.width(30)),
                 ),
-                elevation: 2,
               ),
-              onPressed: () {
-                // Navigate to edit profile screen
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.edit, size: Dimension.font(12)),
-                  SizedBox(width: Dimension.width(5)),
-                  Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                      fontSize: Dimension.font(11),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              onPressed: () {},
+              icon: Icon(Icons.edit, size: Dimension.font(14)),
+              label: Text(
+                'Edit Profile',
+                style: TextStyle(
+                  fontSize: Dimension.font(11.5),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -154,14 +164,18 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActionButtons(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
-      padding: EdgeInsets.all(Dimension.width(8)),
+      padding: EdgeInsets.all(Dimension.width(14)),
       decoration: BoxDecoration(
-        color: const Color(0xff013109).withOpacity(0.5),
-        borderRadius: BorderRadius.circular(Dimension.width(10)),
+        color: isDark
+            ? theme.colorScheme.surfaceContainer
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(Dimension.width(20)),
         border: Border.all(
-          color: const Color(0xff04340B),
-          width: Dimension.width(1),
+          color: theme.colorScheme.outline.withOpacity(.25),
+          width: 1,
         ),
       ),
       child: Column(
@@ -169,37 +183,35 @@ class ProfileScreen extends StatelessWidget {
         children: [
           Text(
             'Quick Actions',
-            style: TextStyle(
-              color: const Color(0xff91A693),
-              fontSize: Dimension.font(12),
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface,
             ),
           ),
-          SizedBox(height: Dimension.height(8)),
+          SizedBox(height: Dimension.height(12)),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildQuickActionCard(
+                context: context,
                 icon: CupertinoIcons.tickets_fill,
                 title: 'My Bookings',
-                color: const Color(0xff1A8931),
+                color: theme.colorScheme.primary,
                 onTap: () => context.go('/bookings'),
               ),
               _buildQuickActionCard(
+                context: context,
                 icon: CupertinoIcons.creditcard_fill,
-                title: 'Transactions',
-                color: const Color(0xff0F7687),
-                onTap: () {
-                  // Navigate to transactions screen
-                },
+                title: 'My Payments',
+                color: theme.colorScheme.tertiary,
+                onTap: () {},
               ),
               _buildQuickActionCard(
+                context: context,
                 icon: CupertinoIcons.star_fill,
                 title: 'My Reviews',
-                color: const Color(0xffB65938),
-                onTap: () {
-                  // Navigate to reviews screen
-                },
+                color: theme.colorScheme.secondary,
+                onTap: () {},
               ),
             ],
           ),
@@ -209,38 +221,52 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActionCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final bg = isDark ? color.withOpacity(.18) : color.withOpacity(.12);
+    final border = color.withOpacity(.35);
+    final textColor = theme.colorScheme.onSurface.withOpacity(.85);
+    return InkWell(
+      borderRadius: BorderRadius.circular(Dimension.width(16)),
       onTap: onTap,
       child: Container(
-        width: Dimension.width(70),
+        width: Dimension.width(88),
         padding: EdgeInsets.symmetric(
-          vertical: Dimension.height(8),
-          horizontal: Dimension.width(4),
+          vertical: Dimension.height(10),
+          horizontal: Dimension.width(6),
         ),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(Dimension.width(8)),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: Dimension.width(1),
-          ),
+          color: bg,
+          borderRadius: BorderRadius.circular(Dimension.width(16)),
+          border: Border.all(color: border, width: 1),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: Dimension.font(18)),
-            SizedBox(height: Dimension.height(4)),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(.18),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: Dimension.font(18)),
+            ),
+            SizedBox(height: Dimension.height(8)),
             Text(
               title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: Dimension.font(8),
-                fontWeight: FontWeight.w500,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: Dimension.font(9),
+                color: textColor,
+                letterSpacing: .2,
               ),
             ),
           ],
@@ -250,67 +276,59 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsSection(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xff013109).withOpacity(0.3),
-        borderRadius: BorderRadius.circular(Dimension.width(8)),
-        border: Border.all(
-          color: const Color(0xff04340B),
-          width: Dimension.width(0.5),
-        ),
-      ),
+    final theme = Theme.of(context);
+    final notifier = context.watch<ThemeNotifier>();
+    final isDark = notifier.mode == ThemeMode.dark;
+    return Material(
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(Dimension.width(16)),
       child: Column(
         children: [
           _buildSettingsTile(
             icon: CupertinoIcons.settings_solid,
             title: 'Settings',
-            onTap: () {
-              // Navigate to settings screen
-            },
+            onTap: () {},
           ),
           _buildSettingsTile(
             icon: CupertinoIcons.globe,
             title: 'Language',
-            onTap: () {
-              // Navigate to language selection
-            },
+            onTap: () {},
           ),
-          _buildSettingsTile(
-            icon: CupertinoIcons.moon_fill,
-            title: 'Theme',
-            onTap: () {
-              // Navigate to theme selection
-            },
+          // Theme toggle row
+          SwitchListTile.adaptive(
+            value: isDark,
+            onChanged: (_) => notifier.toggle(),
+            secondary: Icon(
+              CupertinoIcons.moon_fill,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(
+              'Dark Mode',
+              style: TextStyle(
+                fontSize: Dimension.font(11),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: Dimension.width(8),
+            ),
           ),
           _buildSettingsTile(
             icon: CupertinoIcons.bell_fill,
             title: 'Notifications',
-            onTap: () {
-              // Navigate to notification settings
-            },
+            onTap: () {},
           ),
           _buildSettingsTile(
             icon: CupertinoIcons.shield_fill,
             title: 'Privacy & Security',
-            onTap: () {
-              // Navigate to privacy settings
-            },
+            onTap: () {},
           ),
           _buildSettingsTile(
             icon: CupertinoIcons.question_circle_fill,
             title: 'Help & Support',
-            onTap: () {
-              // Navigate to help center
-            },
+            onTap: () {},
+            showDivider: false,
           ),
-          // _buildSettingsTile(
-          //   icon: CupertinoIcons.info_circle_fill,
-          //   title: 'About',
-          //   onTap: () {
-          //     // Navigate to about screen
-          //   },
-          //   showDivider: false,
-          // ),
         ],
       ),
     );
@@ -325,22 +343,16 @@ class ProfileScreen extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: Icon(
-            icon,
-            color: const Color(0xff91A693),
-            size: Dimension.font(14),
-          ),
+          leading: Icon(icon, size: Dimension.font(16)),
           title: Text(
             title,
             style: TextStyle(
-              color: Colors.white,
               fontSize: Dimension.font(11),
               fontWeight: FontWeight.w500,
             ),
           ),
           trailing: Icon(
             CupertinoIcons.chevron_forward,
-            color: const Color(0xff91A693),
             size: Dimension.font(12),
           ),
           onTap: onTap,
@@ -350,49 +362,47 @@ class ProfileScreen extends StatelessWidget {
         if (showDivider)
           Padding(
             padding: EdgeInsets.symmetric(horizontal: Dimension.width(8)),
-            child: Divider(
-              color: const Color(0xff04340B),
-              height: Dimension.height(1),
-            ),
+            child: const Divider(height: 0),
           ),
       ],
     );
   }
 
   Widget _buildLogoutButton(BuildContext context) {
+    final theme = Theme.of(context);
     return BlocBuilder<LogoutBloc, LogoutState>(
       builder: (context, state) {
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.withOpacity(0.15),
-              foregroundColor: Colors.redAccent,
-              padding: EdgeInsets.symmetric(vertical: Dimension.height(8)),
+              backgroundColor: theme.colorScheme.errorContainer,
+              foregroundColor: theme.colorScheme.onErrorContainer,
+              padding: EdgeInsets.symmetric(vertical: Dimension.height(14)),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(Dimension.width(8)),
-                side: const BorderSide(color: Colors.redAccent),
+                borderRadius: BorderRadius.circular(Dimension.width(16)),
               ),
-              elevation: 0,
+              elevation: 2,
             ),
             onPressed: state is LogoutLoading
                 ? null
                 : () => _showLogoutConfirmDialog(context),
             icon: state is LogoutLoading
                 ? SizedBox(
-                    width: Dimension.width(12),
-                    height: Dimension.height(12),
-                    child: const CircularProgressIndicator(
-                      color: Colors.redAccent,
+                    width: Dimension.width(14),
+                    height: Dimension.height(14),
+                    child: CircularProgressIndicator(
+                      color: theme.colorScheme.onErrorContainer,
                       strokeWidth: 2,
                     ),
                   )
-                : Icon(Icons.logout, size: Dimension.font(12)),
+                : Icon(Icons.logout, size: Dimension.font(16)),
             label: Text(
               state is LogoutLoading ? 'Logging out...' : 'Logout',
               style: TextStyle(
-                fontSize: Dimension.font(11),
-                fontWeight: FontWeight.bold,
+                fontSize: Dimension.font(12),
+                fontWeight: FontWeight.w700,
+                letterSpacing: .3,
               ),
             ),
           ),

@@ -32,55 +32,101 @@ class _BottomNavBarState extends State<BottomNavBar> {
         systemNavigationBarColor: Colors.transparent,
       ),
     );
+    final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBody: true,
       body: widget.child,
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 30),
-        child: Container(
-          height: Dimension.height(65),
-          padding: EdgeInsets.only(top: 0),
-          decoration: BoxDecoration(
-            color: Color(0xff03340d),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Align(
-            alignment: Alignment.center,
-            child: BottomNavigationBar(
-              elevation: 100,
-              backgroundColor: Colors.transparent,
-              selectedItemColor: Color(0xff1a8931),
-              unselectedItemColor: Colors.white,
-              iconSize: Dimension.height(30),
-              unselectedLabelStyle: TextStyle(fontSize: Dimension.font(14)),
-              selectedLabelStyle: TextStyle(fontSize: Dimension.font(14)),
-              currentIndex: currentIndex,
-              onTap: (index) {
-                if (index != currentIndex) {
-                  context.go(tabs[index]);
-                }
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_filled),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite),
-                  label: 'Favorites',
-                ),
-
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.surface.withOpacity(.95),
+                  theme.colorScheme.surfaceContainerHighest.withOpacity(.98),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.shadow.withOpacity(.10),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
-              type: BottomNavigationBarType.fixed,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: SizedBox(
+                height: Dimension.height(54), // reduced height
+                child: BottomNavigationBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  currentIndex: currentIndex,
+                  onTap: (index) {
+                    if (index != currentIndex) context.go(tabs[index]);
+                  },
+                  selectedFontSize: Dimension.font(10.5),
+                  unselectedFontSize: Dimension.font(10.0),
+                  items: [
+                    _buildItem(
+                      theme,
+                      Icons.home_filled,
+                      'Home',
+                      0,
+                      currentIndex,
+                    ),
+                    _buildItem(
+                      theme,
+                      Icons.favorite,
+                      'Favorites',
+                      1,
+                      currentIndex,
+                    ),
+                    _buildItem(theme, Icons.person, 'Profile', 2, currentIndex),
+                  ],
+                  type: BottomNavigationBarType.fixed,
+                  showUnselectedLabels: true,
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+BottomNavigationBarItem _buildItem(
+  ThemeData theme,
+  IconData icon,
+  String label,
+  int index,
+  int current,
+) {
+  final bool active = index == current;
+  return BottomNavigationBarItem(
+    icon: AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: active
+            ? theme.colorScheme.primary.withOpacity(.12)
+            : Colors.transparent,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: active
+            ? theme.colorScheme.primary
+            : theme.colorScheme.onSurface.withOpacity(.65),
+      ),
+    ),
+    label: label,
+  );
 }

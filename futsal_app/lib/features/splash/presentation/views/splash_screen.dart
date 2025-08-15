@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for SystemChrome
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/futsal_ground/futsal_ground_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/top_review_ground/top_review_ground_bloc.dart';
+import 'package:futsalpay/features/home/presentation/bloc/trending_ground/trending_ground_bloc.dart';
 import 'package:futsalpay/features/splash/presentation/bloc/splash_bloc.dart';
+import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_update/in_app_update.dart';
@@ -29,6 +33,10 @@ class _SplashScreenState extends State<SplashScreen> {
     );
     // Initialize the SplashBloc
     BlocProvider.of<SplashBloc>(context).add(SplashStartedEvent());
+    context.read<UserInfoBloc>().add(LoadUserInfo());
+    context.read<TrendingGroundBloc>().add(LoadTrendingGrounds());
+    context.read<TopReviewGroundBloc>().add(LoadTopReviewGrounds());
+    context.read<FutsalGroundBloc>().add(LoadFutsalGrounds());
   }
 
   @override

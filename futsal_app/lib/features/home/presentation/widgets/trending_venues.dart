@@ -29,42 +29,8 @@ class _TrendingSectionState extends State<TrendingSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.trending_up_rounded,
-                  color: Color(0xffB65938),
-                  size: Dimension.font(18),
-                ),
-                SizedBox(width: Dimension.width(6)),
-                Text(
-                  'Trending',
-                  style: TextStyle(
-                    color: Color(0xff91A693),
-                    fontSize: Dimension.font(14),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            GestureDetector(
-              onTap: () {
-                context.push('/home/trending');
-              },
-              child: Text(
-                'View All',
-                style: TextStyle(
-                  color: Color(0xffB65938),
-                  fontSize: Dimension.font(12),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
+        // Header provided by parent section card now; keep for standalone reuse
+        // (hidden when embedded in section card) but we still show nothing here.
         SizedBox(height: Dimension.height(10)),
 
         // Horizontal Slider
@@ -115,14 +81,16 @@ class _TrendingSectionState extends State<TrendingSection> {
   }
 
   Widget _buildTrendingCard(BuildContext context, TrendingGroundModel ground) {
+    final theme = Theme.of(context);
     return Container(
-      width: Dimension.width(160),
+      width: Dimension.width(170),
       decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(Dimension.width(18)),
         border: Border.all(
-          color: const Color(0xff04340B),
-          width: Dimension.width(0.5),
+          color: theme.colorScheme.outline.withOpacity(.25),
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(Dimension.width(8)),
       ),
       child: Column(
         children: [
@@ -131,17 +99,17 @@ class _TrendingSectionState extends State<TrendingSection> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(Dimension.width(8)),
-                  topRight: Radius.circular(Dimension.width(8)),
+                  topLeft: Radius.circular(Dimension.width(18)),
+                  topRight: Radius.circular(Dimension.width(18)),
                 ),
                 child: Image.network(
                   ground.imageUrl,
                   width: double.infinity,
-                  height: Dimension.height(100),
+                  height: Dimension.height(110),
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
-                    height: Dimension.height(100),
-                    color: Color(0xff013109),
+                    height: Dimension.height(110),
+                    color: theme.colorScheme.surfaceContainer,
                     child: Icon(Icons.error, color: Colors.grey),
                   ),
                 ),
@@ -155,22 +123,22 @@ class _TrendingSectionState extends State<TrendingSection> {
                     vertical: Dimension.height(2),
                   ),
                   decoration: BoxDecoration(
-                    color: Color(0xffB65938),
-                    borderRadius: BorderRadius.circular(Dimension.width(10)),
+                    color: theme.colorScheme.secondary,
+                    borderRadius: BorderRadius.circular(Dimension.width(12)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.trending_up_rounded,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSecondary,
                         size: Dimension.font(10),
                       ),
                       SizedBox(width: Dimension.width(2)),
                       Text(
                         'HOT',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.colorScheme.onSecondary,
                           fontSize: Dimension.font(8),
                           fontWeight: FontWeight.bold,
                         ),
@@ -195,7 +163,7 @@ class _TrendingSectionState extends State<TrendingSection> {
                       Text(
                         ground.name,
                         style: TextStyle(
-                          color: Color(0xff91A693),
+                          color: theme.colorScheme.onSurface,
                           fontSize: Dimension.font(13),
                           fontWeight: FontWeight.bold,
                         ),
@@ -205,7 +173,7 @@ class _TrendingSectionState extends State<TrendingSection> {
                       Text(
                         'Rs.${ground.pricePerHour}/hr',
                         style: TextStyle(
-                          color: Color(0xff91A693),
+                          color: theme.colorScheme.onSurface.withOpacity(.7),
                           fontSize: Dimension.font(10.5),
                         ),
                       ),
@@ -220,15 +188,17 @@ class _TrendingSectionState extends State<TrendingSection> {
                               vertical: Dimension.height(1),
                             ),
                             decoration: BoxDecoration(
-                              color: Color(0xffB65938).withOpacity(0.2),
+                              color: theme.colorScheme.secondary.withOpacity(
+                                .16,
+                              ),
                               borderRadius: BorderRadius.circular(
-                                Dimension.width(8),
+                                Dimension.width(10),
                               ),
                             ),
                             child: Text(
                               '${ground.bookingCount} bookings',
                               style: TextStyle(
-                                color: Color(0xffB65938),
+                                color: theme.colorScheme.secondary,
                                 fontSize: Dimension.font(7),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -241,12 +211,14 @@ class _TrendingSectionState extends State<TrendingSection> {
 
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: const Color(0xffB65938),
-                      backgroundColor: const Color(0xffB65938),
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
                       padding: EdgeInsets.zero,
                       minimumSize: Size(double.infinity, Dimension.height(28)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Dimension.width(4)),
+                        borderRadius: BorderRadius.circular(
+                          Dimension.width(10),
+                        ),
                       ),
                     ),
                     onPressed: () {
@@ -257,7 +229,7 @@ class _TrendingSectionState extends State<TrendingSection> {
                       'Book Now',
                       style: TextStyle(
                         fontSize: Dimension.font(10.5),
-                        color: Colors.white,
+                        color: theme.colorScheme.onPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
