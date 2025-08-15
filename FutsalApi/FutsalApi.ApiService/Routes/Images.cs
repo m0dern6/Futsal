@@ -17,7 +17,9 @@ namespace FutsalApi.ApiService.Routes
     {
         public void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            var group = endpoints.MapGroup("/images").WithTags("Images");
+            var group = endpoints.MapGroup("/images")
+                        .WithTags("Images")
+                        .RequireAuthorization();
 
             group.MapPost("/upload/single", UploadSingleFile)
                 .WithName("UploadSingleFile")
