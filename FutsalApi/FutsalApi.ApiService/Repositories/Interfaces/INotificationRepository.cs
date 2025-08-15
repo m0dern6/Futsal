@@ -1,6 +1,6 @@
 ﻿
 using FutsalApi.Data.DTO;
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 
 namespace FutsalApi.ApiService.Repositories;
 

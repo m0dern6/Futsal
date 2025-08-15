@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Security.Claims;
 
-using FutsalApi.ApiService.Data;
+
 using FutsalApi.ApiService.Infrastructure;
-using FutsalApi.ApiService.Models;
+using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Services;
-using FutsalApi.Auth.Infrastructure;
-using FutsalApi.Auth.Models;
+using FutsalApi.ApiService.Infrastructure;
+using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -134,12 +134,12 @@ public class PaymentApiEndpoints : IEndpoint
                 payment.Status = PaymentStatus.Completed; // Assuming online payment is completed immediately
             }
 
-            var createdPayment = await repository.CreatePaymentAsync(payment);
+            //var createdPayment = await repository.CreatePaymentAsync(payment);
 
-            if (createdPayment == null)
-            {
-                return TypedResults.Problem("Failed to create the payment.", statusCode: StatusCodes.Status400BadRequest);
-            }
+            //if (createdPayment == null)
+            //{
+            //    return TypedResults.Problem("Failed to create the payment.", statusCode: StatusCodes.Status400BadRequest);
+            //}
 
             return TypedResults.Ok("Payment created successfully.");
         }

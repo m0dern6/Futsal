@@ -1,6 +1,6 @@
-
-@page "/admin/roles"
-@using FutsalApi.Auth.Models
+﻿@page "/admin/roles"
+@using FutsalApi.Data.DTO
+@using FutsalApi.Data.Models
 @inject HttpClient Http
 
 <PageTitle>Roles</PageTitle>
@@ -14,13 +14,13 @@
 else
 {
     <Grid TItem="Role" Items="roles">
-    <GridColumn TItem="Role" HeaderText="ID" PropertyName="Id" />
-    <GridColumn TItem="Role" HeaderText="Name" PropertyName="Name" />
-    <GridColumn TItem="Role" HeaderText="Actions">
-        <Button Color="ButtonColor.Primary" @onclick="() => EditRole(context.Id)">Edit</Button>
-        <Button Color="ButtonColor.Danger" @onclick="() => DeleteRole(context.Id)">Delete</Button>
-    </GridColumn>
-</Grid>
+        <GridColumn TItem="Role" HeaderText="ID" PropertyName="Id" />
+        <GridColumn TItem="Role" HeaderText="Name" PropertyName="Name" />
+        <GridColumn TItem="Role" HeaderText="Actions">
+            <Button Color="ButtonColor.Primary" @onclick="() => EditRole(context.Id)">Edit</Button>
+            <Button Color="ButtonColor.Danger" @onclick="() => DeleteRole(context.Id)">Delete</Button>
+        </GridColumn>
+    </Grid>
 }
 
 @code {

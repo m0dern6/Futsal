@@ -1,6 +1,0 @@
-@FutsalApi.Auth_HostAddress = http://localhost:5204
-
-GET {{FutsalApi.Auth_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

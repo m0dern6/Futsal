@@ -7,7 +7,9 @@ namespace FutsalApi.Data.DTO;
 public enum PaymentMethod
 {
     Cash,
-    Online
+    Online,
+    ESewa,
+    Khalti
 }
 
 public enum PaymentStatus

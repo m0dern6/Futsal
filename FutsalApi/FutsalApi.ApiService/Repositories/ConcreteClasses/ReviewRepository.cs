@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 using Dapper;
 
-using FutsalApi.ApiService.Data;
-using FutsalApi.ApiService.Models;
+
+using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 
 using Microsoft.EntityFrameworkCore;

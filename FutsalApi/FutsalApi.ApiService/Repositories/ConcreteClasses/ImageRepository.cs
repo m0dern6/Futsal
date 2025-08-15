@@ -1,5 +1,5 @@
-using FutsalApi.Data.DTO;
-using FutsalApi.ApiService.Data;
+﻿using FutsalApi.Data.DTO;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories

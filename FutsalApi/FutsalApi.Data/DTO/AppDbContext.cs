@@ -1,6 +1,6 @@
 ﻿using System;
 
-using FutsalApi.Auth.Models;
+
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;

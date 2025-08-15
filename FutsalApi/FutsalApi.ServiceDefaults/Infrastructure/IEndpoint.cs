@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Routing;
 
-namespace FutsalApi.Auth.Infrastructure;
+namespace FutsalApi.ApiService.Infrastructure;
 
 public interface IEndpoint
 {

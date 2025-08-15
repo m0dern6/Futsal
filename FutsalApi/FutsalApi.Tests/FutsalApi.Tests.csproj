@@ -23,7 +23,6 @@
   <ItemGroup>
     <ProjectReference Include="..\FutsalApi.ApiService\FutsalApi.ApiService.csproj" />
     <ProjectReference Include="..\FutsalApi.AppHost\FutsalApi.AppHost.csproj" />
-    <ProjectReference Include="..\FutsalApi.Auth\FutsalApi.Auth.csproj" />
   </ItemGroup>
 
   <ItemGroup>

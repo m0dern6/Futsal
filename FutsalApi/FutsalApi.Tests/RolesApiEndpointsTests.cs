@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Moq;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using FutsalApi.Auth.Routes;
-using FutsalApi.Auth.Models;
+using FutsalApi.ApiService.Routes;
+using FutsalApi.Data.Models;
+using FutsalApi.Data.DTO;
+using Auth;
 
 
 namespace FutsalApi.Tests;
