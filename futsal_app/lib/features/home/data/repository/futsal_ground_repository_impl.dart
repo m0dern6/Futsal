@@ -14,11 +14,24 @@ class FutsalGroundRepositoryImpl implements FutsalGroundRepository {
   Future<List<FutsalGroundModel>> getFutsalGrounds({
     required int page,
     required int pageSize,
+    int? minPrice,
+    int? maxPrice,
+    double? minRating,
+    String? location,
   }) async {
     try {
+      final queryParameters = {
+        'page': page,
+        'pageSize': pageSize,
+        if (minPrice != null) 'minPrice': minPrice,
+        if (maxPrice != null) 'maxPrice': maxPrice,
+        if (minRating != null) 'minRating': minRating,
+        if (location != null && location.isNotEmpty) 'location': location,
+      };
+
       final response = await apiService.get(
         ApiConst.futsalGround,
-        queryParameters: {'page': page, 'pageSize': pageSize},
+        queryParameters: queryParameters,
       );
       return (response as List)
           .map((e) => FutsalGroundModel.fromJson(e))
