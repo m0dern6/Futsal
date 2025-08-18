@@ -174,13 +174,11 @@ Base URL: `/PaymentGateway`
 
 #### Endpoints
 
-| Method | Endpoint                 | Description                    | Request Body                     | Response                   |
-| ------ | ------------------------ | ------------------------------ | -------------------------------- | -------------------------- |
-| POST   | `/esewa/initiate`        | Initiate eSewa payment         | `ESewaPaymentInitiateRequest`    | `ESewaInitiateResponse`    |
-| POST   | `/esewa/callback`        | Process eSewa callback         | `ESewaCallbackResponse`          | `string`                   |
-| POST   | `/khalti/initiate`       | Initiate Khalti payment        | `KhaltiPaymentInitiateRequest`   | `KhaltiInitiateResponse`   |
-| POST   | `/khalti/callback`       | Process Khalti callback        | -                                | `string`                   |
-| POST   | `/khalti/webhook`        | Process Khalti webhook         | `KhaltiWebhookPayload`           | `string`                   |
+| Method | Endpoint           | Description             | Request Body                   | Response                 |
+| ------ | ------------------ | ----------------------- | ------------------------------ | ------------------------ |
+| POST   | `/khalti/initiate` | Initiate Khalti payment | `KhaltiPaymentInitiateRequest` | `KhaltiInitiateResponse` |
+| POST   | `/khalti/callback` | Process Khalti callback | -                              | `string`                 |
+| POST   | `/khalti/webhook`  | Process Khalti webhook  | `KhaltiWebhookPayload`         | `string`                 |
 
 ---
 
@@ -272,17 +270,6 @@ public class PaymentRequest
     public string? TransactionId { get; set; }
     public decimal AmountPaid { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
-}
-```
-
-#### ESewaPaymentInitiateRequest
-
-```csharp
-public class ESewaPaymentInitiateRequest
-{
-    public int BookingId { get; set; }
-    public string SuccessUrl { get; set; } = string.Empty;
-    public string FailureUrl { get; set; } = string.Empty;
 }
 ```
 

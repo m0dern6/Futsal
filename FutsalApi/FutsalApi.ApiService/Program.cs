@@ -82,10 +82,9 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
+
 // Payment Gateway Services
-builder.Services.Configure<ESewaConfig>(builder.Configuration.GetSection("ESewa"));
 builder.Services.Configure<KhaltiConfig>(builder.Configuration.GetSection("Khalti"));
-builder.Services.AddHttpClient<IESewaService, ESewaService>();
 builder.Services.AddHttpClient<IKhaltiService, KhaltiService>();
 
 builder.Services.AddScoped<ImageService>();

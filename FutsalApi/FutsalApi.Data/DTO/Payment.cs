@@ -8,7 +8,6 @@ public enum PaymentMethod
 {
     Cash,
     Online,
-    ESewa,
     Khalti
 }
 
