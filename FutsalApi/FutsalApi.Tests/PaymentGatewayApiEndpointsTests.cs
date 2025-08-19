@@ -33,7 +33,7 @@ public class PaymentGatewayApiEndpointsTests
         var request = new KhaltiPaymentInitiateRequest { BookingId = 1, ReturnUrl = "return", WebsiteUrl = "web" };
         var response = new KhaltiInitiateResponse { Success = true, PaymentUrl = "url", Pidx = "pidx" };
         _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
-        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(1, "return", "web")).ReturnsAsync(response);
+        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(user, 1, "return", "web")).ReturnsAsync(response);
 
         var result = await _endpoints.InitiateKhaltiPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
 
@@ -62,7 +62,7 @@ public class PaymentGatewayApiEndpointsTests
         var request = new KhaltiPaymentInitiateRequest { BookingId = 1, ReturnUrl = "return", WebsiteUrl = "web" };
         var response = new KhaltiInitiateResponse { Success = false, Message = "Failed" };
         _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
-        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(1, "return", "web")).ReturnsAsync(response);
+        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(user, 1, "return", "web")).ReturnsAsync(response);
 
         var result = await _endpoints.InitiateKhaltiPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
 
