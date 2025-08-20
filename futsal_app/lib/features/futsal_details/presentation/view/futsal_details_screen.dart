@@ -634,13 +634,13 @@ class FutsalDetailsScreen extends StatelessWidget {
                 label,
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
                 subtitle,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: Colors.black,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
