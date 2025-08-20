@@ -158,7 +158,7 @@ class _VenuesState extends State<Venues> {
       children: List.generate(5, (index) {
         return Icon(
           index < numberOfStars ? Icons.star : Icons.star_border,
-          color: Colors.yellow,
+          color: Colors.orange,
           size: Dimension.font(11.5),
         );
       }),

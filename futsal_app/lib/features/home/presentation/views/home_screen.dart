@@ -51,8 +51,8 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(height: Dimension.height(16)),
                 _sectionCard(
                   context,
-                  title: 'Top Rated',
-                  subtitle: 'Highest reviewed pitches',
+                  title: 'Top Reviewed',
+                  subtitle: 'Highest reviewed grounds',
                   child: const TopReviewSection(),
                   onViewAll: () => context.go('/home/top-reviewed'),
                 ),

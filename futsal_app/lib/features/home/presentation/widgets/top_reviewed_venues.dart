@@ -41,13 +41,22 @@ class _TopReviewSectionState extends State<TopReviewSection> {
                 return _buildShimmerEffect();
               }
               if (state is TopReviewGroundLoaded) {
+                // Sort by review count in descending order (highest to lowest)
+                final sortedGrounds = List<TopReviewGroundModel>.from(
+                  state.grounds,
+                )..sort((a, b) => b.ratingCount.compareTo(a.ratingCount));
+
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: state.grounds.length,
+                  itemCount: sortedGrounds.length,
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: EdgeInsets.only(right: Dimension.width(15)),
-                      child: _buildTopReviewCard(context, state.grounds[index]),
+                      child: _buildTopReviewCard(
+                        context,
+                        sortedGrounds[index],
+                        index,
+                      ),
                     );
                   },
                 );
@@ -82,6 +91,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
   Widget _buildTopReviewCard(
     BuildContext context,
     TopReviewGroundModel ground,
+    int index,
   ) {
     final theme = Theme.of(context);
     return Container(
@@ -98,7 +108,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
         },
         child: Column(
           children: [
-            // Top Review Badge
+            // Image with badges
             Stack(
               children: [
                 ClipRRect(
@@ -118,6 +128,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
                     ),
                   ),
                 ),
+                // Rating badge (top-right)
                 Positioned(
                   top: Dimension.height(8),
                   right: Dimension.width(8),
@@ -151,6 +162,69 @@ class _TopReviewSectionState extends State<TopReviewSection> {
                     ),
                   ),
                 ),
+                // Review count badge (top-left)
+                Positioned(
+                  top: Dimension.height(8),
+                  left: Dimension.width(8),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Dimension.width(6),
+                      vertical: Dimension.height(2),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(Dimension.width(12)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.rate_review,
+                          color: Colors.white,
+                          size: Dimension.font(9),
+                        ),
+                        SizedBox(width: Dimension.width(2)),
+                        Text(
+                          '${ground.ratingCount}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: Dimension.font(8),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Ranking badge for top 3 (bottom-left)
+                // if (index < 3)
+                //   Positioned(
+                //     bottom: Dimension.height(8),
+                //     left: Dimension.width(8),
+                //     child: Container(
+                //       width: Dimension.width(20),
+                //       height: Dimension.width(20),
+                //       decoration: BoxDecoration(
+                //         color: index == 0
+                //             ? const Color(0xFFFFD700) // Gold
+                //             : index == 1
+                //             ? const Color(0xFFC0C0C0) // Silver
+                //             : const Color(0xFFCD7F32), // Bronze
+                //         shape: BoxShape.circle,
+                //         border: Border.all(color: Colors.white, width: 1.5),
+                //       ),
+                //       child: Center(
+                //         child: Text(
+                //           '${index + 1}',
+                //           style: TextStyle(
+                //             color: index == 1 ? Colors.black : Colors.white,
+                //             fontSize: Dimension.font(9),
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
 
@@ -185,7 +259,25 @@ class _TopReviewSectionState extends State<TopReviewSection> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildRatingStars(ground.averageRating),
+                            // Display review count instead of just stars
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: Dimension.font(12),
+                                ),
+                                SizedBox(width: Dimension.width(2)),
+                                Text(
+                                  '${ground.ratingCount} reviews',
+                                  style: TextStyle(
+                                    color: Color(0xff91A693),
+                                    fontSize: Dimension.font(8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: Dimension.width(4),
@@ -198,7 +290,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
                                 ),
                               ),
                               child: Text(
-                                'Top Pick',
+                                index < 3 ? '#${index + 1}' : 'Top Pick',
                                 style: TextStyle(
                                   color: Color(0xff0F7687),
                                   fontSize: Dimension.font(7),

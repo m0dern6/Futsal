@@ -96,301 +96,318 @@ class _TrendingScreenState extends State<TrendingScreen> {
                           final g = list[index];
                           return Container(
                             // card no longer navigates on whole-tap; navigation available on Book Now button
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 0),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.shadowColor.withOpacity(0.08),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Stack(
-                                  children: [
-                                    SizedBox(
-                                      height: 200,
-                                      width: double.infinity,
-                                      child: Image.network(
-                                        g.imageUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          color: theme
-                                              .colorScheme
-                                              .surfaceContainer,
+                            child: GestureDetector(
+                              onTap: () {
+                                // Navigate to details screen and pass the ground id as extra (string)
+                                context.push(
+                                  '/futsal-details',
+                                  extra: g.id.toString(),
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 0,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.shadowColor.withOpacity(
+                                        0.08,
+                                      ),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Stack(
+                                    children: [
+                                      SizedBox(
+                                        height: 200,
+                                        width: double.infinity,
+                                        child: Image.network(
+                                          g.imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              Container(
+                                                color: theme
+                                                    .colorScheme
+                                                    .surfaceContainer,
+                                              ),
                                         ),
                                       ),
-                                    ),
-                                    // subtle gradient for legibility
-                                    Positioned.fill(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.bottomCenter,
-                                            colors: [
-                                              Colors.transparent,
-                                              theme.colorScheme.onSurface
-                                                  .withOpacity(0.04),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    // glassmorphism info container
-                                    Positioned(
-                                      left: 0,
-                                      right: 0,
-                                      bottom: 0,
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.only(
-                                          bottomLeft: Radius.circular(12),
-                                          bottomRight: Radius.circular(12),
-                                        ),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(
-                                            sigmaX: 8,
-                                            sigmaY: 8,
-                                          ),
-                                          child: Container(
-                                            // touch card edges externally; keep small top padding and internal left/right via child Padding
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
-                                            ),
-                                            constraints: const BoxConstraints(
-                                              maxHeight: 84,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: theme.colorScheme.surface
-                                                  .withOpacity(0.52),
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                    bottomLeft: Radius.circular(
-                                                      12,
-                                                    ),
-                                                    bottomRight:
-                                                        Radius.circular(12),
-                                                  ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.08),
-                                                  blurRadius: 10,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                                // light top highlight to simulate glassy reflection
-                                                BoxShadow(
-                                                  color: Colors.white
-                                                      .withOpacity(0.04),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, -4),
-                                                ),
+                                      // subtle gradient for legibility
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.transparent,
+                                                theme.colorScheme.onSurface
+                                                    .withOpacity(0.04),
                                               ],
                                             ),
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
+                                          ),
+                                        ),
+                                      ),
+
+                                      // glassmorphism info container
+                                      Positioned(
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            bottomLeft: Radius.circular(12),
+                                            bottomRight: Radius.circular(12),
+                                          ),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(
+                                              sigmaX: 8,
+                                              sigmaY: 8,
+                                            ),
+                                            child: Container(
+                                              // touch card edges externally; keep small top padding and internal left/right via child Padding
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                              ),
+                                              constraints: const BoxConstraints(
+                                                maxHeight: 84,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.surface
+                                                    .withOpacity(0.52),
+                                                borderRadius:
+                                                    const BorderRadius.only(
+                                                      bottomLeft:
+                                                          Radius.circular(12),
+                                                      bottomRight:
+                                                          Radius.circular(12),
+                                                    ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.08),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                  // light top highlight to simulate glassy reflection
+                                                  BoxShadow(
+                                                    color: Colors.white
+                                                        .withOpacity(0.04),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, -4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            left: 12,
+                                                          ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            g.name,
+                                                            style: theme
+                                                                .textTheme
+                                                                .titleMedium
+                                                                ?.copyWith(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w800,
+                                                                  color: theme
+                                                                      .colorScheme
+                                                                      .onSurface,
+                                                                ),
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 4,
+                                                          ),
+                                                          Text(
+                                                            g.location,
+                                                            style: theme
+                                                                .textTheme
+                                                                .bodySmall
+                                                                ?.copyWith(
+                                                                  color: theme
+                                                                      .colorScheme
+                                                                      .onSurface
+                                                                      .withOpacity(
+                                                                        .9,
+                                                                      ),
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Padding(
                                                     padding:
                                                         const EdgeInsets.only(
-                                                          left: 12,
+                                                          right: 12,
                                                         ),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                    child: Row(
                                                       mainAxisSize:
                                                           MainAxisSize.min,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
                                                       children: [
-                                                        Text(
-                                                          g.name,
-                                                          style: theme
-                                                              .textTheme
-                                                              .titleMedium
-                                                              ?.copyWith(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w800,
+                                                        Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Container(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        10,
+                                                                    vertical: 6,
+                                                                  ),
+                                                              decoration: BoxDecoration(
                                                                 color: theme
                                                                     .colorScheme
-                                                                    .onSurface,
-                                                              ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Text(
-                                                          g.location,
-                                                          style: theme
-                                                              .textTheme
-                                                              .bodySmall
-                                                              ?.copyWith(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .onSurface
-                                                                    .withOpacity(
-                                                                      .9,
+                                                                    .primary,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      10,
                                                                     ),
                                                               ),
+                                                              child: Text(
+                                                                'Rs.${g.pricePerHour}/hr',
+                                                                style: theme
+                                                                    .textTheme
+                                                                    .bodySmall
+                                                                    ?.copyWith(
+                                                                      color: theme
+                                                                          .colorScheme
+                                                                          .onPrimary,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w700,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 8,
+                                                            ),
+                                                            // circular rating badge with compact content to avoid overflow
+                                                            Container(
+                                                              width: 44,
+                                                              height: 44,
+                                                              decoration: BoxDecoration(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .surface,
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                boxShadow: [
+                                                                  BoxShadow(
+                                                                    color: Colors
+                                                                        .black
+                                                                        .withOpacity(
+                                                                          0.12,
+                                                                        ),
+                                                                    blurRadius:
+                                                                        6,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              child: Column(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  const Icon(
+                                                                    Icons.star,
+                                                                    size: 14,
+                                                                    color: Colors
+                                                                        .amber,
+                                                                  ),
+                                                                  const SizedBox(
+                                                                    height: 2,
+                                                                  ),
+                                                                  Text(
+                                                                    g.averageRating
+                                                                        .toStringAsFixed(
+                                                                          1,
+                                                                        ),
+                                                                    style: theme
+                                                                        .textTheme
+                                                                        .bodySmall
+                                                                        ?.copyWith(
+                                                                          fontWeight:
+                                                                              FontWeight.w700,
+                                                                        ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () =>
+                                                              context.push(
+                                                                '/bookNow',
+                                                                extra: g,
+                                                              ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      12,
+                                                                  vertical: 10,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    8,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: Text(
+                                                            'Book Now',
+                                                            style: theme
+                                                                .textTheme
+                                                                .bodySmall
+                                                                ?.copyWith(
+                                                                  color: theme
+                                                                      .colorScheme
+                                                                      .onPrimary,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700,
+                                                                ),
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        right: 12,
-                                                      ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Container(
-                                                            padding:
-                                                                const EdgeInsets.symmetric(
-                                                                  horizontal:
-                                                                      10,
-                                                                  vertical: 6,
-                                                                ),
-                                                            decoration: BoxDecoration(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .primary,
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    10,
-                                                                  ),
-                                                            ),
-                                                            child: Text(
-                                                              'Rs.${g.pricePerHour}/hr',
-                                                              style: theme
-                                                                  .textTheme
-                                                                  .bodySmall
-                                                                  ?.copyWith(
-                                                                    color: theme
-                                                                        .colorScheme
-                                                                        .onPrimary,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w700,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 8,
-                                                          ),
-                                                          // circular rating badge with compact content to avoid overflow
-                                                          Container(
-                                                            width: 44,
-                                                            height: 44,
-                                                            decoration: BoxDecoration(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .surface,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              boxShadow: [
-                                                                BoxShadow(
-                                                                  color: Colors
-                                                                      .black
-                                                                      .withOpacity(
-                                                                        0.12,
-                                                                      ),
-                                                                  blurRadius: 6,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            child: Column(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .center,
-                                                              children: [
-                                                                const Icon(
-                                                                  Icons.star,
-                                                                  size: 14,
-                                                                  color: Colors
-                                                                      .amber,
-                                                                ),
-                                                                const SizedBox(
-                                                                  height: 2,
-                                                                ),
-                                                                Text(
-                                                                  g.averageRating
-                                                                      .toStringAsFixed(
-                                                                        1,
-                                                                      ),
-                                                                  style: theme
-                                                                      .textTheme
-                                                                      .bodySmall
-                                                                      ?.copyWith(
-                                                                        fontWeight:
-                                                                            FontWeight.w700,
-                                                                      ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      ElevatedButton(
-                                                        onPressed: () =>
-                                                            context.push(
-                                                              '/bookNow',
-                                                              extra: g,
-                                                            ),
-                                                        style: ElevatedButton.styleFrom(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                horizontal: 12,
-                                                                vertical: 10,
-                                                              ),
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          'Book Now',
-                                                          style: theme
-                                                              .textTheme
-                                                              .bodySmall
-                                                              ?.copyWith(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .onPrimary,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w700,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
