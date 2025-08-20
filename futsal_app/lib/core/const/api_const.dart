@@ -5,6 +5,7 @@ class ApiConst {
   static const String register = 'User/register';
   static const String logout = 'User/logout';
   static const String futsalGround = '/FutsalGround';
+  static String futsalDetails(String id) => '/FutsalGround/$id';
   static const String trendingGround = '/FutsalGround/trending';
   static const String topReviewGround = '/FutsalGround/top-reviewed';
   //
