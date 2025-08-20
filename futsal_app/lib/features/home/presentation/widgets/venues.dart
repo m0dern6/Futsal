@@ -54,89 +54,97 @@ class _VenuesState extends State<Venues> {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-      child: Container(
-        width: Dimension.width(155), // Set a fixed width to control wrapping
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(Dimension.width(18)),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(.25)),
-        ),
-        child: Column(
-          children: [
-            // Using ClipRRect to contain the image within the border radius
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(Dimension.width(18)),
-                topRight: Radius.circular(Dimension.width(18)),
-              ),
-              child: Image.network(
-                ground.imageUrl,
-                width: double.infinity, // Image takes full width of container
-                height: Dimension.height(
-                  118,
-                ), // Fixed height as per your design
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => SizedBox(
-                  height: Dimension.height(118),
-                  child: Icon(Icons.error, color: Colors.grey),
+      child: GestureDetector(
+        onTap: () {
+          // Navigate to details screen and pass the ground id as extra (string)
+          context.push('/futsal-details', extra: ground.id.toString());
+        },
+        child: Container(
+          width: Dimension.width(155), // Set a fixed width to control wrapping
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(Dimension.width(18)),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(.25),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Using ClipRRect to contain the image within the border radius
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(Dimension.width(18)),
+                  topRight: Radius.circular(Dimension.width(18)),
+                ),
+                child: Image.network(
+                  ground.imageUrl,
+                  width: double.infinity, // Image takes full width of container
+                  height: Dimension.height(
+                    118,
+                  ), // Fixed height as per your design
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => SizedBox(
+                    height: Dimension.height(118),
+                    child: Icon(Icons.error, color: Colors.grey),
+                  ),
                 ),
               ),
-            ),
-            Container(
-              padding: EdgeInsets.all(Dimension.width(8)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ground.name,
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: Dimension.font(14),
-                      fontWeight: FontWeight.bold,
+              Container(
+                padding: EdgeInsets.all(Dimension.width(8)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ground.name,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: Dimension.font(14),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    'Rs.${ground.pricePerHour}/hr',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(.7),
-                      fontSize: Dimension.font(11.5),
+                    Text(
+                      'Rs.${ground.pricePerHour}/hr',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withOpacity(.7),
+                        fontSize: Dimension.font(11.5),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: Dimension.height(4)),
-                  _buildRatingStars(ground.averageRating), // Dynamic stars
-                  SizedBox(height: Dimension.height(8)),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size(
-                        double.infinity,
-                        Dimension.height(30),
-                      ), // Full width button
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          Dimension.width(10),
+                    SizedBox(height: Dimension.height(4)),
+                    _buildRatingStars(ground.averageRating), // Dynamic stars
+                    SizedBox(height: Dimension.height(8)),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size(
+                          double.infinity,
+                          Dimension.height(30),
+                        ), // Full width button
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            Dimension.width(10),
+                          ),
+                        ),
+                      ),
+                      onPressed: () {
+                        context.push('/bookNow', extra: ground);
+                      },
+                      child: Text(
+                        'Book Now',
+                        style: TextStyle(
+                          fontSize: Dimension.font(11.5),
+                          color: theme.colorScheme.onPrimary,
                         ),
                       ),
                     ),
-                    onPressed: () {
-                      context.push('/bookNow', extra: ground);
-                    },
-                    child: Text(
-                      'Book Now',
-                      style: TextStyle(
-                        fontSize: Dimension.font(11.5),
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

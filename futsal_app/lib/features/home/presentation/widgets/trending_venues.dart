@@ -92,153 +92,162 @@ class _TrendingSectionState extends State<TrendingSection> {
           width: 1,
         ),
       ),
-      child: Column(
-        children: [
-          // Trending Badge
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(Dimension.width(18)),
-                  topRight: Radius.circular(Dimension.width(18)),
-                ),
-                child: Image.network(
-                  ground.imageUrl,
-                  width: double.infinity,
-                  height: Dimension.height(110),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+      child: GestureDetector(
+        onTap: () {
+          // Navigate to details screen and pass the ground id as extra (string)
+          context.push('/futsal-details', extra: ground.id.toString());
+        },
+        child: Column(
+          children: [
+            // Trending Badge
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(Dimension.width(18)),
+                    topRight: Radius.circular(Dimension.width(18)),
+                  ),
+                  child: Image.network(
+                    ground.imageUrl,
+                    width: double.infinity,
                     height: Dimension.height(110),
-                    color: theme.colorScheme.surfaceContainer,
-                    child: Icon(Icons.error, color: Colors.grey),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: Dimension.height(110),
+                      color: theme.colorScheme.surfaceContainer,
+                      child: Icon(Icons.error, color: Colors.grey),
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                top: Dimension.height(8),
-                right: Dimension.width(8),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Dimension.width(6),
-                    vertical: Dimension.height(2),
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.secondary,
-                    borderRadius: BorderRadius.circular(Dimension.width(12)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.trending_up_rounded,
-                        color: theme.colorScheme.onSecondary,
-                        size: Dimension.font(10),
-                      ),
-                      SizedBox(width: Dimension.width(2)),
-                      Text(
-                        'HOT',
-                        style: TextStyle(
+                Positioned(
+                  top: Dimension.height(8),
+                  right: Dimension.width(8),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Dimension.width(6),
+                      vertical: Dimension.height(2),
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.secondary,
+                      borderRadius: BorderRadius.circular(Dimension.width(12)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.trending_up_rounded,
                           color: theme.colorScheme.onSecondary,
-                          fontSize: Dimension.font(8),
-                          fontWeight: FontWeight.bold,
+                          size: Dimension.font(10),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: Dimension.width(2)),
+                        Text(
+                          'HOT',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSecondary,
+                            fontSize: Dimension.font(8),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(Dimension.width(8)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        ground.name,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: Dimension.font(13),
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        'Rs.${ground.pricePerHour}/hr',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface.withOpacity(.7),
-                          fontSize: Dimension.font(10.5),
-                        ),
-                      ),
-                      SizedBox(height: Dimension.height(2)),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildRatingStars(ground.averageRating),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: Dimension.width(4),
-                              vertical: Dimension.height(1),
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.secondary.withOpacity(
-                                .16,
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                Dimension.width(10),
-                              ),
-                            ),
-                            child: Text(
-                              '${ground.bookingCount} bookings',
-                              style: TextStyle(
-                                color: theme.colorScheme.secondary,
-                                fontSize: Dimension.font(7),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(Dimension.width(8)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ground.name,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: Dimension.font(13),
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Rs.${ground.pricePerHour}/hr',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withOpacity(.7),
+                            fontSize: Dimension.font(10.5),
+                          ),
+                        ),
+                        SizedBox(height: Dimension.height(2)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildRatingStars(ground.averageRating),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: Dimension.width(4),
+                                vertical: Dimension.height(1),
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondary.withOpacity(
+                                  .16,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  Dimension.width(10),
+                                ),
+                              ),
+                              child: Text(
+                                '${ground.bookingCount} bookings',
+                                style: TextStyle(
+                                  color: theme.colorScheme.secondary,
+                                  fontSize: Dimension.font(7),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
 
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size(double.infinity, Dimension.height(28)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          Dimension.width(10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size(
+                          double.infinity,
+                          Dimension.height(28),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            Dimension.width(10),
+                          ),
+                        ),
+                      ),
+                      onPressed: () {
+                        // Convert TrendingGroundModel to FutsalGroundModel or pass directly
+                        context.push('/bookNow', extra: ground);
+                      },
+                      child: Text(
+                        'Book Now',
+                        style: TextStyle(
+                          fontSize: Dimension.font(10.5),
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                    onPressed: () {
-                      // Convert TrendingGroundModel to FutsalGroundModel or pass directly
-                      context.push('/bookNow', extra: ground);
-                    },
-                    child: Text(
-                      'Book Now',
-                      style: TextStyle(
-                        fontSize: Dimension.font(10.5),
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
