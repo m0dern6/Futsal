@@ -93,7 +93,8 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/bookings', builder: (context, state) => BookingScreen()),
     GoRoute(
       path: '/futsal-details',
-      builder: (context, state) => FutsalDetailsScreen(),
+      builder: (context, state) =>
+          FutsalDetailsScreen(id: state.extra as String?),
     ),
   ],
 );
