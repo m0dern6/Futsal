@@ -41,7 +41,7 @@ namespace FutsalApi.ApiService.Routes
                 .Produces<UnauthorizedHttpResult>(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-            group.MapDelete("/delete/single/{imageUrl:string}", DeleteSingleFile)
+            group.MapDelete("/delete/single/{imageUrl}", DeleteSingleFile)
                 .WithName("DeleteSingleFile")
                 .WithSummary("Deletes a single image.")
                 .WithDescription("Deletes a single image by its URL.")
