@@ -205,6 +205,48 @@ Base URL: `/Reviews`
 
 ---
 
+### Images Management
+
+Base URL: `/images`
+**Authorization Required**
+
+#### Endpoints
+
+| Method | Endpoint                    | Description                    | Request Body          | Response                 |
+| ------ | --------------------------- | ------------------------------ | --------------------- | ------------------------ |
+| POST   | `/upload/single`            | Upload a single image file     | `multipart/form-data` | `Image`                  |
+| POST   | `/upload/multiple`          | Upload multiple image files    | `multipart/form-data` | `List<Image>`            |
+| DELETE | `/delete/single/{imageUrl}` | Delete a single image by URL   | -                     | `NoContent`/`NotFound`   |
+| DELETE | `/delete/multiple`          | Delete multiple images by URLs | `List<string>`        | `NoContent`/`BadRequest` |
+| GET    | `/user`                     | Get images for current user    | -                     | `List<Image>`            |
+
+#### Notes
+
+- For single delete, `imageUrl` is passed as a route parameter (URL-encoded if needed).
+- For multiple delete, provide a JSON array of image URLs in the request body.
+
+#### Example: Delete Single Image
+
+```
+DELETE /images/delete/single/https%3A%2F%2Fexample.com%2Fimg%2Fabc.jpg
+Authorization: Bearer <token>
+```
+
+#### Example: Delete Multiple Images
+
+```
+DELETE /images/delete/multiple
+Content-Type: application/json
+Authorization: Bearer <token>
+
+[
+    "https://example.com/img/abc.jpg",
+    "https://example.com/img/xyz.jpg"
+]
+```
+
+---
+
 ### Notification Management
 
 Base URL: `/Notifications`

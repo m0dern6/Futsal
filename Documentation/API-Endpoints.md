@@ -1,3 +1,11 @@
+## Images Management
+
+- **POST /images/upload/single**: Uploads a single image file.
+- **POST /images/upload/multiple**: Uploads multiple image files.
+- **DELETE /images/delete/single/{imageUrl}**: Deletes a single image by its URL (URL-encoded).
+- **DELETE /images/delete/multiple**: Deletes multiple images by their URLs (in request body).
+- **GET /images/user**: Retrieves all images uploaded by the current user.
+
 # API Endpoints
 
 This document outlines the available API endpoints for the Futsal API.

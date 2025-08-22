@@ -26,6 +26,15 @@ namespace FutsalApi.ApiService.Repositories
         {
             await _context.SaveChangesAsync();
         }
+        public bool Delete(Image image)
+        {
+            if (image != null)
+            {
+                _context.Images?.Remove(image);
+                return true;
+            }
+            return false;
+        }
 
         public IQueryable<Image> Where(System.Linq.Expressions.Expression<System.Func<Image, bool>> predicate)
         {

@@ -7,6 +7,7 @@ namespace FutsalApi.ApiService.Repositories
     {
         void Add(Image image);
         void Update(Image image);
+        bool Delete(Image image);
         Task SaveChangesAsync();
         IQueryable<Image> Where(System.Linq.Expressions.Expression<System.Func<Image, bool>> predicate);
         Task<List<Image>> GetImagesByUserIdAsync(string userId);
