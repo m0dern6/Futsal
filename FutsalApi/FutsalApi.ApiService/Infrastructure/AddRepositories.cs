@@ -2,6 +2,8 @@
 using System.Data;
 using System.Reflection;
 
+using Dapper;
+
 using FutsalApi.ApiService.Repositories;
 
 using Npgsql;
@@ -28,6 +30,10 @@ public static class RepositoryExtension
         }
 
         services.AddScoped<IDbConnection>(sp => new NpgsqlConnection(sp.GetRequiredService<IConfiguration>().GetConnectionString("futsaldb")));
+
+        // Configure Dapper type mappings for proper PostgreSQL date handling
+        SqlMapper.AddTypeMap(typeof(DateOnly), DbType.Date);
+        SqlMapper.AddTypeMap(typeof(DateOnly?), DbType.Date);
 
         return services;
     }

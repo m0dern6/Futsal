@@ -22,7 +22,7 @@ public class GroundClosureRepository : GenericRepository<GroundClosure>, IGround
         var parameters = new
         {
             p_ground_id = groundId,
-            p_date = date.Date,
+            p_date = DateOnly.FromDateTime(date.Date),
             p_start_time = startTime,
             p_end_time = endTime
         };
