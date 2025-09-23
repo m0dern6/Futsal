@@ -23,8 +23,8 @@ public class GroundClosureRepository : GenericRepository<GroundClosure>, IGround
         {
             p_ground_id = groundId,
             p_date = DateOnly.FromDateTime(date.Date),
-            p_start_time = startTime,
-            p_end_time = endTime
+            p_start_time = TimeOnly.FromTimeSpan(startTime),
+            p_end_time = TimeOnly.FromTimeSpan(endTime)
         };
         return await _dbConnection.ExecuteScalarAsync<bool>(
             "SELECT is_ground_closed(@p_ground_id, @p_date, @p_start_time, @p_end_time)",

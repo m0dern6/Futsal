@@ -1,8 +1,8 @@
-CREATE OR REPLACE FUNCTION is_ground_closed(
+﻿CREATE OR REPLACE FUNCTION is_ground_closed(
     p_ground_id INT,
     p_date DATE,
-    p_start_time INTERVAL,
-    p_end_time INTERVAL
+    p_start_time TIME,
+    p_end_time TIME
 )
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -13,12 +13,9 @@ BEGIN
           AND "StartDate"::date <= p_date
           AND "EndDate"::date >= p_date
           AND (
-                ("StartDate"::time <= (CURRENT_DATE + p_start_time)::time 
-                 AND "EndDate"::time >= (CURRENT_DATE + p_start_time)::time)
-             OR ("StartDate"::time <= (CURRENT_DATE + p_end_time)::time 
-                 AND "EndDate"::time >= (CURRENT_DATE + p_end_time)::time)
-             OR ("StartDate"::time >= (CURRENT_DATE + p_start_time)::time 
-                 AND "EndDate"::time <= (CURRENT_DATE + p_end_time)::time)
+                ("StartDate"::time <= p_start_time AND "EndDate"::time >= p_start_time) OR
+                ("StartDate"::time <= p_end_time AND "EndDate"::time >= p_end_time) OR
+                ("StartDate"::time >= p_start_time AND "EndDate"::time <= p_end_time)
               )
     );
 END;
