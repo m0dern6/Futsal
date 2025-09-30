@@ -14,6 +14,8 @@ import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 import 'package:futsalpay/shared/user_info/data/repository/user_info_repository.dart';
 import 'package:futsalpay/features/futsal_details/presentation/bloc/futsal_details_bloc.dart';
 import 'package:futsalpay/features/futsal_details/domain/futsal_details_repository.dart';
+import 'package:futsalpay/features/book_now/presentation/bloc/booking_bloc.dart';
+import 'package:futsalpay/features/book_now/data/repository/booking_repository.dart';
 
 class AppBlocProviders {
   static List<BlocProvider> get all => [
@@ -51,6 +53,9 @@ class AppBlocProviders {
     BlocProvider<FutsalDetailsBloc>(
       create: (context) =>
           FutsalDetailsBloc(context.read<FutsalDetailsRepository>()),
+    ),
+    BlocProvider<BookingBloc>(
+      create: (context) => BookingBloc(context.read<BookingRepository>()),
     ),
   ];
 }

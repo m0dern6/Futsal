@@ -11,6 +11,7 @@ import 'package:futsalpay/features/home/domain/futsal_ground_repository.dart';
 import 'package:futsalpay/features/home/domain/top_review_ground_repository.dart';
 import 'package:futsalpay/features/home/domain/trending_ground_repository.dart';
 import 'package:futsalpay/shared/user_info/data/repository/user_info_repository.dart';
+import 'package:futsalpay/features/book_now/data/repository/booking_repository.dart';
 
 class AppRepositoryProviders {
   static List<RepositoryProvider> get all => [
@@ -36,6 +37,10 @@ class AppRepositoryProviders {
     RepositoryProvider<FutsalDetailsRepository>(
       create: (context) =>
           FutsalDetailsRepositoryImpl(context.read<ApiService>()),
+    ),
+    RepositoryProvider<BookingRepository>(
+      create: (context) =>
+          BookingRepository(apiService: context.read<ApiService>()),
     ),
   ];
 }

@@ -5,6 +5,7 @@ import 'package:futsalpay/features/book_now/presentation/views/book_now_screen.d
 import 'package:futsalpay/features/bookings/presentation/views/booking_screen.dart';
 import 'package:futsalpay/features/favorites/presentation/views/favorite_screen.dart';
 import 'package:futsalpay/features/futsal_details/presentation/view/futsal_details_screen.dart';
+import 'package:futsalpay/features/profile/presentation/views/edit_profile_screen.dart';
 import 'package:futsalpay/features/profile/presentation/views/profile_screen.dart';
 import 'package:futsalpay/features/search_and_filter/presentation/view/search_filter_futsal_screen.dart';
 import 'package:futsalpay/features/splash/presentation/views/splash_screen.dart';
@@ -82,7 +83,16 @@ final GoRouter router = GoRouter(
           path: '/favorites',
           builder: (context, state) => FavoriteScreen(),
         ),
-        GoRoute(path: '/profile', builder: (context, state) => ProfileScreen()),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => ProfileScreen(),
+          routes: [
+            GoRoute(
+              path: 'edit-profile',
+              builder: (context, state) => EditProfileScreen(),
+            ),
+          ],
+        ),
       ],
     ),
 

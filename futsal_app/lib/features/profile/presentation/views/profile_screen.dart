@@ -147,7 +147,7 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(Dimension.width(30)),
                 ),
               ),
-              onPressed: () {},
+              onPressed: () => context.go('/profile/edit-profile'),
               icon: Icon(Icons.edit, size: Dimension.font(14)),
               label: Text(
                 'Edit Profile',

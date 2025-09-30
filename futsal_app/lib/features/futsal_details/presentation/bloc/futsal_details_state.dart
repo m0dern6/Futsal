@@ -8,7 +8,7 @@ final class FutsalDetailsInitial extends FutsalDetailsState {}
 final class FutsalDetailsLoading extends FutsalDetailsState {}
 
 final class FutsalDetailsLoaded extends FutsalDetailsState {
-  final data;
+  final FutsalDetailsModel data;
   FutsalDetailsLoaded(this.data);
 }
 
