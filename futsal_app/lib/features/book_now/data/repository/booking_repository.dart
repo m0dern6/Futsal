@@ -1,5 +1,6 @@
 import 'package:futsalpay/core/services/api_service.dart';
 import 'package:futsalpay/core/const/api_const.dart';
+import 'package:futsalpay/features/bookings/data/model/booking_model.dart';
 import 'dart:developer';
 
 class BookingRepository {
@@ -7,6 +8,47 @@ class BookingRepository {
 
   BookingRepository({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
+
+  Future<List<BookingModel>> fetchUserBookings({String? userId}) async {
+    try {
+      Map<String, dynamic>? queryParams;
+      if (userId != null) {
+        queryParams = {'userId': userId};
+      }
+
+      log('Fetching bookings with params: $queryParams');
+      final response = await _apiService.get(
+        ApiConst.bookFutsal,
+        queryParameters: queryParams,
+      );
+      log('Bookings response: $response');
+      log('Response type: ${response.runtimeType}');
+
+      if (response is List) {
+        return response
+            .map((json) => BookingModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } else if (response is Map<String, dynamic> &&
+          response.containsKey('data')) {
+        // Handle case where response is wrapped in a data object
+        final data = response['data'];
+        if (data is List) {
+          return data
+              .map(
+                (json) => BookingModel.fromJson(json as Map<String, dynamic>),
+              )
+              .toList();
+        }
+      }
+
+      // If no valid data format, return empty list
+      log('No valid booking data found in response');
+      return [];
+    } catch (e) {
+      log('Error fetching bookings: $e');
+      rethrow;
+    }
+  }
 
   Future<void> createBooking({
     required String userId,

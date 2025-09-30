@@ -197,7 +197,7 @@ class ProfileScreen extends StatelessWidget {
                 icon: CupertinoIcons.tickets_fill,
                 title: 'My Bookings',
                 color: theme.colorScheme.primary,
-                onTap: () => context.go('/bookings'),
+                onTap: () => context.push('/bookings'),
               ),
               _buildQuickActionCard(
                 context: context,
