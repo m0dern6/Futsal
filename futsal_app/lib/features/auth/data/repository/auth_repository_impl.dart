@@ -97,6 +97,28 @@ class AuthRepositoryImpl implements AuthRepository {
         print('Token saved: ${loginData['accessToken']}');
       }
 
+      if (loginData['refreshToken'] != null) {
+        await prefs.setString('refreshToken', loginData['refreshToken']);
+        print('Refresh token saved');
+      }
+
+      final expiresInRaw = loginData['expiresIn'];
+      int? expiresInSeconds;
+      if (expiresInRaw is int) {
+        expiresInSeconds = expiresInRaw;
+      } else if (expiresInRaw is String) {
+        expiresInSeconds = int.tryParse(expiresInRaw);
+      }
+
+      if (expiresInSeconds != null) {
+        final expiresAt = DateTime.now()
+            .add(Duration(seconds: expiresInSeconds))
+            .millisecondsSinceEpoch;
+        await prefs.setInt('tokenExpiry', expiresAt);
+      } else {
+        await prefs.remove('tokenExpiry');
+      }
+
       return LoginResponseModel.fromJson(loginData);
     } on DioException catch (e) {
       // Handle Dio-specific errors
@@ -121,6 +143,8 @@ class AuthRepositoryImpl implements AuthRepository {
       // If no exception was thrown, logout was successful
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('token');
+      await prefs.remove('refreshToken');
+      await prefs.remove('tokenExpiry');
     } on DioException catch (e) {
       // Handle Dio-specific errors
       if (e.response != null) {

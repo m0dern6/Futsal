@@ -4,6 +4,7 @@ class ApiConst {
 
   //auth endpoints
   static const String login = 'User/login';
+  static const String refresh = 'User/refresh';
   static const String register = 'User/register';
   static const String logout = 'User/logout';
 
