@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutsalApi.ApiService.Repositories;
 
-public class FavouriteFutsalGroundRepository : IFavouriteFutsalGroundRepository
+public class FavouriteFutsalGroundRepository : IFavouriteFutsalGroundRepository,GenericRepository<FavouriteFutsalGround>
 {
     private readonly AppDbContext _dbContext;
-    public FavouriteFutsalGroundRepository(AppDbContext dbContext)
+    public FavouriteFutsalGroundRepository(AppDbContext dbContext): base(dbContext)
     {
         _dbContext = dbContext;
     }
