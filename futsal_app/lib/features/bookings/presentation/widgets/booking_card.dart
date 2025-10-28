@@ -121,6 +121,47 @@ class BookingCard extends StatelessWidget {
               ),
             ],
           ),
+          // Add Review button for completed bookings
+          if (booking.statusText == 'Completed') ...[
+            SizedBox(height: Dimension.height(16)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.rate_review_rounded),
+                label: Text('Add Review'),
+                onPressed: () {
+                  // TODO: Show review input dialog/bottom sheet
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Add Review'),
+                      content: Text('Review input form goes here.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // TODO: Submit review
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Submit'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

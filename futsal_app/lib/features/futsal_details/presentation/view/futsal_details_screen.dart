@@ -1,3 +1,6 @@
+import '../../../reviews/data/repository/review_repository_impl.dart';
+import '../../../reviews/presentation/review_list.dart';
+import '../../../reviews/data/model/review_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -21,16 +24,17 @@ class _FutsalDetailsScreenState extends State<FutsalDetailsScreen> {
   bool _isFavorite = false;
   bool _isFavoriteKnown = false;
   bool _isProcessingFavorite = false;
+  List<ReviewModel> _groundReviews = []; // Initialize ground reviews
+  bool _loadingReviews = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       if (widget.id != null) {
         context.read<FutsalDetailsBloc>().add(LoadFutsalDetails(widget.id!));
+        _fetchGroundReviews(widget.id!); // Fetch reviews for the ground
       }
     });
 
@@ -39,6 +43,19 @@ class _FutsalDetailsScreenState extends State<FutsalDetailsScreen> {
       favoriteBloc.add(const LoadFavoriteGrounds());
     } else {
       _syncFavoriteState(favoriteBloc.state);
+    }
+  }
+
+  Future<void> _fetchGroundReviews(String groundId) async {
+    setState(() => _loadingReviews = true);
+    try {
+      final repo = ReviewRepositoryImpl();
+      final reviews = await repo.getReviewsByGroundId(groundId);
+      setState(() => _groundReviews = reviews);
+    } catch (e) {
+      // Optionally show error
+    } finally {
+      setState(() => _loadingReviews = false);
     }
   }
 
@@ -80,6 +97,19 @@ class _FutsalDetailsScreenState extends State<FutsalDetailsScreen> {
       });
     }
   }
+
+  // Future<void> _fetchGroundReviews(String groundId) async {
+  //   setState(() => _loadingReviews = true);
+  //   try {
+  //     final repo = ReviewRepositoryImpl();
+  //     final reviews = await repo.getReviewsByGroundId(groundId);
+  //     setState(() => _groundReviews = reviews);
+  //   } catch (e) {
+  //     // Optionally show error
+  //   } finally {
+  //     setState(() => _loadingReviews = false);
+  //   }
+  // }
 
   Future<void> _openMaps(String name, double lat, double lng) async {
     final googleUrl = Uri.parse('geo:$lat,$lng?q=$lat,$lng($name)');
@@ -224,36 +254,13 @@ class _FutsalDetailsScreenState extends State<FutsalDetailsScreen> {
         ),
         body: BlocBuilder<FutsalDetailsBloc, FutsalDetailsState>(
           builder: (context, state) {
-            if (state is FutsalDetailsLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state is FutsalDetailsError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: colorScheme.error,
-                    ),
-                    SizedBox(height: Dimension.height(16)),
-                    Text(
-                      'Something went wrong',
-                      style: theme.textTheme.headlineSmall,
-                    ),
-                    SizedBox(height: Dimension.height(8)),
-                    Text(state.message, style: theme.textTheme.bodyMedium),
-                  ],
-                ),
-              );
-            }
             if (state is FutsalDetailsLoaded) {
               final d = state.data;
               return CustomScrollView(
                 slivers: [
-                  // Hero Image Section
+                  // Move SliverAppBar to the top
                   SliverAppBar(
+                    automaticallyImplyLeading: false,
                     expandedHeight: Dimension.height(320),
                     pinned: false,
                     backgroundColor: Colors.transparent,
@@ -286,44 +293,29 @@ class _FutsalDetailsScreenState extends State<FutsalDetailsScreen> {
                               ),
                             ),
                           ),
-                          // Rating badge
-                          Positioned(
-                            top: Dimension.height(260),
-                            right: Dimension.width(16),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: Dimension.width(12),
-                                vertical: Dimension.height(6),
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  ),
-                                  SizedBox(width: Dimension.width(4)),
-                                  Text(
-                                    d.averageRating.toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          // Title on image
+                          // Positioned(
+                          //   left: Dimension.width(20),
+                          //   bottom: Dimension.height(32),
+                          //   child: Text(
+                          //     d.name,
+                          //     style: theme.textTheme.headlineMedium?.copyWith(
+                          //       color: Colors.white,
+                          //       fontWeight: FontWeight.bold,
+                          //       shadows: [
+                          //         Shadow(
+                          //           blurRadius: 8,
+                          //           color: Colors.black.withOpacity(0.7),
+                          //           offset: Offset(0, 2),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
                   ),
-
                   // Content Section
                   SliverToBoxAdapter(
                     child: Container(
@@ -515,6 +507,19 @@ class _FutsalDetailsScreenState extends State<FutsalDetailsScreen> {
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                                SizedBox(height: Dimension.height(24)),
+
+                                // Reviews Section (keep only one)
+                                Text(
+                                  'Reviews',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: Dimension.height(8)),
+                                _loadingReviews
+                                    ? Center(child: CircularProgressIndicator())
+                                    : ReviewList(reviews: _groundReviews),
                               ],
                             ),
                           ),

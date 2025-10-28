@@ -17,6 +17,14 @@ class ApiConst {
   static String addFavorite(String groundId) =>
       'FutsalGround/favourite/$groundId';
 
+  // review endpoints
+  static String reviews =
+      'Reviews'; // get all review of current user with pagination(Get) && also used to create a new review(Post)
+  static String getReviewsById(String groundId) =>
+      'Reviews/Ground/$groundId'; //retrieve(Get) reviews for a specific ground
+  static String individualReviews(String reviewId) =>
+      'Reviews/$reviewId'; //retrieves(Get), updates(Put) and delete(Delete) a existing review by id
+
   // Other endpoints
   static const String uploadImage = 'images/upload/single';
   static const String userInfo = 'User/manage/info';

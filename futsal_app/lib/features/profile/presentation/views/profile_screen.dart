@@ -8,6 +8,7 @@ import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:futsalpay/core/theme/theme_notifier.dart';
+import 'my_reviews_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -218,7 +219,11 @@ class ProfileScreen extends StatelessWidget {
                 icon: CupertinoIcons.star_fill,
                 title: 'My Reviews',
                 color: theme.colorScheme.secondary,
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => MyReviewsScreen()));
+                },
               ),
             ],
           ),
