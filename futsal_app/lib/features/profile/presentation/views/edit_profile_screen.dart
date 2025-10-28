@@ -60,8 +60,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
     // Listen for changes
     _usernameCtrl.addListener(_onFormChanged);
-    _emailCtrl.addListener(_onFormChanged);
-    _phoneCtrl.addListener(_onFormChanged);
 
     // Pre-fill user data
     WidgetsBinding.instance.addPostFrameCallback((_) => _preloadUserData());
@@ -71,8 +69,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     setState(() {
       _hasChanges =
           _usernameCtrl.text != _originalData['username'] ||
-          _emailCtrl.text != _originalData['email'] ||
-          _phoneCtrl.text != _originalData['phone'] ||
           _pickedImage != null;
     });
   }
@@ -83,15 +79,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     if (state is UserInfoLoaded) {
       final user = state.userInfo;
       _usernameCtrl.text = user.username;
-      _emailCtrl.text = user.email;
-      _phoneCtrl.text = user.phoneNumber ?? '';
+      // _emailCtrl.text = user.email;
+      // _phoneCtrl.text = user.phoneNumber ?? '';
 
       // Store original data for change detection
-      _originalData = {
-        'username': user.username,
-        'email': user.email,
-        'phone': user.phoneNumber ?? '',
-      };
+      _originalData = {'username': user.username};
     }
   }
 
@@ -182,11 +174,16 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           context.read<UserInfoBloc>().add(LoadUserInfo());
           Navigator.of(context).pop();
         } else if (state is EditProfileFailure) {
+          String msg = state.error;
+          // Try to extract only the validation error message if present
+          final match = RegExp(
+            r"Username '.*?invalid, can only contain letters or digits.']",
+          ).stringMatch(msg);
+          if (match != null) {
+            msg = match.replaceAll(RegExp(r"[\[\]']"), '');
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to update profile: ${state.error}'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(msg), backgroundColor: Colors.red),
           );
         }
       },
@@ -209,23 +206,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                   theme: theme,
                 ),
                 SizedBox(height: Dimension.height(20)),
-                _buildInputField(
-                  controller: _emailCtrl,
-                  focusNode: _emailFocus,
-                  label: 'Email',
-                  icon: Icons.email_outlined,
-                  theme: theme,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                SizedBox(height: Dimension.height(20)),
-                _buildInputField(
-                  controller: _phoneCtrl,
-                  focusNode: _phoneFocus,
-                  label: 'Phone Number',
-                  icon: Icons.phone_outlined,
-                  theme: theme,
-                  keyboardType: TextInputType.phone,
-                ),
+                // Email and phone fields removed
                 SizedBox(height: Dimension.height(40)),
                 _buildSaveButton(theme, context),
                 SizedBox(height: Dimension.height(20)),
@@ -510,26 +491,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
       // Only include changed fields
       String? newUsername;
-      String? newEmail;
-      String? newPhone;
-
       if (_usernameCtrl.text != currentUser.username) {
         newUsername = _usernameCtrl.text;
       }
-
-      if (_emailCtrl.text != currentUser.email) {
-        newEmail = _emailCtrl.text;
-      }
-
-      if (_phoneCtrl.text != (currentUser.phoneNumber ?? '')) {
-        newPhone = _phoneCtrl.text;
-      }
-
       context.read<EditProfileBloc>().add(
         EditProfileSubmitted(
           username: newUsername,
-          email: newEmail,
-          phoneNumber: newPhone,
           profileImageId: _uploadedImageId,
         ),
       );

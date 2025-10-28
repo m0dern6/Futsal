@@ -13,6 +13,9 @@ class ApiConst {
   static String futsalDetails(String id) => 'FutsalGround/$id';
   static const String trendingGround = 'FutsalGround/trending';
   static const String topReviewGround = 'FutsalGround/top-reviewed';
+  static const String favorites = 'FutsalGround/favourites';
+  static String addFavorite(String groundId) =>
+      'FutsalGround/favourite/$groundId';
 
   // Other endpoints
   static const String uploadImage = 'images/upload/single';

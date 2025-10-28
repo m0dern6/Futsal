@@ -83,15 +83,22 @@ class ProfileScreen extends StatelessWidget {
             Stack(
               alignment: Alignment.bottomRight,
               children: [
-                CircleAvatar(
-                  radius: Dimension.width(44),
-                  backgroundColor: theme.colorScheme.primary,
+                Container(
+                  width: Dimension.width(80),
+                  height: Dimension.width(80),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(Dimension.width(44)),
+                    borderRadius: BorderRadius.circular(Dimension.width(100)),
                     child: Image.network(
                       '${ApiConst.baseUrl}${user?.profileImageUrl}',
 
-                      fit: BoxFit.cover,
+                      fit: BoxFit.fill,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.person,
                         size: Dimension.font(42),

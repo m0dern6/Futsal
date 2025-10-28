@@ -3,6 +3,8 @@ import 'package:futsalpay/features/auth/domain/repository/auth_repository.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/login/login_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/logout/logout_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/register/register_bloc.dart';
+import 'package:futsalpay/features/favorites/domain/favorites_repository.dart';
+import 'package:futsalpay/features/favorites/presentation/bloc/favorite_ground_bloc.dart';
 import 'package:futsalpay/features/home/domain/futsal_ground_repository.dart';
 import 'package:futsalpay/features/home/domain/top_review_ground_repository.dart';
 import 'package:futsalpay/features/home/domain/trending_ground_repository.dart';
@@ -45,6 +47,10 @@ class AppBlocProviders {
     BlocProvider<TrendingGroundBloc>(
       create: (context) =>
           TrendingGroundBloc(context.read<TrendingGroundRepository>()),
+    ),
+    BlocProvider<FavoriteGroundBloc>(
+      create: (context) =>
+          FavoriteGroundBloc(context.read<FavoritesRepository>()),
     ),
     BlocProvider<UserInfoBloc>(
       create: (context) =>
