@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/core/config/dimension.dart';
 import 'package:futsalpay/features/book_now/presentation/bloc/booking_bloc.dart';
+import 'package:futsalpay/features/book_now/presentation/widgets/timeline_slot_picker.dart';
 import 'package:futsalpay/shared/user_info/bloc/user_info_bloc.dart';
 
 class BookNowScreen extends StatefulWidget {
@@ -16,19 +17,34 @@ class BookNowScreen extends StatefulWidget {
 
 class _BookNowScreenState extends State<BookNowScreen> {
   int selectedDateIndex = 0;
-  int selectedStartTimeIndex = 0;
-  int selectedEndTimeIndex = 1;
+  TimeOfDay? selectedStartTime;
+  TimeOfDay? selectedEndTime;
   bool isBookingInProgress = false; // Add this to prevent double booking
-  final List<String> times = [
-    '12:00 PM',
-    '1:00 PM',
-    '2:00 PM',
-    '3:00 PM',
-    '4:00 PM',
-    '5:00 PM',
-    '6:00 PM',
-    '7:00 PM',
-  ];
+
+  // Get opening and closing hours from ground data
+  TimeOfDay _getOpeningHour() {
+    try {
+      return widget.ground?.openingHour ?? const TimeOfDay(hour: 6, minute: 0);
+    } catch (e) {
+      return const TimeOfDay(hour: 6, minute: 0); // Default 6 AM
+    }
+  }
+
+  TimeOfDay _getClosingHour() {
+    try {
+      return widget.ground?.closingHour ?? const TimeOfDay(hour: 20, minute: 0);
+    } catch (e) {
+      return const TimeOfDay(hour: 20, minute: 0); // Default 8 PM
+    }
+  }
+
+  List<TimeOfDay> _getBookedSlots() {
+    try {
+      return widget.ground?.bookedSlots?.cast<TimeOfDay>() ?? [];
+    } catch (e) {
+      return []; // Default empty list
+    }
+  }
 
   // Helper methods to safely extract properties from dynamic ground object
   String _getGroundName() {
@@ -280,281 +296,26 @@ class _BookNowScreenState extends State<BookNowScreen> {
                       ),
                     ),
                     SizedBox(height: Dimension.height(12)),
-
-                    // Start and End Time Row
-                    Row(
-                      children: [
-                        // Start Time
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Start Time',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontSize: Dimension.font(11.5),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: Dimension.height(5)),
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    backgroundColor: colorScheme.surface,
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                        top: Radius.circular(20),
-                                      ),
-                                    ),
-                                    builder: (ctx) => Container(
-                                      height: Dimension.height(210),
-                                      padding: EdgeInsets.all(
-                                        Dimension.width(12),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: Dimension.width(28),
-                                            height: Dimension.height(3),
-                                            decoration: BoxDecoration(
-                                              color: colorScheme.onSurface
-                                                  .withOpacity(0.3),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    Dimension.width(1.5),
-                                                  ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: Dimension.height(10),
-                                          ),
-                                          Text(
-                                            'Select Start Time',
-                                            style: TextStyle(
-                                              color: colorScheme.onSurface,
-                                              fontSize: Dimension.font(13.5),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: Dimension.height(10),
-                                          ),
-                                          Expanded(
-                                            child: CupertinoDatePicker(
-                                              mode:
-                                                  CupertinoDatePickerMode.time,
-                                              initialDateTime: DateTime(
-                                                today.year,
-                                                today.month,
-                                                today.day,
-                                                12 + selectedStartTimeIndex,
-                                              ),
-                                              use24hFormat: false,
-                                              onDateTimeChanged: (date) {
-                                                setState(() {
-                                                  selectedStartTimeIndex =
-                                                      date.hour >= 12
-                                                      ? date.hour - 12
-                                                      : date.hour;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: Dimension.width(16),
-                                    vertical: Dimension.height(14),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withOpacity(
-                                      0.15,
-                                    ),
-                                    border: Border.all(
-                                      color: colorScheme.primary.withOpacity(
-                                        0.3,
-                                      ),
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      Dimension.width(12),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        selectedStartTimeIndex < times.length
-                                            ? times[selectedStartTimeIndex]
-                                            : '${12 + selectedStartTimeIndex}:00 PM',
-                                        style: TextStyle(
-                                          color: colorScheme.primary,
-                                          fontSize: Dimension.font(12),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.access_time,
-                                        color: colorScheme.primary,
-                                        size: Dimension.width(14),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                    TimelineSlotPicker(
+                      openingTime: _getOpeningHour(),
+                      closingTime: _getClosingHour(),
+                      bookedSlots: _getBookedSlots(),
+                      onError: (msg) {
+                        final cs = Theme.of(context).colorScheme;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(msg),
+                            backgroundColor: cs.error,
+                            behavior: SnackBarBehavior.floating,
                           ),
-                        ),
-
-                        // Separator
-                        Container(
-                          margin: EdgeInsets.symmetric(
-                            horizontal: Dimension.width(10),
-                            vertical: Dimension.height(5),
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            color: colorScheme.onSurface.withOpacity(0.6),
-                            size: Dimension.width(16),
-                          ),
-                        ),
-
-                        // End Time
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'End Time',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontSize: Dimension.font(11.5),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: Dimension.height(5)),
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    backgroundColor: colorScheme.surface,
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                        top: Radius.circular(20),
-                                      ),
-                                    ),
-                                    builder: (ctx) => Container(
-                                      height: Dimension.height(210),
-                                      padding: EdgeInsets.all(
-                                        Dimension.width(12),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: Dimension.width(28),
-                                            height: Dimension.height(3),
-                                            decoration: BoxDecoration(
-                                              color: colorScheme.onSurface
-                                                  .withOpacity(0.3),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    Dimension.width(1.5),
-                                                  ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: Dimension.height(10),
-                                          ),
-                                          Text(
-                                            'Select End Time',
-                                            style: TextStyle(
-                                              color: colorScheme.onSurface,
-                                              fontSize: Dimension.font(13.5),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: Dimension.height(10),
-                                          ),
-                                          Expanded(
-                                            child: CupertinoDatePicker(
-                                              mode:
-                                                  CupertinoDatePickerMode.time,
-                                              initialDateTime: DateTime(
-                                                today.year,
-                                                today.month,
-                                                today.day,
-                                                12 + selectedEndTimeIndex,
-                                              ),
-                                              use24hFormat: false,
-                                              onDateTimeChanged: (date) {
-                                                setState(() {
-                                                  selectedEndTimeIndex =
-                                                      date.hour >= 12
-                                                      ? date.hour - 12
-                                                      : date.hour;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: Dimension.width(16),
-                                    vertical: Dimension.height(14),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF7CFF6B,
-                                    ).withOpacity(0.15),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF7CFF6B,
-                                      ).withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      Dimension.width(12),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        selectedEndTimeIndex < times.length
-                                            ? times[selectedEndTimeIndex]
-                                            : '${12 + selectedEndTimeIndex}:00 PM',
-                                        style: TextStyle(
-                                          color: const Color(0xFF7CFF6B),
-                                          fontSize: Dimension.font(12),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.access_time,
-                                        color: const Color(0xFF7CFF6B),
-                                        size: Dimension.width(14),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        );
+                      },
+                      onSlotsSelected: (startSlot, endSlot) {
+                        setState(() {
+                          selectedStartTime = startSlot.time;
+                          selectedEndTime = endSlot.time;
+                        });
+                      },
                     ),
 
                     SizedBox(height: Dimension.height(12)),
@@ -659,7 +420,11 @@ class _BookNowScreenState extends State<BookNowScreen> {
                       borderRadius: BorderRadius.circular(Dimension.width(12)),
                     ),
                   ),
-                  onPressed: () => _showBookingConfirmation(context),
+                  onPressed: () {
+                    if (_validateSelectionOrNotify(context)) {
+                      _showBookingConfirmation(context);
+                    }
+                  },
                   child: Text(
                     'Continue',
                     style: TextStyle(
@@ -678,15 +443,69 @@ class _BookNowScreenState extends State<BookNowScreen> {
   }
 
   int _calculateDuration() {
-    int startHour = selectedStartTimeIndex;
-    int endHour = selectedEndTimeIndex;
+    if (selectedStartTime == null || selectedEndTime == null) return 0;
 
-    // Handle case where end time might be less than start time
-    if (endHour <= startHour) {
-      endHour += times.length;
+    int startMinutes = selectedStartTime!.hour * 60 + selectedStartTime!.minute;
+    int endMinutes = selectedEndTime!.hour * 60 + selectedEndTime!.minute;
+
+    // Handle case where end time might be less than start time (next day)
+    if (endMinutes <= startMinutes) {
+      endMinutes += 24 * 60; // Add 24 hours
     }
 
-    return endHour - startHour;
+    return ((endMinutes - startMinutes) / 60).ceil();
+  }
+
+  bool _validateSelectionOrNotify(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    if (selectedStartTime == null || selectedEndTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select a start and end time.'),
+          backgroundColor: colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return false;
+    }
+
+    // Duration must be 1 or 2 hours only
+    final duration = _calculateDuration();
+    if (duration < 1 || duration > 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select 1 or 2 hours maximum.'),
+          backgroundColor: colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return false;
+    }
+
+    // Prevent overlap with booked slots
+    final booked = _getBookedSlots();
+    // Iterate each 1-hour segment between [start, end)
+    int startMinutes = selectedStartTime!.hour * 60 + selectedStartTime!.minute;
+    int endMinutes = selectedEndTime!.hour * 60 + selectedEndTime!.minute;
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60; // normalize
+
+    for (int m = startMinutes; m < endMinutes; m += 60) {
+      final t = TimeOfDay(hour: (m ~/ 60) % 24, minute: m % 60);
+      if (booked.any((b) => b.hour == t.hour && b.minute == t.minute)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Selected time overlaps an already booked slot.',
+            ),
+            backgroundColor: colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return false;
+      }
+    }
+
+    return true;
   }
 
   Widget _buildQuickTimeButton(String label, int duration) {
@@ -695,10 +514,17 @@ class _BookNowScreenState extends State<BookNowScreen> {
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          selectedEndTimeIndex =
-              (selectedStartTimeIndex + duration) % times.length;
-        });
+        if (selectedStartTime != null) {
+          setState(() {
+            final startMinutes =
+                selectedStartTime!.hour * 60 + selectedStartTime!.minute;
+            final endMinutes = startMinutes + (duration * 60);
+            selectedEndTime = TimeOfDay(
+              hour: (endMinutes ~/ 60) % 24,
+              minute: endMinutes % 60,
+            );
+          });
+        }
       },
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -734,8 +560,10 @@ class _BookNowScreenState extends State<BookNowScreen> {
       today.month,
       today.day + selectedDateIndex,
     );
-    final startTime = times[selectedStartTimeIndex];
-    final endTime = times[selectedEndTimeIndex];
+    if (selectedStartTime == null || selectedEndTime == null) return;
+
+    final startTime = _formatTimeOfDay(selectedStartTime!);
+    final endTime = _formatTimeOfDay(selectedEndTime!);
     final duration = _calculateDuration();
     final totalCost = (duration * _getPricePerHour()).toInt();
 
@@ -904,8 +732,8 @@ class _BookNowScreenState extends State<BookNowScreen> {
             userId: userInfoState.userInfo.id,
             groundId: groundId,
             bookingDate: date,
-            startTime: _convertTo24HourFormat(startTime),
-            endTime: _convertTo24HourFormat(endTime),
+            startTime: _convertTo24HourFormat(selectedStartTime!),
+            endTime: _convertTo24HourFormat(selectedEndTime!),
           ),
         );
       } catch (e) {
@@ -995,22 +823,17 @@ class _BookNowScreenState extends State<BookNowScreen> {
     }
   }
 
-  String _convertTo24HourFormat(String time12Hour) {
-    // Convert time format from "12:00 PM" to "12:00:00"
-    final parts = time12Hour.split(' ');
-    final timePart = parts[0];
-    final amPm = parts[1];
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:$minute $period';
+  }
 
-    final timeComponents = timePart.split(':');
-    int hour = int.parse(timeComponents[0]);
-    final minute = timeComponents[1];
-
-    if (amPm == 'PM' && hour != 12) {
-      hour += 12;
-    } else if (amPm == 'AM' && hour == 12) {
-      hour = 0;
-    }
-
-    return '${hour.toString().padLeft(2, '0')}:$minute:00';
+  String _convertTo24HourFormat(TimeOfDay time) {
+    final hour = time.hour;
+    final minute = time.minute;
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:00';
   }
 }

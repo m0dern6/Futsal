@@ -18,11 +18,7 @@ class BookingCard extends StatelessWidget {
       fontWeight: FontWeight.w700,
     );
 
-    final subtitleStyle = TextStyle(
-      color: colorScheme.onSurface.withOpacity(0.65),
-      fontSize: Dimension.font(11),
-      fontWeight: FontWeight.w500,
-    );
+    // Removed unused subtitleStyle to satisfy strict lints
 
     return Container(
       margin: EdgeInsets.only(bottom: Dimension.height(14)),

@@ -341,19 +341,7 @@ class _TopReviewSectionState extends State<TopReviewSection> {
     );
   }
 
-  Widget _buildRatingStars(double rating) {
-    int numberOfStars = rating.round();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        return Icon(
-          index < numberOfStars ? Icons.star : Icons.star_border,
-          color: Colors.amber,
-          size: Dimension.font(10),
-        );
-      }),
-    );
-  }
+  // Removed unused _buildRatingStars to satisfy strict lints
 
   Widget _buildShimmerEffect() {
     return Shimmer.fromColors(
