@@ -65,6 +65,7 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
                 StartTime = e.StartTime,
                 EndTime = e.EndTime,
                 Status = e.Status,
+                GroundId = e.GroundId,
                 TotalAmount = e.TotalAmount,
                 CreatedAt = e.CreatedAt,
                 GroundName = e.Ground.Name
