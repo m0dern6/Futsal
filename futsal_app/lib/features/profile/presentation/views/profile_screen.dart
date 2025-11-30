@@ -336,6 +336,78 @@ class ProfileScreen extends StatelessWidget {
             onTap: () {},
           ),
           _buildSettingsTile(
+            icon: CupertinoIcons.mail_solid,
+            title: 'Resend Verification Email',
+            onTap: () {
+              // Show confirmation dialog
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Resend Verification Email'),
+                  content: const Text(
+                    'Do you want to resend the verification email to your account?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // TODO: Implement send revalidate email
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Verification email sent!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      child: const Text('Send'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          _buildSettingsTile(
+            icon: CupertinoIcons.delete_solid,
+            title: 'Deactivate Account',
+            onTap: () {
+              // Show confirmation dialog
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Deactivate Account'),
+                  content: const Text(
+                    'Are you sure you want to deactivate your account? This action will log you out.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // TODO: Implement account deactivation
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Account deactivated'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        context.go('/login');
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: const Text('Deactivate'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          _buildSettingsTile(
             icon: CupertinoIcons.question_circle_fill,
             title: 'Help & Support',
             onTap: () {},

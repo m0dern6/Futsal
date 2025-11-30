@@ -1,5 +1,4 @@
 class ApiConst {
-  // Update this to match your actual server URL - use localhost if testing locally, or your production URL
   static const String baseUrl = 'http://144.126.252.228:8080/';
 
   //auth endpoints
@@ -7,6 +6,24 @@ class ApiConst {
   static const String refresh = 'User/refresh';
   static const String register = 'User/register';
   static const String logout = 'User/logout';
+  static const String loginGoogle = 'User/login/google';
+  static const String authGoogleCallback = 'User/auth/google/callback';
+
+  // Email confirmation endpoints
+  static const String confirmEmail = 'User/confirmEmail';
+  static const String resendConfirmationEmail = 'User/resendConfirmationEmail';
+
+  // Password reset endpoints
+  static const String forgotPassword = 'User/forgotPassword';
+  static const String resetPassword = 'User/resetPassword';
+  static const String verifyResetCode = 'User/verifyResetCode';
+
+  // Account management endpoints
+  static const String deactivateAccount = 'User/manage/deactivate';
+  static const String sendRevalidateEmail = 'User/manage/sendRevalidateEmail';
+  static const String revalidateAccount = 'User/manage/revalidate';
+  static const String setup2fa = 'User/manage/setup2fa';
+  static const String manage2fa = 'User/manage/2fa';
 
   // Fixed futsal ground endpoints (removed leading slash)
   static const String futsalGround = 'FutsalGround';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:futsalpay/core/config/dimension.dart';
 import 'package:futsalpay/features/bookings/data/model/booking_model.dart';
+import 'package:futsalpay/features/reviews/presentation/add_review_dialog.dart';
 
 class BookingCard extends StatelessWidget {
   final BookingModel booking;
@@ -118,41 +119,56 @@ class BookingCard extends StatelessWidget {
             ],
           ),
           // Add Review button for completed bookings
-          if (booking.statusText == 'Completed') ...[
-            SizedBox(height: Dimension.height(16)),
-            Align(
-              alignment: Alignment.centerLeft,
+          if (booking.status == 1) ...[
+            SizedBox(height: Dimension.height(12)),
+            SizedBox(
+              width: double.infinity,
               child: ElevatedButton.icon(
-                icon: Icon(Icons.rate_review_rounded),
+                icon: Icon(
+                  Icons.rate_review_rounded,
+                  size: Dimension.width(18),
+                ),
                 label: Text('Add Review'),
                 onPressed: () {
-                  // TODO: Show review input dialog/bottom sheet
+                  print('=== BOOKING DETAILS FOR REVIEW ===');
+                  print('Booking ID: ${booking.id}');
+                  print('Ground ID: ${booking.groundId}');
+                  print('Ground Name: ${booking.groundName}');
+                  print('Status: ${booking.status}');
+                  print('Booking Date: ${booking.bookingDate}');
+
+                  // Validate groundId before showing dialog
+                  if (booking.groundId == 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Cannot add review: Invalid ground ID from server. '
+                          'Please contact support.',
+                        ),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 5),
+                      ),
+                    );
+                    print(
+                      'ERROR: Ground ID is 0 - API is not returning correct groundId',
+                    );
+                    return;
+                  }
+
                   showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Add Review'),
-                      content: Text('Review input form goes here.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: Submit review
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('Submit'),
-                        ),
-                      ],
+                    builder: (context) => AddReviewDialog(
+                      groundId: booking.groundId,
+                      groundName: booking.groundName,
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
+                  padding: EdgeInsets.symmetric(vertical: Dimension.height(12)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(Dimension.width(10)),
                   ),
                 ),
               ),

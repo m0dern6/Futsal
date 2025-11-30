@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futsalpay/features/auth/domain/repository/auth_repository.dart';
+import 'package:futsalpay/features/auth/presentation/bloc/forgot_password/forgot_password_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/login/login_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/logout/logout_bloc.dart';
 import 'package:futsalpay/features/auth/presentation/bloc/register/register_bloc.dart';
+import 'package:futsalpay/features/auth/presentation/bloc/reset_password/reset_password_bloc.dart';
 import 'package:futsalpay/features/favorites/domain/favorites_repository.dart';
 import 'package:futsalpay/features/favorites/presentation/bloc/favorite_ground_bloc.dart';
 import 'package:futsalpay/features/home/domain/futsal_ground_repository.dart';
@@ -35,6 +37,14 @@ class AppBlocProviders {
     BlocProvider<LogoutBloc>(
       create: (context) =>
           LogoutBloc(authRepository: context.read<AuthRepository>()),
+    ),
+    BlocProvider<ForgotPasswordBloc>(
+      create: (context) =>
+          ForgotPasswordBloc(authRepository: context.read<AuthRepository>()),
+    ),
+    BlocProvider<ResetPasswordBloc>(
+      create: (context) =>
+          ResetPasswordBloc(authRepository: context.read<AuthRepository>()),
     ),
     BlocProvider<FutsalGroundBloc>(
       create: (context) =>

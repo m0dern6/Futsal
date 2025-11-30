@@ -73,11 +73,11 @@ class BookingModel {
       case 0:
         return 'Pending';
       case 1:
-        return 'Confirmed';
+        return 'Completed';
       case 2:
         return 'Cancelled';
       case 3:
-        return 'Completed';
+        return 'Confirmed';
       default:
         return 'Unknown';
     }
@@ -88,11 +88,11 @@ class BookingModel {
       case 0:
         return const Color(0xFFFFA500); // Orange for pending
       case 1:
-        return const Color(0xFF4CAF50); // Green for confirmed
+        return const Color(0xFF9C27B0); // Purple for completed
       case 2:
         return const Color(0xFFF44336); // Red for cancelled
       case 3:
-        return const Color(0xFF9C27B0); // Purple for completed
+        return const Color(0xFF4CAF50); // Green for confirmed
       default:
         return const Color(0xFF757575); // Gray for unknown
     }

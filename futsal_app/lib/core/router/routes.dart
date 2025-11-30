@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:futsalpay/features/auth/presentation/views/forgot_password_screen.dart';
 import 'package:futsalpay/features/auth/presentation/views/login_screen.dart';
 import 'package:futsalpay/features/auth/presentation/views/register_screen.dart';
+import 'package:futsalpay/features/auth/presentation/views/reset_password_screen.dart';
 import 'package:futsalpay/features/book_now/presentation/views/book_now_screen.dart';
 import 'package:futsalpay/features/bookings/presentation/views/booking_screen.dart';
 import 'package:futsalpay/features/favorites/presentation/views/favorite_screen.dart';
@@ -32,6 +34,16 @@ final GoRouter router = GoRouter(
               RegisterScreen(),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (BuildContext context, GoRouterState state) =>
+          ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (BuildContext context, GoRouterState state) =>
+          ResetPasswordScreen(email: state.extra as String?),
     ),
     ShellRoute(
       builder: (context, state, child) {
