@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
@@ -835,7 +836,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
         var totalBookings = await dbContext.Bookings.CountAsync(b => b.UserId == user.Id);
         var totalReviews = await dbContext.Reviews.CountAsync(r => r.UserId == user.Id);
-        var totalFavorites = await dbContext.Favorites.CountAsync(f => f.UserId == user.Id);
+        var totalFavorites = await dbContext.FavouriteFutsalGrounds.CountAsync(f => f.UserId == user.Id);
 
         return new()
         {

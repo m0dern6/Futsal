@@ -30,21 +30,18 @@ public class CustomUserValidator : IUserValidator<User>
         }
 
         // Validate unique username
-        if (manager.SupportsUserName)
+        var userName = await manager.GetUserNameAsync(user);
+        if (!string.IsNullOrWhiteSpace(userName))
         {
-            var userName = await manager.GetUserNameAsync(user);
-            if (!string.IsNullOrWhiteSpace(userName))
+            var owner = await manager.FindByNameAsync(userName);
+            // Only fail if there's a different user with the same username
+            if (owner != null && !string.Equals(await manager.GetUserIdAsync(owner), await manager.GetUserIdAsync(user)))
             {
-                var owner = await manager.FindByNameAsync(userName);
-                // Only fail if there's a different user with the same username
-                if (owner != null && !string.Equals(await manager.GetUserIdAsync(owner), await manager.GetUserIdAsync(user)))
+                errors.Add(new IdentityError
                 {
-                    errors.Add(new IdentityError
-                    {
-                        Code = "DuplicateUserName",
-                        Description = $"User name '{userName}' is already taken."
-                    });
-                }
+                    Code = "DuplicateUserName",
+                    Description = $"User name '{userName}' is already taken."
+                });
             }
         }
 
