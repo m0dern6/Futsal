@@ -33,7 +33,8 @@ public static class AuthExtensions
             options.SignIn.RequireConfirmedEmail = false;
         })
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddUserValidator<CustomUserValidator>();
 
         // Configure Authentication schemes after Identity is added
         services.ConfigureApplicationCookie(options =>
