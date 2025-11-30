@@ -8,8 +8,6 @@ using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Repositories.Interfaces;
-using FutsalApi.ApiService.Infrastructure;
-using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -29,7 +27,7 @@ public class BookingApiEndpoints : IEndpoint
             .RequireAuthorization();
 
         routeGroup.MapGet("/", GetBookingsByUserId)
-            .RequirePermissionResource(Permissions.CanView, Resources.Booking)
+            //.RequirePermissionResource(Permissions.CanView, Resources.Booking)
             .WithName("GetBookingsByUserId")
             .WithSummary("Get Bookings of a user")
             .WithDescription("Get all the Bookings for a particular user using userid")
@@ -65,6 +63,60 @@ public class BookingApiEndpoints : IEndpoint
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        routeGroup.MapPatch("/accept/{id}", AcceptBooking)
+            .WithName("AcceptBooking")
+            .WithSummary("Accept a booking request (owner only)")
+            .WithDescription("Allows the owner of the ground to accept a booking request. Only the owner can perform this action.")
+            .Produces<string>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
+    }
+
+    internal async Task<Results<Ok<string>, ProblemHttpResult, NotFound, ForbidHttpResult>> AcceptBooking(
+        [FromServices] IBookingRepository repository,
+        [FromServices] IFutsalGroundRepository groundRepository,
+        ClaimsPrincipal claimsPrincipal,
+        [FromServices] UserManager<User> userManager,
+        [FromRoute] int id)
+    {
+        try
+        {
+            // Get current user
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            if (user == null)
+                return TypedResults.NotFound();
+
+            // Get booking
+            var booking = await repository.GetByIdAsync(e => e.Id == id);
+            if (booking == null)
+                return TypedResults.NotFound();
+
+            // Get ground
+            var ground = await groundRepository.GetByIdAsync(e => e.Id == booking.GroundId);
+            if (ground == null)
+                return TypedResults.Problem("Ground not found.", statusCode: StatusCodes.Status404NotFound);
+
+            // Check owner
+            if (ground.OwnerId != user.Id)
+                return TypedResults.Forbid();
+
+            // Only allow accepting if pending
+            if (booking.Status != BookingStatus.Pending)
+                return TypedResults.Problem("Only pending bookings can be accepted.", statusCode: StatusCodes.Status400BadRequest);
+
+            booking.Status = BookingStatus.Confirmed;
+            booking.UpdatedAt = DateTime.UtcNow;
+            await repository.UpdateAsync(e => e.Id == id, booking);
+
+            return TypedResults.Ok("Booking accepted successfully.");
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"An error occurred while accepting the booking: {ex.Message}");
+        }
     }
 
     internal async Task<Results<Ok<IEnumerable<BookingResponse>>, ProblemHttpResult, NotFound>> GetBookingsByUserId(

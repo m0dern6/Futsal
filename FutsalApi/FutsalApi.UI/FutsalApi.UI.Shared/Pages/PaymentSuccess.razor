@@ -78,11 +78,6 @@
                 // Khalti callback
                 await ProcessKhaltiCallback();
             }
-            else if (!string.IsNullOrEmpty(TransactionUuid))
-            {
-                // eSewa callback
-                await ProcessESewaCallback();
-            }
             else
             {
                 errorMessage = "Invalid payment callback data";
@@ -101,36 +96,11 @@
         }
     }
 
-    private async Task ProcessESewaCallback()
-    {
-        var callbackData = new ESewaCallbackResponse
-        {
-            Data = Data ?? "",
-            TransactionCode = TransactionCode ?? "",
-            Status = Status ?? "",
-            TotalAmount = TotalAmount ?? 0,
-            TransactionUuid = TransactionUuid ?? "",
-            ProductCode = ProductCode ?? "",
-            Success = Status == "success"
-        };
-
-        var response = await Http.PostAsJsonAsync("PaymentGateway/esewa/callback", callbackData);
-        
-        if (response.IsSuccessStatusCode)
-        {
-            paymentSuccess = true;
-        }
-        else
-        {
-            errorMessage = "Failed to verify eSewa payment";
-            paymentSuccess = false;
-        }
-    }
 
     private async Task ProcessKhaltiCallback()
     {
         var response = await Http.PostAsync($"PaymentGateway/khalti/callback?pidx={Pidx}", null);
-        
+
         if (response.IsSuccessStatusCode)
         {
             paymentSuccess = true;
@@ -153,14 +123,4 @@
     }
 
     // Response classes for callback processing
-    public class ESewaCallbackResponse
-    {
-        public string Data { get; set; } = string.Empty;
-        public string TransactionCode { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public decimal TotalAmount { get; set; }
-        public string TransactionUuid { get; set; } = string.Empty;
-        public string ProductCode { get; set; } = string.Empty;
-        public bool Success { get; set; }
-    }
 }

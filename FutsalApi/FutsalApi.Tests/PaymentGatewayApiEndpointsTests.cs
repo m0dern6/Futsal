@@ -24,74 +24,6 @@ public class PaymentGatewayApiEndpointsTests
         _endpoints = new PaymentGatewayApiEndpoints();
     }
 
-    [Fact]
-    public async Task InitiateESewaPayment_ReturnsOk_WhenSuccess()
-    {
-        var user = new User { Id = "user1" };
-        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) }));
-        var request = new ESewaPaymentInitiateRequest { BookingId = 1, SuccessUrl = "success", FailureUrl = "fail" };
-        var response = new ESewaInitiateResponse { Success = true, PaymentUrl = "url", TransactionUuid = "uuid" };
-        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
-        _paymentServiceMock.Setup(s => s.InitiateESewaPaymentAsync(1, "success", "fail")).ReturnsAsync(response);
-
-        var result = await _endpoints.InitiateESewaPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
-
-        result.Result.Should().BeOfType<Ok<ESewaInitiateResponse>>();
-        ((Ok<ESewaInitiateResponse>)result.Result).Value.Should().BeEquivalentTo(response);
-    }
-
-    [Fact]
-    public async Task InitiateESewaPayment_ReturnsProblem_WhenUserNotFound()
-    {
-        var claimsPrincipal = new ClaimsPrincipal();
-        var request = new ESewaPaymentInitiateRequest();
-        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync((User?)null);
-
-        var result = await _endpoints.InitiateESewaPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
-
-        result.Result.Should().BeOfType<ProblemHttpResult>();
-        ((ProblemHttpResult)result.Result).ProblemDetails.Detail.Should().Contain("User not found");
-    }
-
-    [Fact]
-    public async Task InitiateESewaPayment_ReturnsProblem_WhenFailure()
-    {
-        var user = new User { Id = "user1" };
-        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) }));
-        var request = new ESewaPaymentInitiateRequest { BookingId = 1, SuccessUrl = "success", FailureUrl = "fail" };
-        var response = new ESewaInitiateResponse { Success = false, Message = "Failed" };
-        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
-        _paymentServiceMock.Setup(s => s.InitiateESewaPaymentAsync(1, "success", "fail")).ReturnsAsync(response);
-
-        var result = await _endpoints.InitiateESewaPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
-
-        result.Result.Should().BeOfType<ProblemHttpResult>();
-        ((ProblemHttpResult)result.Result).ProblemDetails.Detail.Should().Contain("Failed");
-    }
-
-    [Fact]
-    public async Task ProcessESewaCallback_ReturnsOk_WhenSuccess()
-    {
-        var callback = new ESewaCallbackResponse { Success = true };
-        _paymentServiceMock.Setup(s => s.ProcessESewaCallbackAsync(callback)).ReturnsAsync(new Payment());
-
-        var result = await _endpoints.ProcessESewaCallback(_paymentServiceMock.Object, callback);
-
-        result.Result.Should().BeOfType<Ok<string>>();
-        ((Ok<string>)result.Result).Value.Should().Be("Payment processed successfully");
-    }
-
-    [Fact]
-    public async Task ProcessESewaCallback_ReturnsProblem_WhenFailure()
-    {
-        var callback = new ESewaCallbackResponse { Success = false };
-        _paymentServiceMock.Setup(s => s.ProcessESewaCallbackAsync(callback)).ReturnsAsync((Payment?)null);
-
-        var result = await _endpoints.ProcessESewaCallback(_paymentServiceMock.Object, callback);
-
-        result.Result.Should().BeOfType<ProblemHttpResult>();
-        ((ProblemHttpResult)result.Result).ProblemDetails.Detail.Should().Contain("Failed to process payment");
-    }
 
     [Fact]
     public async Task InitiateKhaltiPayment_ReturnsOk_WhenSuccess()
@@ -101,7 +33,7 @@ public class PaymentGatewayApiEndpointsTests
         var request = new KhaltiPaymentInitiateRequest { BookingId = 1, ReturnUrl = "return", WebsiteUrl = "web" };
         var response = new KhaltiInitiateResponse { Success = true, PaymentUrl = "url", Pidx = "pidx" };
         _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
-        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(1, "return", "web")).ReturnsAsync(response);
+        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(user, 1, "return", "web")).ReturnsAsync(response);
 
         var result = await _endpoints.InitiateKhaltiPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
 
@@ -130,7 +62,7 @@ public class PaymentGatewayApiEndpointsTests
         var request = new KhaltiPaymentInitiateRequest { BookingId = 1, ReturnUrl = "return", WebsiteUrl = "web" };
         var response = new KhaltiInitiateResponse { Success = false, Message = "Failed" };
         _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
-        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(1, "return", "web")).ReturnsAsync(response);
+        _paymentServiceMock.Setup(s => s.InitiateKhaltiPaymentAsync(user, 1, "return", "web")).ReturnsAsync(response);
 
         var result = await _endpoints.InitiateKhaltiPayment(_paymentServiceMock.Object, _userManagerMock.Object, claimsPrincipal, request);
 

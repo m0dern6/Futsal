@@ -23,7 +23,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
         _dbConnection = dbConnection;
     }
 
-    public async new Task<IEnumerable<FutsalGroundResponse>> GetAllAsync(int page = 1, int pageSize = 10)
+    public async new Task<IEnumerable<FutsalGroundResponse>> GetAllAsync(int page = 1, int pageSize = 10, string? userId = null)
     {
         if (page <= 0 || pageSize <= 0)
         {
@@ -50,7 +50,8 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 RatingCount = g.RatingCount,
                 CreatedAt = g.CreatedAt,
                 AverageRating = g.AverageRating,
-                OwnerName = g.Owner.UserName!
+                OwnerName = g.Owner.UserName!,
+                IsFavorite = userId != null && _dbContext.FavouriteFutsalGrounds.Any(f => f.GroundId == g.Id && f.UserId == userId)
             })
             .ToListAsync();
     }
@@ -63,7 +64,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
 
     public async new Task<FutsalGroundResponse?> GetByIdAsync(Expression<Func<FutsalGround, bool>> predicate)
     {
-        return await _dbContext.FutsalGrounds
+        var ground = await _dbContext.FutsalGrounds
             .Where(predicate)
             .Select(g => new FutsalGroundResponse
             {
@@ -84,6 +85,43 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 OwnerName = g.Owner.UserName!
             })
             .FirstOrDefaultAsync();
+
+        if (ground != null)
+        {
+            // Get the latest 10 reviews for this ground
+            ground.Reviews = await _dbContext.Reviews
+                .Where(r => r.GroundId == ground.Id)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(10)
+                .Select(r => new ReviewResponse
+                {
+                    Id = r.Id,
+                    UserId = r.UserId,
+                    UserName = r.User.UserName ?? string.Empty,
+                    GroundId = r.GroundId,
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt,
+                    ReviewImageUrl = r.ImageUrl
+                })
+                .ToListAsync();
+
+            // Get booked time slots for this ground (today and future, not cancelled)
+            var now = DateTime.UtcNow.Date;
+            ground.BookedTimeSlots = await _dbContext.Bookings
+                .Where(b => b.GroundId == ground.Id && b.BookingDate >= now && b.Status != BookingStatus.Cancelled)
+                .OrderBy(b => b.BookingDate)
+                .ThenBy(b => b.StartTime)
+                .Select(b => new BookedTimeSlot
+                {
+                    BookingDate = b.BookingDate,
+                    StartTime = b.StartTime,
+                    EndTime = b.EndTime
+                })
+                .ToListAsync();
+        }
+
+        return ground;
     }
 
     public async Task UpdateRatingAsync(int groundId)
@@ -110,7 +148,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
             commandType: CommandType.Text);
     }
 
-    public async Task<IEnumerable<FutsalGroundResponse>> GetTrendingFutsalGroundsAsync(int page = 1, int pageSize = 10)
+    public async Task<IEnumerable<FutsalGroundResponse>> GetTrendingFutsalGroundsAsync(int page = 1, int pageSize = 10, string? userId = null)
     {
         // Trending = most booked in the last 30 days
         var sinceDate = DateTime.UtcNow.AddDays(-30);
@@ -135,12 +173,13 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                         CreatedAt = g.CreatedAt,
                         AverageRating = g.AverageRating,
                         OwnerName = g.Owner.UserName!,
-                        BookingCount = bookingCount
+                        BookingCount = bookingCount,
+                        IsFavorite = userId != null && _dbContext.FavouriteFutsalGrounds.Any(f => f.GroundId == g.Id && f.UserId == userId)
                     };
         return await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
-    public async Task<IEnumerable<FutsalGroundResponse>> GetTopReviewedFutsalGroundsAsync(int page = 1, int pageSize = 10)
+    public async Task<IEnumerable<FutsalGroundResponse>> GetTopReviewedFutsalGroundsAsync(int page = 1, int pageSize = 10, string? userId = null)
     {
         // Top reviewed = highest average rating, then most reviews
         var query = _dbContext.FutsalGrounds
@@ -164,7 +203,8 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                 RatingCount = g.RatingCount,
                 CreatedAt = g.CreatedAt,
                 AverageRating = g.AverageRating,
-                OwnerName = g.Owner.UserName!
+                OwnerName = g.Owner.UserName!,
+                IsFavorite = userId != null && _dbContext.FavouriteFutsalGrounds.Any(f => f.GroundId == g.Id && f.UserId == userId)
             });
         return await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }

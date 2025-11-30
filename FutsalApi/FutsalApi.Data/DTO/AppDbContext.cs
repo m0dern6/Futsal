@@ -28,4 +28,5 @@ public class AppDbContext : IdentityDbContext<User, Role, string, IdentityUserCl
     public DbSet<Review>? Reviews { get; set; }
     public DbSet<Image>? Images { get; set; }
     public DbSet<GroundClosure>? GroundClosures { get; set; }
+    public DbSet<FavouriteFutsalGround> FavouriteFutsalGrounds { get; set; } = null!;
 }

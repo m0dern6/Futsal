@@ -4,15 +4,10 @@
 using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
-using FutsalApi.ApiService.Infrastructure;
-
-using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
-using FutsalApi.Data.DTO;
-
 namespace FutsalApi.ApiService.Routes;
 
 public class FutsalGroundApiEndpoints : IEndpoint
@@ -88,10 +83,31 @@ public class FutsalGroundApiEndpoints : IEndpoint
             .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        // Favourites endpoints
+        routeGroup.MapPost("/favourite/{groundId:int}", AddFavourite)
+            .WithName("AddFavouriteFutsalGround")
+            .WithSummary("Add a futsal ground to user's favourites.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        routeGroup.MapDelete("/favourite/{groundId:int}", RemoveFavourite)
+            .WithName("RemoveFavouriteFutsalGround")
+            .WithSummary("Remove a futsal ground from user's favourites.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        routeGroup.MapGet("/favourites", GetFavouritesByUserId)
+            .WithName("GetFavouriteFutsalGroundsByUser")
+            .WithSummary("Get all favourite futsal grounds for the current user.")
+            .Produces<IEnumerable<FutsalGroundResponse>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetAllFutsalGrounds(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -102,7 +118,9 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
         try
         {
-            var futsalGrounds = await repository.GetAllAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            var userId = user?.Id;
+            var futsalGrounds = await repository.GetAllAsync(page, pageSize, userId);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)
@@ -113,7 +131,6 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<FutsalGroundResponse>, NotFound, ProblemHttpResult>> GetFutsalGroundById(
         [FromServices] IFutsalGroundRepository repository,
-        [FromServices] IBookingRepository bookingRepository,
         int id)
     {
         try
@@ -123,21 +140,6 @@ public class FutsalGroundApiEndpoints : IEndpoint
             {
                 return TypedResults.NotFound();
             }
-
-            // Fetch booked time slots for this ground (for today and future, and not cancelled)
-            var now = DateTime.UtcNow.Date;
-            var bookings = await bookingRepository.GetAllAsync(
-                b => b.GroundId == id && b.BookingDate >= now && b.Status != BookingStatus.Cancelled,
-                1, 1000 // fetch up to 1000 future bookings
-            );
-            futsalGround.BookedTimeSlots = bookings
-                .Select(b => new BookedTimeSlot
-                {
-                    BookingDate = b.BookingDate,
-                    StartTime = b.StartTime,
-                    EndTime = b.EndTime
-                })
-                .ToList();
 
             return TypedResults.Ok(futsalGround);
         }
@@ -332,6 +334,8 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetTrendingFutsalGrounds(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -341,7 +345,9 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
         try
         {
-            var futsalGrounds = await repository.GetTrendingFutsalGroundsAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            var userId = user?.Id;
+            var futsalGrounds = await repository.GetTrendingFutsalGroundsAsync(page, pageSize, userId);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)
@@ -352,6 +358,8 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetTopReviewedFutsalGrounds(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -361,12 +369,57 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
         try
         {
-            var futsalGrounds = await repository.GetTopReviewedFutsalGroundsAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            var userId = user?.Id;
+            var futsalGrounds = await repository.GetTopReviewedFutsalGroundsAsync(page, pageSize, userId);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)
         {
             return TypedResults.Problem($"An error occurred while retrieving top reviewed futsal grounds: {ex.Message}");
         }
+    }
+
+    // Add favourite
+    internal async Task<IResult> AddFavourite(
+        [FromServices] IFavouriteFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
+        int groundId)
+    {
+        var user = await userManager.GetUserAsync(claimsPrincipal);
+        if (user == null)
+            return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+        await repository.AddFavouriteAsync(user.Id, groundId);
+        return TypedResults.NoContent();
+    }
+
+    // Remove favourite
+    internal async Task<IResult> RemoveFavourite(
+        [FromServices] IFavouriteFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
+        int groundId)
+    {
+        var user = await userManager.GetUserAsync(claimsPrincipal);
+        if (user == null)
+            return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+        await repository.RemoveFavouriteAsync(user.Id, groundId);
+        return TypedResults.NoContent();
+    }
+
+    // Get favourites by user
+    internal async Task<IResult> GetFavouritesByUserId(
+        [FromServices] IFavouriteFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var user = await userManager.GetUserAsync(claimsPrincipal);
+        if (user == null)
+            return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+        var result = await repository.GetFavouritesByUserIdAsync(user.Id, page, pageSize);
+        return TypedResults.Ok(result);
     }
 }

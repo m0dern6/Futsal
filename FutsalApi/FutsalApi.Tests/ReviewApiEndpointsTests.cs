@@ -29,17 +29,20 @@ public class ReviewApiEndpointsTests
     }
 
     [Fact]
-    public async Task GetAllReviews_ReturnsOk_WhenValid()
+    public async Task GetAllReviewsByUserId_ReturnsOk_WhenValid()
     {
         // Arrange
+        var user = new User { Id = "user1" };
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
         var reviews = new List<ReviewResponse>
         {
             new ReviewResponse { Id = 1, UserId = "user1", GroundId = 1, Rating = 5, Comment = "Great!" }
         };
-        _repositoryMock.Setup(r => r.GetAllAsync(1, 10)).ReturnsAsync(reviews);
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+        _repositoryMock.Setup(r => r.GetAllByUserAsync(user.Id, 1, 10)).ReturnsAsync(reviews);
 
         // Act
-        var result = await _endpoints.GetAllReviews(_repositoryMock.Object, 1, 10);
+        var result = await _endpoints.GetAllReviewsByUserId(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 1, 10);
 
         // Assert
         result.Should().BeOfType<Results<Ok<IEnumerable<ReviewResponse>>, ProblemHttpResult>>();
@@ -50,10 +53,15 @@ public class ReviewApiEndpointsTests
     }
 
     [Fact]
-    public async Task GetAllReviews_ReturnsProblem_WhenInvalidPage()
+    public async Task GetAllReviewsByUserId_ReturnsProblem_WhenInvalidPage()
     {
+        // Arrange
+        var user = new User { Id = "user1" };
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        _userManagerMock.Setup(um => um.GetUserAsync(claimsPrincipal)).ReturnsAsync(user);
+
         // Act
-        var result = await _endpoints.GetAllReviews(_repositoryMock.Object, 0, 10);
+        var result = await _endpoints.GetAllReviewsByUserId(_repositoryMock.Object, _userManagerMock.Object, claimsPrincipal, 0, 10);
 
         // Assert
         result.Should().BeOfType<Results<Ok<IEnumerable<ReviewResponse>>, ProblemHttpResult>>();

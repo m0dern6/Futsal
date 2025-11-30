@@ -18,22 +18,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             .WithTags("PaymentGateway")
             .RequireAuthorization();
 
-        // eSewa endpoints
-        routeGroup.MapPost("/esewa/initiate", InitiateESewaPayment)
-            .WithName("InitiateESewaPayment")
-            .WithSummary("Initiate eSewa payment")
-            .WithDescription("Initiate a new eSewa payment for a booking")
-            .Produces<ESewaInitiateResponse>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        routeGroup.MapPost("/esewa/callback", ProcessESewaCallback)
-            .WithName("ProcessESewaCallback")
-            .WithSummary("Process eSewa callback")
-            .WithDescription("Process eSewa payment callback")
-            .Produces<string>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // Khalti endpoints
         routeGroup.MapPost("/khalti/initiate", InitiateKhaltiPayment)
@@ -62,57 +47,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    internal async Task<Results<Ok<ESewaInitiateResponse>, ProblemHttpResult>> InitiateESewaPayment(
-        [FromServices] IPaymentService paymentService,
-        [FromServices] UserManager<User> userManager,
-        ClaimsPrincipal claimsPrincipal,
-        [FromBody] ESewaPaymentInitiateRequest request)
-    {
-        try
-        {
-            if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
-            {
-                return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status401Unauthorized);
-            }
 
-            var response = await paymentService.InitiateESewaPaymentAsync(
-                request.BookingId,
-                request.SuccessUrl,
-                request.FailureUrl);
-
-            if (response.Success)
-            {
-                return TypedResults.Ok(response);
-            }
-
-            return TypedResults.Problem(response.Message, statusCode: StatusCodes.Status400BadRequest);
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Problem($"An error occurred while initiating eSewa payment: {ex.Message}");
-        }
-    }
-
-    internal async Task<Results<Ok<string>, ProblemHttpResult>> ProcessESewaCallback(
-        [FromServices] IPaymentService paymentService,
-        [FromBody] ESewaCallbackResponse callback)
-    {
-        try
-        {
-            var payment = await paymentService.ProcessESewaCallbackAsync(callback);
-
-            if (payment != null)
-            {
-                return TypedResults.Ok("Payment processed successfully");
-            }
-
-            return TypedResults.Problem("Failed to process payment", statusCode: StatusCodes.Status400BadRequest);
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Problem($"An error occurred while processing eSewa callback: {ex.Message}");
-        }
-    }
 
     internal async Task<Results<Ok<KhaltiInitiateResponse>, ProblemHttpResult>> InitiateKhaltiPayment(
         [FromServices] IPaymentService paymentService,
@@ -128,6 +63,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
             }
 
             var response = await paymentService.InitiateKhaltiPaymentAsync(
+                user,
                 request.BookingId,
                 request.ReturnUrl,
                 request.WebsiteUrl);
@@ -199,12 +135,7 @@ public class PaymentGatewayApiEndpoints : IEndpoint
 }
 
 // Request models for the endpoints
-public class ESewaPaymentInitiateRequest
-{
-    public int BookingId { get; set; }
-    public string SuccessUrl { get; set; } = string.Empty;
-    public string FailureUrl { get; set; } = string.Empty;
-}
+
 
 public class KhaltiPaymentInitiateRequest
 {

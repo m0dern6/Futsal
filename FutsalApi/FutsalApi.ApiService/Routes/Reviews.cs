@@ -3,10 +3,6 @@
 using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
-using FutsalApi.ApiService.Infrastructure;
-
-
-using FutsalApi.Data.Models;
 using FutsalApi.Data.DTO;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -23,11 +19,11 @@ public class ReviewApiEndpoints : IEndpoint
             .CacheOutput()
             .RequireAuthorization();
 
-        // GET: /Reviews (with pagination)
-        routeGroup.MapGet("/", GetAllReviews)
-            .WithName("GetAllReviews")
-            .WithSummary("Retrieves all reviews with pagination.")
-            .WithDescription("Returns a paginated list of all reviews available in the system.")
+        // GET: /Reviews (for current user, with pagination)
+        routeGroup.MapGet("/", GetAllReviewsByUserId)
+            .WithName("GetAllReviewsByUserId")
+            .WithSummary("Retrieves all reviews for the current user with pagination.")
+            .WithDescription("Returns a paginated list of all reviews for the currently authenticated user.")
             .Produces<IEnumerable<ReviewResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -81,8 +77,11 @@ public class ReviewApiEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    internal async Task<Results<Ok<IEnumerable<ReviewResponse>>, ProblemHttpResult>> GetAllReviews(
+    // Changed: Get all reviews for the current user
+    internal async Task<Results<Ok<IEnumerable<ReviewResponse>>, ProblemHttpResult>> GetAllReviewsByUserId(
         [FromServices] IReviewRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -90,10 +89,14 @@ public class ReviewApiEndpoints : IEndpoint
         {
             return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
         }
-
         try
         {
-            var reviews = await repository.GetAllAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            if (user == null)
+            {
+                return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+            var reviews = await repository.GetAllByUserAsync(user.Id, page, pageSize);
             return TypedResults.Ok(reviews);
         }
         catch (Exception ex)

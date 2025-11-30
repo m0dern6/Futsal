@@ -63,22 +63,17 @@ namespace FutsalApi.ApiService.Services
             return uploadedImages;
         }
 
-        public async Task<bool> DeleteSingleFile(User user, int imageId)
+        public async Task<bool> DeleteSingleFile(User user, string imageUrl)
         {
             string? userId = user?.Id;
 
-            var image = await _imageRepository.GetByIdAsync(i => i.Id == imageId && i.UserId == userId && !i.IsDeleted);
+            var image = await _imageRepository.GetByIdAsync(i => (i.FilePath == imageUrl || i.FileName == imageUrl) && i.UserId == userId && !i.IsDeleted);
             if (image == null)
             {
                 return false;
             }
-
-            // Mark as deleted in DB
-            image.IsDeleted = true;
-            _imageRepository.Update(image);
+            _imageRepository.Delete(image);
             await _imageRepository.SaveChangesAsync();
-
-            // Optionally delete from file system (consider soft delete first)
             var filePath = Path.Combine(_env.WebRootPath, image.FilePath.TrimStart('/'));
             if (File.Exists(filePath))
             {
@@ -88,12 +83,12 @@ namespace FutsalApi.ApiService.Services
             return true;
         }
 
-        public async Task<bool> DeleteMultipleFiles(User user, List<int> imageIds)
+        public async Task<bool> DeleteMultipleFiles(User user, List<string> imageUrls)
         {
             bool allDeleted = true;
-            foreach (var imageId in imageIds)
+            foreach (var imageUrl in imageUrls)
             {
-                if (!await DeleteSingleFile(user, imageId))
+                if (!await DeleteSingleFile(user, imageUrl))
                 {
                     allDeleted = false;
                 }

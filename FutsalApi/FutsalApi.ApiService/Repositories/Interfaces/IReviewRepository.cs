@@ -10,7 +10,7 @@ namespace FutsalApi.ApiService.Repositories;
 public interface IReviewRepository : IGenericRepository<Review>
 {
     new Task<ReviewResponse?> GetByIdAsync(Expression<Func<Review, bool>> predicate);
-    new Task<IEnumerable<ReviewResponse>> GetAllAsync(int page = 1, int pageSize = 10);
+    Task<IEnumerable<ReviewResponse>> GetAllByUserAsync(string userId, int page = 1, int pageSize = 10);
     Task<IEnumerable<ReviewResponse>> GetReviewsByGroundIdAsync(int groundId, int page = 1, int pageSize = 10);
     Task<bool> DeleteReviewByUserAsync(int reviewId, string userId);
     Task<int> CreateReviewAsync(Review review);

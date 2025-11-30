@@ -17,7 +17,9 @@ namespace FutsalApi.ApiService.Routes
     {
         public void MapEndpoint(IEndpointRouteBuilder endpoints)
         {
-            var group = endpoints.MapGroup("/images").WithTags("Images");
+            var group = endpoints.MapGroup("/images")
+                        .WithTags("Images")
+                        .RequireAuthorization();
 
             group.MapPost("/upload/single", UploadSingleFile)
                 .WithName("UploadSingleFile")
@@ -39,10 +41,10 @@ namespace FutsalApi.ApiService.Routes
                 .Produces<UnauthorizedHttpResult>(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-            group.MapDelete("/delete/single/{imageId:int}", DeleteSingleFile)
+            group.MapDelete("/delete/single/{imageUrl}", DeleteSingleFile)
                 .WithName("DeleteSingleFile")
                 .WithSummary("Deletes a single image.")
-                .WithDescription("Deletes a single image by its ID.")
+                .WithDescription("Deletes a single image by its URL.")
                 .Produces<NoContent>(StatusCodes.Status204NoContent)
                 .Produces<NotFound>(StatusCodes.Status404NotFound)
                 .Produces<UnauthorizedHttpResult>(StatusCodes.Status401Unauthorized)
@@ -98,13 +100,13 @@ namespace FutsalApi.ApiService.Routes
         }
 
         internal async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> DeleteSingleFile(
-            ClaimsPrincipal claimsPrincipal, [FromServices] ImageService imageService, [FromServices] UserManager<User> userManager, int imageId)
+            ClaimsPrincipal claimsPrincipal, [FromServices] ImageService imageService, [FromServices] UserManager<User> userManager, string imageUrl)
         {
             if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
             {
                 return TypedResults.Unauthorized();
             }
-            var result = await imageService.DeleteSingleFile(user, imageId);
+            var result = await imageService.DeleteSingleFile(user, imageUrl);
             if (result)
             {
                 return TypedResults.NoContent();
@@ -113,9 +115,9 @@ namespace FutsalApi.ApiService.Routes
         }
 
         internal async Task<Results<NoContent, BadRequest, UnauthorizedHttpResult>> DeleteMultipleFiles(
-            ClaimsPrincipal claimsPrincipal, [FromServices] ImageService imageService, [FromServices] UserManager<User> userManager, [FromBody] List<int> imageIds)
+            ClaimsPrincipal claimsPrincipal, [FromServices] ImageService imageService, [FromServices] UserManager<User> userManager, [FromBody] List<string> imageUrls)
         {
-            if (imageIds == null || imageIds.Count == 0)
+            if (imageUrls == null || imageUrls.Count == 0)
             {
                 return TypedResults.BadRequest();
             }
@@ -123,7 +125,7 @@ namespace FutsalApi.ApiService.Routes
             {
                 return TypedResults.Unauthorized();
             }
-            var result = await imageService.DeleteMultipleFiles(user, imageIds);
+            var result = await imageService.DeleteMultipleFiles(user, imageUrls);
             if (result)
             {
                 return TypedResults.NoContent();

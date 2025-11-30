@@ -1,0 +1,9 @@
+{
+    "dotnet.defaultSolution": "FutsalApi/FutsalApi.sln",
+    "csharp.format.enable": true,
+    "csharp.suppressDotnetInstallWarning": true,
+    "csharp.suppressDotnetRestoreNotification": true,
+    "dotnet.server.useOmnisharp": false,
+    "dotnetAcquisitionExtension.enableTelemetry": false,
+    "omnisharp.useModernNet": true
+}
