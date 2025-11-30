@@ -106,6 +106,8 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetAllFutsalGrounds(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -116,7 +118,9 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
         try
         {
-            var futsalGrounds = await repository.GetAllAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            var userId = user?.Id;
+            var futsalGrounds = await repository.GetAllAsync(page, pageSize, userId);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)
@@ -127,7 +131,6 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<FutsalGroundResponse>, NotFound, ProblemHttpResult>> GetFutsalGroundById(
         [FromServices] IFutsalGroundRepository repository,
-        [FromServices] IBookingRepository bookingRepository,
         int id)
     {
         try
@@ -137,21 +140,6 @@ public class FutsalGroundApiEndpoints : IEndpoint
             {
                 return TypedResults.NotFound();
             }
-
-            // Fetch booked time slots for this ground (for today and future, and not cancelled)
-            var now = DateTime.UtcNow.Date;
-            var bookings = await bookingRepository.GetAllAsync(
-                b => b.GroundId == id && b.BookingDate >= now && b.Status != BookingStatus.Cancelled,
-                1, 1000 // fetch up to 1000 future bookings
-            );
-            futsalGround.BookedTimeSlots = bookings
-                .Select(b => new BookedTimeSlot
-                {
-                    BookingDate = b.BookingDate,
-                    StartTime = b.StartTime,
-                    EndTime = b.EndTime
-                })
-                .ToList();
 
             return TypedResults.Ok(futsalGround);
         }
@@ -346,6 +334,8 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetTrendingFutsalGrounds(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -355,7 +345,9 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
         try
         {
-            var futsalGrounds = await repository.GetTrendingFutsalGroundsAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            var userId = user?.Id;
+            var futsalGrounds = await repository.GetTrendingFutsalGroundsAsync(page, pageSize, userId);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)
@@ -366,6 +358,8 @@ public class FutsalGroundApiEndpoints : IEndpoint
 
     internal async Task<Results<Ok<IEnumerable<FutsalGroundResponse>>, ProblemHttpResult>> GetTopReviewedFutsalGrounds(
         [FromServices] IFutsalGroundRepository repository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -375,7 +369,9 @@ public class FutsalGroundApiEndpoints : IEndpoint
         }
         try
         {
-            var futsalGrounds = await repository.GetTopReviewedFutsalGroundsAsync(page, pageSize);
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            var userId = user?.Id;
+            var futsalGrounds = await repository.GetTopReviewedFutsalGroundsAsync(page, pageSize, userId);
             return TypedResults.Ok(futsalGrounds);
         }
         catch (Exception ex)

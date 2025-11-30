@@ -29,8 +29,12 @@ public class FutsalGroundResponse
     public DateTime CreatedAt { get; set; }
     public int? BookingCount { get; set; } = 0;
     public string OwnerName { get; set; } = string.Empty;
+    public bool IsFavorite { get; set; } = false;
     public double? DistanceKm { get; set; } // Distance from search coordinates in kilometers
 
     // New property for booked time slots
     public List<BookedTimeSlot> BookedTimeSlots { get; set; } = new();
+    
+    // Latest reviews for the ground
+    public List<ReviewResponse> Reviews { get; set; } = new();
 }
