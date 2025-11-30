@@ -35,6 +35,7 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
             .Select(e => new BookingResponse
             {
                 Id = e.Id,
+                UserId = e.UserId,
                 BookingDate = e.BookingDate,
                 StartTime = e.StartTime,
                 EndTime = e.EndTime,

@@ -272,12 +272,17 @@ public class AuthApiEndpointRouteBuilderExtensions
         var userStore = sp.GetRequiredService<IUserStore<User>>();
         var emailStore = (IUserEmailStore<User>)userStore;
         var email = registration.Email;
+        var username = registration.UserName;
         if (string.IsNullOrEmpty(email) || !_emailAddressAttribute.IsValid(email))
         {
             return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(email)));
         }
-        var user = new User();
-        await userStore.SetUserNameAsync(user, email, CancellationToken.None);
+        var user = new User
+        {
+            FirstName = registration.FirstName,
+            LastName = registration.LastName
+        };
+        await userStore.SetUserNameAsync(user, username, CancellationToken.None);
         await emailStore.SetEmailAsync(user, email, CancellationToken.None);
         var result = await userManager.CreateAsync(user, registration.Password);
         if (!result.Succeeded)
@@ -828,6 +833,10 @@ public class AuthApiEndpointRouteBuilderExtensions
     private async Task<InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, AppDbContext dbContext)
     {
         var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
+        var totalBookings = await dbContext.Bookings.CountAsync(b => b.UserId == user.Id);
+        var totalReviews = await dbContext.Reviews.CountAsync(r => r.UserId == user.Id);
+        var totalFavorites = await dbContext.Favorites.CountAsync(f => f.UserId == user.Id);
+
         return new()
         {
             Id = user.Id,
@@ -836,7 +845,10 @@ public class AuthApiEndpointRouteBuilderExtensions
             ProfileImageUrl = profileImage?.FilePath, // imageurl
             Username = await userManager.GetUserNameAsync(user), // username
             PhoneNumber = await userManager.GetPhoneNumberAsync(user), // phone number
-            IsPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(user) // isphoneverified
+            IsPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(user), // isphoneverified
+            TotalBookings = totalBookings,
+            TotalReviews = totalReviews,
+            TotalFavorites = totalFavorites
         };
     }
 
