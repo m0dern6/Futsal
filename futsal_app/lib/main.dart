@@ -11,7 +11,8 @@ import 'package:ui/view/favorite/bloc/favorite_bloc.dart';
 import 'package:ui/view/favorite/data/repository/favorite_repository.dart';
 import 'package:ui/view/profile/bloc/profile_bloc.dart';
 import 'package:ui/view/profile/data/repository/profile_repository.dart';
-import 'package:ui/core/app_theme.dart';
+import 'package:ui/core/simple_theme.dart';
+import 'package:provider/provider.dart';
 import 'package:ui/core/service/api_service.dart';
 
 void main() async {
@@ -20,7 +21,12 @@ void main() async {
   // Initialize ApiService and load saved token
   await ApiService().init();
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider<ThemeNotifier>(
+      create: (_) => ThemeNotifier()..loadTheme(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -54,15 +60,14 @@ class MyApp extends StatelessWidget {
               ProfileBloc(profileRepository: ProfileRepository()),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          primaryColor: AppTheme.primary,
-          scaffoldBackgroundColor: AppTheme.background,
-          fontFamily: 'Roboto',
+      child: Consumer<ThemeNotifier>(
+        builder: (context, themeNotifier, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: SimpleAppTheme.lightTheme,
+          darkTheme: SimpleAppTheme.darkTheme,
+          themeMode: themeNotifier.isDark ? ThemeMode.dark : ThemeMode.light,
+          home: const Splash(),
         ),
-        home: const Splash(),
       ),
     );
   }

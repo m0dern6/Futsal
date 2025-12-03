@@ -5,18 +5,28 @@ class UserInfoModel extends Equatable {
   final String email;
   final bool isEmailConfirmed;
   final String? profileImageUrl;
+  final String firstName;
+  final String lastName;
   final String username;
   final String? phoneNumber;
   final bool isPhoneNumberConfirmed;
+  final String totalBookings;
+  final String totalFavorites;
+  final String totalReviews;
 
   const UserInfoModel({
     required this.id,
     required this.email,
     required this.isEmailConfirmed,
     this.profileImageUrl,
+    required this.firstName,
+    required this.lastName,
     required this.username,
     this.phoneNumber,
     required this.isPhoneNumberConfirmed,
+    required this.totalBookings,
+    required this.totalFavorites,
+    required this.totalReviews,
   });
 
   // Get full image URL with base URL prepended
@@ -38,9 +48,14 @@ class UserInfoModel extends Equatable {
       email: json['email'] as String,
       isEmailConfirmed: json['isEmailConfirmed'] as bool,
       profileImageUrl: json['profileImageUrl'] as String?,
+      firstName: json['firstName'] as String,
+      lastName: json['lastName'] as String,
       username: json['username'] as String,
       phoneNumber: json['phoneNumber'] as String?,
       isPhoneNumberConfirmed: json['isPhoneNumberConfirmed'] as bool,
+      totalBookings: json['totalBookings']?.toString() ?? '0',
+      totalFavorites: json['totalFavorites']?.toString() ?? '0',
+      totalReviews: json['totalReviews']?.toString() ?? '0',
     );
   }
 
@@ -50,9 +65,14 @@ class UserInfoModel extends Equatable {
       'email': email,
       'isEmailConfirmed': isEmailConfirmed,
       'profileImageUrl': profileImageUrl,
+      'firstName': firstName,
+      'lastName': lastName,
       'username': username,
       'phoneNumber': phoneNumber,
       'isPhoneNumberConfirmed': isPhoneNumberConfirmed,
+      'totalBookings': totalBookings,
+      'totalFavorites': totalFavorites,
+      'totalReviews': totalReviews,
     };
   }
 
@@ -62,8 +82,13 @@ class UserInfoModel extends Equatable {
     email,
     isEmailConfirmed,
     profileImageUrl,
+    firstName,
+    lastName,
     username,
     phoneNumber,
     isPhoneNumberConfirmed,
+    totalBookings,
+    totalFavorites,
+    totalReviews,
   ];
 }

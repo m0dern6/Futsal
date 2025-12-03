@@ -16,6 +16,7 @@ class FutsalModel {
   final DateTime createdAt;
   final int bookingCount;
   final String ownerName;
+  final bool isFavorite;
   final double? distanceKm;
   final List<BookedTimeSlot> bookedTimeSlots;
 
@@ -37,6 +38,7 @@ class FutsalModel {
     required this.createdAt,
     required this.bookingCount,
     required this.ownerName,
+    required this.isFavorite,
     this.distanceKm,
     required this.bookedTimeSlots,
   });
@@ -60,6 +62,7 @@ class FutsalModel {
       createdAt: DateTime.parse(json['createdAt'] as String),
       bookingCount: json['bookingCount'] as int,
       ownerName: json['ownerName'] as String,
+      isFavorite: json['isFavorite'] as bool? ?? false,
       distanceKm: json['distanceKm'] != null
           ? (json['distanceKm'] as num).toDouble()
           : null,
@@ -90,6 +93,7 @@ class FutsalModel {
       'createdAt': createdAt.toIso8601String(),
       'bookingCount': bookingCount,
       'ownerName': ownerName,
+      'isFavorite': isFavorite,
       'distanceKm': distanceKm,
       'bookedTimeSlots': bookedTimeSlots.map((e) => e.toJson()).toList(),
     };
@@ -115,6 +119,7 @@ class FutsalModel {
       'createdAt': createdAt.toIso8601String(),
       'bookingCount': bookingCount,
       'ownerName': ownerName,
+      'isFavorite': isFavorite,
       'distanceKm': distanceKm,
       'bookedTimeSlots': bookedTimeSlots
           .map(
