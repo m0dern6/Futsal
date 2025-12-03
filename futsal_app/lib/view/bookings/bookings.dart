@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ui/core/simple_theme.dart';
 import '../../core/dimension.dart';
 import 'data/repository/booking_repository.dart';
 import 'data/model/booking.dart';
+import '../futsal/futsal_details.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -10,14 +13,16 @@ class BookingsScreen extends StatefulWidget {
   State<BookingsScreen> createState() => _BookingsScreenState();
 }
 
-class _BookingsScreenState extends State<BookingsScreen> {
+class _BookingsScreenState extends State<BookingsScreen>
+    with SingleTickerProviderStateMixin {
   final _repo = BookingRepository();
   late Future<List<Booking>> _future;
-  bool _showUpcoming = true;
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     _future = _repo.getBookings();
   }
 
@@ -32,76 +37,148 @@ class _BookingsScreenState extends State<BookingsScreen> {
   Widget build(BuildContext context) {
     Dimension.init(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        title: const Text('My Bookings'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(Dimension.height(70)),
+        child: Container(
+          width: double.infinity,
+
+          padding: EdgeInsets.symmetric(
+            horizontal: Dimension.width(20),
+            vertical: Dimension.height(20),
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Column(
+            children: [
+              SizedBox(height: Dimension.height(25)),
+              Row(
+                children: [
+                  Text(
+                    'My Bookings',
+                    style: TextStyle(
+                      fontSize: Dimension.font(20),
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
       body: Column(
         children: [
-          _FilterBar(
-            showUpcoming: _showUpcoming,
-            onToggle: (val) => setState(() => _showUpcoming = val),
+          Container(
+            color: Theme.of(context).colorScheme.surface,
+            child: TabBar(
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              controller: _tabController,
+              splashBorderRadius: null,
+              splashFactory: null,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicatorPadding: EdgeInsets.symmetric(
+                horizontal: Dimension.width(10),
+              ),
+              tabs: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: Dimension.height(15)),
+                  child: Text('Upcoming'),
+                ),
+                Text('Completed'),
+                Text('Cancelled'),
+              ],
+            ),
           ),
           Expanded(
-            child: FutureBuilder<List<Booking>>(
-              future: _future,
-              builder: (context, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return _LoadingList();
-                }
-                if (snap.hasError) {
-                  return _ErrorView(
-                    message: snap.error.toString(),
-                    onRetry: _refresh,
-                  );
-                }
-                final data = snap.data ?? [];
-                final now = DateTime.now();
-                List<Booking> filtered =
-                    data.where((b) {
-                        // Basic upcoming vs past using bookingDate
-                        if (_showUpcoming) {
-                          return b.bookingDate.isAfter(now) ||
-                              _sameDay(b.bookingDate, now);
-                        } else {
-                          return b.bookingDate.isBefore(now) &&
-                              !_sameDay(b.bookingDate, now);
-                        }
-                      }).toList()
-                      ..sort((a, b) => a.bookingDate.compareTo(b.bookingDate));
-
-                if (filtered.isEmpty) {
-                  return _EmptyView(
-                    upcoming: _showUpcoming,
-                    onRefresh: _refresh,
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: ListView.separated(
-                    padding: EdgeInsets.fromLTRB(
-                      Dimension.width(16),
-                      Dimension.height(12),
-                      Dimension.width(16),
-                      Dimension.height(24),
-                    ),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) =>
-                        SizedBox(height: Dimension.height(12)),
-                    itemBuilder: (context, i) {
-                      return _BookingCard(booking: filtered[i]);
-                    },
-                  ),
-                );
-              },
+            child: Padding(
+              padding: EdgeInsets.only(top: Dimension.height(8)),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildBookingList(0),
+                  _buildBookingList(1),
+                  _buildBookingList(2),
+                ],
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildBookingList(int statusFilter) {
+    return FutureBuilder<List<Booking>>(
+      future: _future,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return _LoadingList();
+        }
+        if (snap.hasError) {
+          return _ErrorView(message: snap.error.toString(), onRetry: _refresh);
+        }
+        final data = snap.data ?? [];
+        final now = DateTime.now();
+        List<Booking> filtered;
+
+        if (statusFilter == 0) {
+          // Upcoming: bookingDate is today or future AND status is 0 (pending) or 1 (confirmed)
+          filtered = data
+              .where(
+                (b) =>
+                    (b.bookingDate.isAfter(now) ||
+                        _sameDay(b.bookingDate, now)) &&
+                    (b.status == 0 || b.status == 1),
+              )
+              .toList();
+        } else {
+          // Completed (1) or Cancelled (2): filter by exact status match
+          filtered = data.where((b) => b.status == statusFilter).toList();
+        }
+
+        filtered.sort((a, b) => b.bookingDate.compareTo(a.bookingDate));
+
+        if (filtered.isEmpty) {
+          return _EmptyView(statusFilter: statusFilter, onRefresh: _refresh);
+        }
+
+        return RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView.separated(
+            padding: EdgeInsets.fromLTRB(
+              Dimension.width(16),
+              Dimension.height(12),
+              Dimension.width(16),
+              Dimension.height(24),
+            ),
+            itemCount: filtered.length,
+            separatorBuilder: (_, __) => SizedBox(height: Dimension.height(12)),
+            itemBuilder: (context, i) {
+              return _BookingCard(
+                booking: filtered[i],
+                isUpcoming: statusFilter == 0,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -109,77 +186,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
       a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
-class _FilterBar extends StatelessWidget {
-  final bool showUpcoming;
-  final ValueChanged<bool> onToggle;
-  const _FilterBar({required this.showUpcoming, required this.onToggle});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(
-        horizontal: Dimension.width(16),
-        vertical: Dimension.height(10),
-      ),
-      child: Row(
-        children: [
-          _Segment(
-            label: 'Upcoming',
-            active: showUpcoming,
-            onTap: () => onToggle(true),
-          ),
-          SizedBox(width: Dimension.width(10)),
-          _Segment(
-            label: 'Past',
-            active: !showUpcoming,
-            onTap: () => onToggle(false),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Segment extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _Segment({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(vertical: Dimension.height(10)),
-          decoration: BoxDecoration(
-            color: active ? const Color(0xFF00A843) : const Color(0xFFE7E7E7),
-            borderRadius: BorderRadius.circular(Dimension.width(12)),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: Dimension.font(13),
-              fontWeight: FontWeight.w600,
-              color: active ? Colors.white : Colors.black87,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _BookingCard extends StatelessWidget {
   final Booking booking;
-  const _BookingCard({required this.booking});
+  final bool isUpcoming;
+  const _BookingCard({required this.booking, this.isUpcoming = false});
 
   Color _statusColor(int s) {
     switch (s) {
@@ -199,7 +209,7 @@ class _BookingCard extends StatelessWidget {
       case 0:
         return 'Pending';
       case 1:
-        return 'Confirmed';
+        return 'Completed';
       case 2:
         return 'Cancelled';
       default:
@@ -239,7 +249,7 @@ class _BookingCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(Dimension.width(16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(Dimension.width(16)),
         border: Border.all(color: Colors.black.withOpacity(0.06)),
         boxShadow: [
@@ -265,58 +275,59 @@ class _BookingCard extends StatelessWidget {
                           ? 'Ground'
                           : booking.groundName,
                       style: TextStyle(
-                        fontSize: Dimension.font(16),
-                        fontWeight: FontWeight.w700,
+                        fontSize: Dimension.font(18),
+                        fontWeight: FontWeight.w400,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
                     SizedBox(height: Dimension.height(4)),
-                    Text(
-                      _prettyDate(booking.bookingDate),
-                      style: TextStyle(
-                        fontSize: Dimension.font(12),
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Image.asset(
+                          'assets/icons/booking.png',
+                          width: Dimension.width(10),
+                          height: Dimension.width(10),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary.withOpacity(0.7),
+                        ),
+                        SizedBox(width: Dimension.width(6)),
+                        Text(
+                          _prettyDate(booking.bookingDate),
+                          style: TextStyle(
+                            fontSize: Dimension.font(12),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimary.withOpacity(0.7),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: Dimension.width(10),
-                  vertical: Dimension.height(6),
-                ),
-                decoration: BoxDecoration(
-                  color: _statusColor(booking.status).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(Dimension.width(20)),
-                ),
-                child: Text(
-                  _statusLabel(booking.status),
-                  style: TextStyle(
-                    fontSize: Dimension.font(11),
-                    fontWeight: FontWeight.w700,
-                    color: _statusColor(booking.status),
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
             ],
           ),
-          SizedBox(height: Dimension.height(12)),
+          // SizedBox(height: Dimension.height(12)),
           Row(
             children: [
-              Icon(
-                Icons.schedule,
-                size: Dimension.width(16),
-                color: const Color(0xFF00A843),
+              Image.asset(
+                'assets/icons/clock.png',
+                width: Dimension.width(10),
+                height: Dimension.width(10),
+                color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
               ),
               SizedBox(width: Dimension.width(6)),
               Expanded(
                 child: Text(
                   _formatRange(),
                   style: TextStyle(
-                    fontSize: Dimension.font(13),
-                    fontWeight: FontWeight.w600,
+                    fontSize: Dimension.font(12),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onPrimary.withOpacity(0.7),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
@@ -324,21 +335,169 @@ class _BookingCard extends StatelessWidget {
           ),
           SizedBox(height: Dimension.height(8)),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.payments_outlined, // money/payment style icon
-                size: Dimension.width(16),
-                color: Colors.green[700],
+              Row(
+                children: [
+                  Text(
+                    'Total: ',
+                    style: TextStyle(
+                      fontSize: Dimension.font(12),
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  Text(
+                    ' Rs.${booking.totalAmount.truncate()}',
+                    style: TextStyle(
+                      fontSize: Dimension.font(12),
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: Dimension.width(6)),
-              Text(
-                'NPR ${booking.totalAmount.truncate()}',
-                style: TextStyle(
-                  fontSize: Dimension.font(13),
-                  fontWeight: FontWeight.w700,
+              if (isUpcoming) ...[
+                Spacer(),
+                ElevatedButton(
+                  onPressed: () => _showCancelDialog(context),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      context.read<ThemeNotifier>().isDark
+                          ? Colors.white24
+                          : Colors.grey[300],
+                    ),
+                    shadowColor: WidgetStateProperty.all(Colors.transparent),
+                    padding: WidgetStateProperty.all(
+                      EdgeInsets.symmetric(
+                        horizontal: Dimension.width(12),
+                        vertical: Dimension.height(0),
+                      ),
+                    ),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(Dimension.width(8)),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: Dimension.font(14),
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ),
-              ),
+                // SizedBox(width: Dimension.width(8)),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     // Navigate to futsal details with groundId
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => FutsalDetails(
+                //           futsalData: {
+                //             'id': booking.groundId,
+                //             'name': booking.groundName,
+                //           },
+                //         ),
+                //       ),
+                //     );
+                //   },
+                //   style: ButtonStyle(
+                //     backgroundColor: WidgetStateProperty.all(
+                //       Theme.of(context).colorScheme.primary,
+                //     ),
+                //     shadowColor: WidgetStateProperty.all(Colors.transparent),
+                //     padding: WidgetStateProperty.all(
+                //       EdgeInsets.symmetric(
+                //         horizontal: Dimension.width(12),
+                //         vertical: Dimension.height(0),
+                //       ),
+                //     ),
+                //     shape: WidgetStateProperty.all(
+                //       RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(Dimension.width(8)),
+                //       ),
+                //     ),
+                //   ),
+                //   child: Text(
+                //     'View Details',
+                //     style: TextStyle(
+                //       fontSize: Dimension.font(14),
+                //       color: Colors.white,
+                //       fontWeight: FontWeight.w400,
+                //     ),
+                //   ),
+                // ),
+              ],
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Dimension.width(16)),
+        ),
+        title: Text(
+          'Cancel Booking',
+          style: TextStyle(
+            fontSize: Dimension.font(18),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to cancel this booking?',
+          style: TextStyle(
+            fontSize: Dimension.font(14),
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'No',
+              style: TextStyle(
+                fontSize: Dimension.font(14),
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              // TODO: Implement cancel booking logic
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Booking cancelled'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Dimension.width(8)),
+              ),
+            ),
+            child: Text(
+              'Yes, Cancel',
+              style: TextStyle(
+                fontSize: Dimension.font(14),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -410,7 +569,7 @@ class _LoadingList extends StatelessWidget {
           margin: EdgeInsets.only(bottom: Dimension.height(12)),
           height: Dimension.height(110),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(Dimension.width(16)),
           ),
         );
@@ -452,11 +611,20 @@ class _ErrorView extends StatelessWidget {
 }
 
 class _EmptyView extends StatelessWidget {
-  final bool upcoming;
+  final int statusFilter;
   final VoidCallback onRefresh;
-  const _EmptyView({required this.upcoming, required this.onRefresh});
+  const _EmptyView({required this.statusFilter, required this.onRefresh});
   @override
   Widget build(BuildContext context) {
+    String message;
+    if (statusFilter == 0) {
+      message = 'No upcoming bookings';
+    } else if (statusFilter == 1) {
+      message = 'No completed bookings';
+    } else {
+      message = 'No cancelled bookings';
+    }
+
     return RefreshIndicator(
       onRefresh: () async => onRefresh(),
       child: ListView(
@@ -470,7 +638,7 @@ class _EmptyView extends StatelessWidget {
           ),
           SizedBox(height: Dimension.height(16)),
           Text(
-            upcoming ? 'No upcoming bookings' : 'No past bookings',
+            message,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: Dimension.font(16),
@@ -479,7 +647,7 @@ class _EmptyView extends StatelessWidget {
           ),
           SizedBox(height: Dimension.height(8)),
           Text(
-            'Pull to refresh or change filter',
+            'Pull to refresh or change tab',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: Dimension.font(12),
