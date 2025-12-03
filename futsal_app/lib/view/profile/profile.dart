@@ -9,13 +9,11 @@ import '../auth/login.dart';
 import '../edit_profile/edit_profile.dart';
 import '../settings/settings.dart';
 import 'bloc/profile_bloc.dart';
+import 'package:provider/provider.dart';
+import '../../core/simple_theme.dart';
 import 'bloc/profile_event.dart';
 import 'bloc/profile_state.dart';
 import 'data/model/user_info_model.dart';
-
-const Color kPrimaryGreenLight = Color(0xFF00C853);
-const Color kPrimaryGreenDark = Color(0xFF00A843);
-const Color kBgGrey = Color(0xFFF5F5F5);
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -29,382 +27,591 @@ class _ProfileState extends State<Profile> {
   Widget build(BuildContext context) {
     Dimension.init(context);
     return Scaffold(
-      backgroundColor: kBgGrey,
-      body: BlocBuilder<ProfileBloc, ProfileState>(
-        builder: (context, state) {
-          if (state is ProfileLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kPrimaryGreenLight),
-              ),
-            );
-          }
-
-          if (state is ProfileError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: Dimension.width(64),
-                    color: Colors.grey[400],
-                  ),
-                  SizedBox(height: Dimension.height(16)),
-                  Text(
-                    'Failed to load profile',
-                    style: TextStyle(
-                      fontSize: Dimension.font(16),
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: Dimension.height(8)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Dimension.width(32),
-                    ),
-                    child: Text(
-                      state.message,
-                      style: TextStyle(
-                        fontSize: Dimension.font(13),
-                        color: Colors.grey[500],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SizedBox(height: Dimension.height(16)),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<ProfileBloc>().add(const LoadUserInfo()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kPrimaryGreenLight,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is ProfileLoaded) {
-            return _buildProfileContent(state.userInfo);
-          }
-
-          return const SizedBox.shrink();
-        },
-      ),
-    );
-  }
-
-  Widget _buildProfileContent(UserInfoModel userInfo) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(userInfo),
-            SizedBox(height: Dimension.height(20)),
-            _buildProfileCard(userInfo),
-            SizedBox(height: Dimension.height(18)),
-            _buildMenuItems(userInfo),
-            SizedBox(height: Dimension.height(32)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(UserInfoModel userInfo) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        Dimension.width(20),
-        Dimension.height(20),
-        Dimension.width(20),
-        Dimension.height(24),
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kPrimaryGreenLight, kPrimaryGreenDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(Dimension.width(28)),
-          bottomRight: Radius.circular(Dimension.width(28)),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: kPrimaryGreenDark.withOpacity(0.25),
-            blurRadius: Dimension.width(16),
-            offset: Offset(0, Dimension.height(6)),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(Dimension.height(200)),
+        child: Container(
+          width: double.infinity,
+          color: Theme.of(context).appBarTheme.backgroundColor,
+          padding: EdgeInsets.symmetric(
+            horizontal: Dimension.width(20),
+            vertical: Dimension.height(20),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: Dimension.width(56),
-            height: Dimension.width(56),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              // border: Border.all(
-              //   color: Colors.white.withOpacity(0.35),
-              //   width: Dimension.width(2),
-              // ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: Dimension.width(10),
-                  offset: Offset(0, Dimension.height(4)),
-                ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset('assets/logo/logo.png', fit: BoxFit.cover),
-          ),
-          SizedBox(width: Dimension.width(14)),
-          Expanded(
-            child: Text(
-              'Futsal Pay',
-              style: TextStyle(
-                fontSize: Dimension.font(26),
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: -0.8,
-              ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: Dimension.width(14),
-              vertical: Dimension.height(8),
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(Dimension.width(20)),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
-            ),
-            child: Text(
-              'Profile',
-              style: TextStyle(
-                fontSize: Dimension.font(14),
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileCard(UserInfoModel userInfo) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-      padding: EdgeInsets.all(Dimension.width(16)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(Dimension.width(20)),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: Dimension.width(14),
-            offset: Offset(0, Dimension.height(6)),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: Dimension.width(80),
-            height: Dimension.width(80),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [kPrimaryGreenLight, kPrimaryGreenDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withOpacity(0.6),
-                width: Dimension.width(2),
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: userInfo.fullImageUrl != null
-                ? Image.network(
-                    userInfo.fullImageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => Icon(
-                      Icons.person,
-                      size: Dimension.width(48),
-                      color: Colors.white.withOpacity(0.85),
-                    ),
-                  )
-                : Icon(
-                    Icons.person,
-                    size: Dimension.width(48),
-                    color: Colors.white.withOpacity(0.85),
-                  ),
-          ),
-          SizedBox(height: Dimension.height(14)),
-          Text(
-            userInfo.username,
-            style: TextStyle(
-              fontSize: Dimension.font(22),
-              fontWeight: FontWeight.w700,
-              color: kPrimaryGreenDark,
-            ),
-          ),
-          SizedBox(height: Dimension.height(4)),
-          Row(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                child: Text(
-                  userInfo.email,
-                  style: TextStyle(
-                    fontSize: Dimension.font(14),
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              Text(
+                'Profile',
+                style: TextStyle(
+                  fontSize: Dimension.font(16),
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                  letterSpacing: -0.8,
                 ),
               ),
-              if (userInfo.isEmailConfirmed) ...[
-                SizedBox(width: Dimension.width(6)),
-                Icon(
-                  Icons.verified,
-                  size: Dimension.width(16),
-                  color: kPrimaryGreenLight,
+              SizedBox(height: Dimension.height(10)),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Dimension.width(20),
+                  vertical: Dimension.height(10),
                 ),
-              ],
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(Dimension.width(8)),
+                ),
+                child: BlocBuilder<ProfileBloc, ProfileState>(
+                  builder: (context, state) {
+                    if (state is ProfileLoaded) {
+                      final userInfo = state.userInfo;
+                      return Row(
+                        children: [
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(500),
+                                child: Image.network(
+                                  userInfo.fullImageUrl ??
+                                      'https://www.gravatar.com/avatar/placeholder',
+                                  width: Dimension.width(80),
+                                  height: Dimension.width(80),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (c, e, s) => Icon(
+                                    Icons.person,
+                                    size: Dimension.width(40),
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: Dimension.width(24),
+                                  height: Dimension.width(24),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.edit_sharp,
+                                    size: Dimension.width(16),
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(width: Dimension.width(16)),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                userInfo.username,
+                                style: TextStyle(
+                                  fontSize: Dimension.font(16),
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                ),
+                              ),
+                              SizedBox(height: Dimension.height(4)),
+                              Text(
+                                userInfo.email,
+                                style: TextStyle(
+                                  fontSize: Dimension.font(14),
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).colorScheme.onPrimary
+                                      .withValues(alpha: 0.6),
+                                ),
+                              ),
+                              SizedBox(height: Dimension.height(4)),
+                              Text(
+                                userInfo.phoneNumber ?? '9869020670',
+                                style: TextStyle(
+                                  fontSize: Dimension.font(14),
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).colorScheme.onPrimary
+                                      .withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
             ],
           ),
-          if (userInfo.phoneNumber != null &&
-              userInfo.phoneNumber!.isNotEmpty) ...[
-            SizedBox(height: Dimension.height(4)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.phone,
-                  size: Dimension.width(14),
-                  color: Colors.grey[600],
-                ),
-                SizedBox(width: Dimension.width(4)),
-                Text(
-                  userInfo.phoneNumber!,
-                  style: TextStyle(
-                    fontSize: Dimension.font(13),
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (userInfo.isPhoneNumberConfirmed) ...[
-                  SizedBox(width: Dimension.width(4)),
-                  Icon(
-                    Icons.verified,
-                    size: Dimension.width(14),
-                    color: kPrimaryGreenLight,
-                  ),
-                ],
-              ],
-            ),
-          ],
-          SizedBox(height: Dimension.height(16)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: Dimension.width(20),
+            vertical: Dimension.height(20),
+          ),
+          child: Column(
             children: [
-              _StatItem(
-                label: 'Bookings',
-                value: '12',
-                onViewTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BookingsScreen(),
+              BlocBuilder<ProfileBloc, ProfileState>(
+                builder: (context, state) {
+                  if (state is ProfileLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (state is ProfileError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: Dimension.width(64),
+                            color: Colors.grey[400],
+                          ),
+                          SizedBox(height: Dimension.height(16)),
+                          Text(
+                            'Failed to load profile',
+                            style: TextStyle(
+                              fontSize: Dimension.font(16),
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: Dimension.height(8)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: Dimension.width(32),
+                            ),
+                            child: Text(
+                              state.message,
+                              style: TextStyle(
+                                fontSize: Dimension.font(13),
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          SizedBox(height: Dimension.height(16)),
+                          ElevatedButton(
+                            onPressed: () => context.read<ProfileBloc>().add(
+                              const LoadUserInfo(),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (state is ProfileLoaded) {
+                    final userInfo = state.userInfo;
+                    return Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(Dimension.width(10)),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(Dimension.width(8)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              Text(
+                                userInfo.totalBookings,
+                                style: TextStyle(
+                                  fontSize: Dimension.font(20),
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              Text(
+                                'Bookings',
+                                style: TextStyle(
+                                  fontSize: Dimension.font(13),
+                                  color: Theme.of(context).colorScheme.onPrimary
+                                      .withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            width: Dimension.width(1),
+                            height: Dimension.height(40),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withOpacity(0.2),
+                          ),
+                          Column(
+                            children: [
+                              Text(
+                                userInfo.totalFavorites,
+                                style: TextStyle(
+                                  fontSize: Dimension.font(20),
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              Text(
+                                'Favorites',
+                                style: TextStyle(
+                                  fontSize: Dimension.font(13),
+                                  color: Theme.of(context).colorScheme.onPrimary
+                                      .withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            width: Dimension.width(1),
+                            height: Dimension.height(40),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withOpacity(0.2),
+                          ),
+                          Column(
+                            children: [
+                              Text(
+                                userInfo.totalReviews,
+                                style: TextStyle(
+                                  fontSize: Dimension.font(20),
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              Text(
+                                'Reviews',
+                                style: TextStyle(
+                                  fontSize: Dimension.font(13),
+                                  color: Theme.of(context).colorScheme.onPrimary
+                                      .withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+              SizedBox(height: Dimension.height(20)),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: Dimension.height(10)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(Dimension.width(14)),
+                  border: Border.all(color: Colors.black.withOpacity(0.05)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: Dimension.width(10),
+                      offset: Offset(0, Dimension.height(4)),
                     ),
-                  );
+                  ],
+                ),
+                child: SwitchListTile.adaptive(
+                  value: context.watch<ThemeNotifier>().isDark,
+                  onChanged: (v) => context.read<ThemeNotifier>().setDark(v),
+                  shape: Border.all(color: Colors.transparent),
+                  trackOutlineColor: WidgetStateProperty.all(
+                    Colors.transparent,
+                  ),
+                  activeTrackColor: Theme.of(context).colorScheme.primary,
+                  inactiveTrackColor: Colors.grey[400],
+                  thumbColor: WidgetStateProperty.all(Colors.white),
+                  title: Center(
+                    child: Text(
+                      context.read<ThemeNotifier>().isDark
+                          ? 'Light Mode'
+                          : 'Dark Mode',
+                      style: TextStyle(
+                        fontSize: Dimension.font(16),
+                        fontWeight: FontWeight.w400,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                  secondary: Container(
+                    width: Dimension.width(35),
+                    height: Dimension.width(35),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Dimension.width(6),
+                      vertical: Dimension.width(6),
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(Dimension.width(10)),
+                      color: context.read<ThemeNotifier>().isDark
+                          ? Colors.deepPurpleAccent
+                          : Colors.deepPurpleAccent.withOpacity(0.2),
+                    ),
+                    child: Image.asset(
+                      context.read<ThemeNotifier>().isDark
+                          ? 'assets/icons/sun.png'
+                          : 'assets/icons/moon.png',
+                      width: Dimension.width(12),
+                      height: Dimension.width(12),
+                      color: context.read<ThemeNotifier>().isDark
+                          ? Colors.white
+                          : Colors.deepPurpleAccent,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: Dimension.height(20)),
+              _buildMenuItem(),
+              SizedBox(height: Dimension.height(20)),
+              ElevatedButton(
+                onPressed: () {
+                  _showLogoutDialog(context);
                 },
-              ),
-              Container(
-                width: Dimension.width(1),
-                height: Dimension.height(40),
-                color: Colors.black.withOpacity(0.06),
-              ),
-              _StatItem(label: 'Favorites', value: '8'),
-              Container(
-                width: Dimension.width(1),
-                height: Dimension.height(40),
-                color: Colors.black.withOpacity(0.06),
-              ),
-              _StatItem(
-                label: 'Reviews',
-                value: '5',
-                onViewTap: () {
-                  // TODO: Navigate to reviews list
-                },
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(
+                    Colors.red.withOpacity(
+                      context.read<ThemeNotifier>().isDark ? 0.3 : 0.2,
+                    ),
+                  ),
+                  elevation: WidgetStateProperty.all(0),
+                  padding: WidgetStateProperty.all(
+                    EdgeInsets.symmetric(vertical: Dimension.height(12)),
+                  ),
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(Dimension.width(8)),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/icons/logout.png',
+                      width: Dimension.width(20),
+                      height: Dimension.width(20),
+                      color: Colors.red,
+                    ),
+                    SizedBox(width: Dimension.width(10)),
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontSize: Dimension.font(18),
+                        fontWeight: FontWeight.w400,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildMenuItems(UserInfoModel userInfo) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
+  Widget _buildMenuItem() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(Dimension.width(10)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.06),
+            blurRadius: Dimension.width(10),
+            offset: Offset(0, 0),
+
+            spreadRadius: Dimension.width(2),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          _MenuItem(
-            icon: Icons.person_outline,
-            title: 'Edit Profile',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditProfile(userInfo: userInfo),
-                ),
-              );
+          BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              if (state is ProfileLoaded) {
+                final userInfo = state.userInfo;
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => EditProfile(userInfo: userInfo),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withOpacity(0.1),
+                          width: Dimension.height(1),
+                        ),
+                      ),
+                    ),
+                    child: menuItems(
+                      Colors.lightBlue,
+                      'assets/icons/edit_profile.png',
+                      'Edit Profile',
+                    ),
+                  ),
+                );
+              } else {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withOpacity(0.1),
+                        width: Dimension.height(1),
+                      ),
+                    ),
+                  ),
+                  child: menuItems(
+                    Colors.lightBlue,
+                    'assets/icons/edit_profile.png',
+                    'Edit Profile',
+                  ),
+                );
+              }
             },
           ),
-          SizedBox(height: Dimension.height(10)),
-          _MenuItem(
-            icon: Icons.settings_outlined,
-            title: 'Settings',
+          GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
+              Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.1),
+                    width: Dimension.height(1),
+                  ),
+                ),
+              ),
+              child: menuItems(
+                Colors.cyan,
+                'assets/icons/setting.png',
+                'Settings',
+              ),
+            ),
           ),
-          SizedBox(height: Dimension.height(10)),
-          _MenuItem(
-            icon: Icons.security_outlined,
-            title: 'Privacy & Security',
-            onTap: () {},
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                  width: Dimension.height(1),
+                ),
+              ),
+            ),
+            child: menuItems(
+              Colors.deepPurpleAccent,
+              'assets/icons/notification.png',
+              'Notifications',
+            ),
           ),
-          SizedBox(height: Dimension.height(10)),
-          _MenuItem(
-            icon: Icons.help_outline,
-            title: 'Help & Support',
-            onTap: () {},
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                  width: Dimension.height(1),
+                ),
+              ),
+            ),
+            child: menuItems(
+              Colors.orangeAccent,
+              'assets/icons/privacyPolicy.png',
+              'Privacy & Security',
+            ),
           ),
-          SizedBox(height: Dimension.height(10)),
-          _MenuItem(icon: Icons.info_outline, title: 'About', onTap: () {}),
-          SizedBox(height: Dimension.height(18)),
-          _MenuItem(
-            icon: Icons.logout,
-            title: 'Logout',
-            isDestructive: true,
-            onTap: () => _showLogoutDialog(context),
+          Container(
+            decoration: BoxDecoration(color: Colors.transparent),
+            child: menuItems(
+              Colors.redAccent,
+              'assets/icons/helpSupport.png',
+              'Help & Support',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget menuItems(Color bg, String iconPath, String title) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: Dimension.width(15),
+        vertical: Dimension.height(15),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: Dimension.width(35),
+                height: Dimension.width(35),
+                padding: EdgeInsets.symmetric(
+                  horizontal: Dimension.width(6),
+                  vertical: Dimension.width(6),
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(Dimension.width(10)),
+                  color: bg.withValues(alpha: 0.2),
+                ),
+                child: Image.asset(iconPath, color: bg),
+              ),
+              SizedBox(width: Dimension.width(12)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: Dimension.font(16),
+                  fontWeight: FontWeight.w400,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ],
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: Dimension.width(16),
+            color: Colors.grey[400],
           ),
         ],
       ),
@@ -415,6 +622,7 @@ class _ProfileState extends State<Profile> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Dimension.width(20)),
         ),
@@ -424,7 +632,9 @@ class _ProfileState extends State<Profile> {
               width: Dimension.width(40),
               height: Dimension.width(40),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withOpacity(
+                  context.read<ThemeNotifier>().isDark ? 0.3 : 0.1,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -438,8 +648,8 @@ class _ProfileState extends State<Profile> {
               'Logout',
               style: TextStyle(
                 fontSize: Dimension.font(20),
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onPrimary,
               ),
             ),
           ],
@@ -448,7 +658,9 @@ class _ProfileState extends State<Profile> {
           'Are you sure you want to logout?',
           style: TextStyle(
             fontSize: Dimension.font(15),
-            color: Colors.grey[700],
+            color: Theme.of(
+              context,
+            ).colorScheme.onPrimary.withValues(alpha: 0.7),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -460,7 +672,9 @@ class _ProfileState extends State<Profile> {
               style: TextStyle(
                 fontSize: Dimension.font(15),
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+                color: Theme.of(
+                  context,
+                ).colorScheme.onPrimary.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -519,7 +733,7 @@ class _StatItem extends StatelessWidget {
           style: TextStyle(
             fontSize: Dimension.font(20),
             fontWeight: FontWeight.w800,
-            color: kPrimaryGreenDark,
+            color: Theme.of(context).primaryColor,
           ),
         ),
         SizedBox(height: Dimension.height(4)),
@@ -545,96 +759,12 @@ class _StatItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: Dimension.font(11),
                 fontWeight: FontWeight.w700,
-                color: kPrimaryGreenDark,
+                color: Theme.of(context).primaryColor,
               ),
             ),
           ),
         ],
       ],
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool isDestructive;
-  final VoidCallback onTap;
-  const _MenuItem({
-    required this.icon,
-    required this.title,
-    this.isDestructive = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isDestructive ? Colors.red : kPrimaryGreenDark;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(Dimension.width(14)),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: Dimension.width(16),
-          vertical: Dimension.height(10),
-        ),
-        decoration: BoxDecoration(
-          color: isDestructive ? Colors.red.withOpacity(0.06) : Colors.white,
-          borderRadius: BorderRadius.circular(Dimension.width(14)),
-          border: Border.all(
-            color: isDestructive
-                ? Colors.red.withOpacity(0.18)
-                : Colors.black.withOpacity(0.05),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: Dimension.width(10),
-              offset: Offset(0, Dimension.height(4)),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: Dimension.width(32),
-              height: Dimension.width(32),
-              decoration: BoxDecoration(
-                gradient: isDestructive
-                    ? null
-                    : const LinearGradient(
-                        colors: [kPrimaryGreenLight, kPrimaryGreenDark],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                color: isDestructive ? Colors.red.withOpacity(0.12) : null,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: Dimension.width(22),
-                color: isDestructive ? Colors.red : Colors.white,
-              ),
-            ),
-            SizedBox(width: Dimension.width(14)),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: Dimension.font(15),
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              size: Dimension.width(22),
-              color: color.withOpacity(0.4),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -8,10 +8,6 @@ import '../../core/dimension.dart';
 import '../profile/data/model/user_info_model.dart';
 import '../profile/data/repository/profile_repository.dart';
 
-const Color kPrimaryGreenLight = Color(0xFF00C853);
-const Color kPrimaryGreenDark = Color(0xFF00A843);
-const Color kBgGrey = Color(0xFFF5F5F5);
-
 class EditProfile extends StatefulWidget {
   final UserInfoModel userInfo;
 
@@ -161,8 +157,8 @@ class _EditProfileState extends State<EditProfile> {
               'Choose Profile Photo',
               style: TextStyle(
                 fontSize: Dimension.font(18),
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             SizedBox(height: Dimension.height(20)),
@@ -246,65 +242,36 @@ class _EditProfileState extends State<EditProfile> {
   Widget build(BuildContext context) {
     Dimension.init(context);
     return Scaffold(
-      backgroundColor: kBgGrey,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Theme.of(context).cardColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        leading: Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+            Text(
+              'Edit Profile',
+              style: TextStyle(
+                fontSize: Dimension.font(18),
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Custom App Bar
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                Dimension.width(20),
-                Dimension.height(16),
-                Dimension.width(20),
-                Dimension.height(16),
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [kPrimaryGreenLight, kPrimaryGreenDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: kPrimaryGreenDark.withOpacity(0.2),
-                    blurRadius: Dimension.width(12),
-                    offset: Offset(0, Dimension.height(4)),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: EdgeInsets.all(Dimension.width(8)),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(
-                          Dimension.width(10),
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: Dimension.width(24),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: Dimension.width(16)),
-                  Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                      fontSize: Dimension.font(22),
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -357,25 +324,11 @@ class _EditProfileState extends State<EditProfile> {
                               height: Dimension.width(120),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    kPrimaryGreenLight,
-                                    kPrimaryGreenDark,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                color: Theme.of(context).primaryColor,
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: Theme.of(context).cardColor,
                                   width: Dimension.width(4),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: kPrimaryGreenDark.withOpacity(0.3),
-                                    blurRadius: Dimension.width(20),
-                                    offset: Offset(0, Dimension.height(8)),
-                                  ),
-                                ],
                               ),
                               child: ClipOval(
                                 child: _selectedImage != null
@@ -399,26 +352,12 @@ class _EditProfileState extends State<EditProfile> {
                                   width: Dimension.width(40),
                                   height: Dimension.width(40),
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        kPrimaryGreenLight,
-                                        kPrimaryGreenDark,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
+                                    color: Theme.of(context).primaryColor,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: Theme.of(context).cardColor,
                                       width: Dimension.width(3),
                                     ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: Dimension.width(8),
-                                        offset: Offset(0, Dimension.height(2)),
-                                      ),
-                                    ],
                                   ),
                                   child: Icon(
                                     Icons.camera_alt,
@@ -438,8 +377,10 @@ class _EditProfileState extends State<EditProfile> {
                         'Tap to change profile picture',
                         style: TextStyle(
                           fontSize: Dimension.font(13),
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
 
@@ -448,43 +389,42 @@ class _EditProfileState extends State<EditProfile> {
                       // Username Field
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(
                             Dimension.width(16),
                           ),
                           border: Border.all(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withOpacity(0.1),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: Dimension.width(12),
-                              offset: Offset(0, Dimension.height(4)),
-                            ),
-                          ],
                         ),
                         child: TextFormField(
                           controller: _usernameController,
                           style: TextStyle(
                             fontSize: Dimension.font(16),
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
                             labelText: 'Username',
                             labelStyle: TextStyle(
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
                               fontSize: Dimension.font(14),
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                             ),
                             floatingLabelStyle: TextStyle(
-                              color: kPrimaryGreenDark,
+                              color: Theme.of(context).primaryColor,
                               fontSize: Dimension.font(14),
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w400,
                             ),
                             hintText: 'Enter your username',
                             hintStyle: TextStyle(
-                              color: Colors.grey[400],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.4),
                               fontSize: Dimension.font(15),
                               fontWeight: FontWeight.w400,
                             ),
@@ -494,12 +434,12 @@ class _EditProfileState extends State<EditProfile> {
                               ),
                               child: Icon(
                                 Icons.person_outline,
-                                color: kPrimaryGreenDark,
+                                color: Theme.of(context).primaryColor,
                                 size: Dimension.width(24),
                               ),
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: Theme.of(context).cardColor,
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: Dimension.width(20),
                               vertical: Dimension.height(18),
@@ -521,7 +461,7 @@ class _EditProfileState extends State<EditProfile> {
                                 Dimension.width(16),
                               ),
                               borderSide: BorderSide(
-                                color: kPrimaryGreenLight,
+                                color: Theme.of(context).primaryColor,
                                 width: Dimension.width(2),
                               ),
                             ),
@@ -568,12 +508,16 @@ class _EditProfileState extends State<EditProfile> {
                       Container(
                         padding: EdgeInsets.all(Dimension.width(16)),
                         decoration: BoxDecoration(
-                          color: kPrimaryGreenLight.withOpacity(0.08),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(
                             Dimension.width(14),
                           ),
                           border: Border.all(
-                            color: kPrimaryGreenLight.withOpacity(0.2),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.2),
                             width: 1,
                           ),
                         ),
@@ -581,7 +525,7 @@ class _EditProfileState extends State<EditProfile> {
                           children: [
                             Icon(
                               Icons.info_outline,
-                              color: kPrimaryGreenDark,
+                              color: Theme.of(context).primaryColor,
                               size: Dimension.width(22),
                             ),
                             SizedBox(width: Dimension.width(12)),
@@ -590,8 +534,8 @@ class _EditProfileState extends State<EditProfile> {
                                 'Username must be a single word with letters only — no spaces, digits, or symbols (e.g., . _ ; ,).',
                                 style: TextStyle(
                                   fontSize: Dimension.font(13),
-                                  color: kPrimaryGreenDark,
-                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.w400,
                                   height: 1.4,
                                 ),
                               ),
@@ -606,65 +550,46 @@ class _EditProfileState extends State<EditProfile> {
                       SizedBox(
                         width: double.infinity,
                         height: Dimension.height(54),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [kPrimaryGreenLight, kPrimaryGreenDark],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              Dimension.width(16),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: kPrimaryGreenDark.withOpacity(0.4),
-                                blurRadius: Dimension.width(12),
-                                offset: Offset(0, Dimension.height(6)),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                Dimension.width(16),
                               ),
-                            ],
+                            ),
                           ),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _saveProfile,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  Dimension.width(16),
-                                ),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? SizedBox(
-                                    height: Dimension.height(24),
-                                    width: Dimension.width(24),
-                                    child: const CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle_outline,
-                                        size: Dimension.width(22),
-                                      ),
-                                      SizedBox(width: Dimension.width(10)),
-                                      Text(
-                                        'Save Changes',
-                                        style: TextStyle(
-                                          fontSize: Dimension.font(16),
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ],
+                          child: _isLoading
+                              ? SizedBox(
+                                  height: Dimension.height(24),
+                                  width: Dimension.width(24),
+                                  child: const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
                                   ),
-                          ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle_outline,
+                                      size: Dimension.width(22),
+                                    ),
+                                    SizedBox(width: Dimension.width(10)),
+                                    Text(
+                                      'Save Changes',
+                                      style: TextStyle(
+                                        fontSize: Dimension.font(16),
+                                        fontWeight: FontWeight.w400,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
 
@@ -678,7 +603,9 @@ class _EditProfileState extends State<EditProfile> {
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
-                              color: Colors.grey[300]!,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withOpacity(0.3),
                               width: Dimension.width(2),
                             ),
                             shape: RoundedRectangleBorder(
@@ -686,14 +613,16 @@ class _EditProfileState extends State<EditProfile> {
                                 Dimension.width(16),
                               ),
                             ),
-                            backgroundColor: Colors.white,
+                            backgroundColor: Theme.of(context).cardColor,
                           ),
                           child: Text(
                             'Cancel',
                             style: TextStyle(
                               fontSize: Dimension.font(16),
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w600,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.7),
+                              fontWeight: FontWeight.w400,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -733,9 +662,11 @@ class _ImagePickerOption extends StatelessWidget {
           vertical: Dimension.height(14),
         ),
         decoration: BoxDecoration(
-          color: kPrimaryGreenLight.withOpacity(0.08),
+          color: Theme.of(context).primaryColor.withOpacity(0.08),
           borderRadius: BorderRadius.circular(Dimension.width(14)),
-          border: Border.all(color: kPrimaryGreenLight.withOpacity(0.2)),
+          border: Border.all(
+            color: Theme.of(context).primaryColor.withOpacity(0.2),
+          ),
         ),
         child: Row(
           children: [
@@ -743,12 +674,12 @@ class _ImagePickerOption extends StatelessWidget {
               width: Dimension.width(40),
               height: Dimension.width(40),
               decoration: BoxDecoration(
-                color: kPrimaryGreenDark.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                color: kPrimaryGreenDark,
+                color: Theme.of(context).primaryColor,
                 size: Dimension.width(22),
               ),
             ),
@@ -757,8 +688,8 @@ class _ImagePickerOption extends StatelessWidget {
               title,
               style: TextStyle(
                 fontSize: Dimension.font(15),
-                fontWeight: FontWeight.w600,
-                color: kPrimaryGreenDark,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).primaryColor,
               ),
             ),
           ],
@@ -810,7 +741,7 @@ class _VerificationWarning extends StatelessWidget {
               style: TextStyle(
                 fontSize: Dimension.font(10),
                 color: Colors.orange[900],
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w400,
                 height: 1.4,
               ),
             ),
