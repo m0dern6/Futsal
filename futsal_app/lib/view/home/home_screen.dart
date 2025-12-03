@@ -11,7 +11,7 @@ import 'package:ui/view/home/bloc/trending_futsal/trending_futsal_event.dart';
 import 'package:ui/view/home/bloc/trending_futsal/trending_futsal_state.dart';
 import '../../core/dimension.dart';
 import '../futsal/futsal_details.dart';
-import '../book_now/book_now.dart';
+// removed book_now import since Book Now button removed from card
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,8 +20,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCategory = 0;
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   final List<_CategoryData> _categories = const [
     _CategoryData(label: 'All', iconPath: 'assets/icons/all.png'),
@@ -32,16 +35,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Data already loaded in splash screen, no need to load here
-  }
-
-  void _onCategoryChanged(int index) {
-    setState(() => _selectedCategory = index);
+    _tabController = TabController(length: _categories.length, vsync: this);
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
   }
 
   Future<void> _onRefresh() async {
-    // Refresh current category data
-    switch (_selectedCategory) {
+    // Refresh current category data based on active tab
+    final index = _tabController.index;
+    switch (index) {
       case 0:
         context.read<AllFutsalBloc>().add(const LoadAllFutsals());
         break;
@@ -61,129 +66,180 @@ class _HomeScreenState extends State<HomeScreen> {
     Dimension.init(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // App Bar with logo and name
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                Dimension.width(20),
-                Dimension.height(16),
-                Dimension.width(20),
-                Dimension.height(12),
-              ),
-              child: Row(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(Dimension.height(145)),
+        child: Container(
+          width: double.infinity,
+          color: Theme.of(context).appBarTheme.backgroundColor,
+          padding: EdgeInsets.symmetric(
+            horizontal: Dimension.width(20),
+            vertical: Dimension.height(20),
+          ),
+          child: Column(
+            children: [
+              SizedBox(height: Dimension.height(40)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Image.asset(
-                    'assets/logo/logo.png',
-                    width: Dimension.width(50),
-                    height: Dimension.width(50),
-                  ),
-                  SizedBox(width: Dimension.width(12)),
-                  Text(
-                    'Futsal Pay',
-                    style: TextStyle(
-                      fontSize: Dimension.font(22),
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Search Bar (not typable)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              child: GestureDetector(
-                onTap: () {
-                  // Navigate to search screen when tapped
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Dimension.width(16),
-                    vertical: Dimension.height(8),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(Dimension.width(6)),
-                    border: Border.all(
-                      color: const Color(0xFF00C853).withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00C853).withOpacity(0.06),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.search,
-                        color: const Color(0xFF00C853),
-                        size: Dimension.width(22),
-                      ),
-                      SizedBox(width: Dimension.width(12)),
                       Text(
-                        'Search futsal courts...',
+                        'Welcome back!',
                         style: TextStyle(
-                          fontSize: Dimension.font(15),
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w500,
+                          fontSize: Dimension.font(10),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          height: 1.2,
+                        ),
+                      ),
+                      Text(
+                        'Find your court',
+                        style: TextStyle(
+                          fontSize: Dimension.font(12),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ],
                   ),
-                ),
+
+                  Container(
+                    width: Dimension.width(25),
+                    height: Dimension.height(25),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withAlpha(80),
+                    ),
+                    child: Icon(
+                      Icons.notifications_none,
+                      size: Dimension.width(15),
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
-            ),
-
-            SizedBox(height: Dimension.height(12)),
-
-            // Category Tabs
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              child: SizedBox(
-                height: Dimension.height(30),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final category = _categories[index];
-                    final selected = index == _selectedCategory;
-                    return Padding(
-                      padding: EdgeInsets.only(right: Dimension.width(10)),
-                      child: _CategoryTab(
-                        label: category.label,
-                        iconPath: category.iconPath,
-                        selected: selected,
-                        onTap: () => _onCategoryChanged(index),
+              SizedBox(height: Dimension.height(20)),
+              // Search Bar
+              SizedBox(
+                height: Dimension.height(40),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: Dimension.width(8),
+                      vertical: Dimension.height(8),
+                    ),
+                    isDense: true,
+                    hint: Row(
+                      children: [
+                        Icon(
+                          Icons.search,
+                          size: Dimension.width(16),
+                          color: Colors.grey[400],
+                        ),
+                        SizedBox(width: Dimension.width(6)),
+                        Text(
+                          'Search Futsal Courts',
+                          style: TextStyle(
+                            fontSize: Dimension.font(14),
+                            color: Colors.grey[400],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              size: Dimension.width(18),
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(Dimension.width(10)),
+                      borderSide: BorderSide(
+                        color: Colors.transparent,
+                        width: 0,
                       ),
-                    );
-                  },
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(Dimension.width(10)),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 3,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-
-            SizedBox(height: Dimension.height(20)),
-
-            // Futsal Court Cards with Pull-to-Refresh
-            Expanded(
-              child: _selectedCategory == 0
-                  ? _buildAllFutsalTab()
-                  : _selectedCategory == 1
-                  ? _buildTrendingFutsalTab()
-                  : _buildTopReviewedFutsalTab(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+      body: Column(
+        children: [
+          Container(
+            color: Theme.of(context).colorScheme.surface,
+            child: TabBar(
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+
+              controller: _tabController,
+              splashBorderRadius: null,
+              splashFactory: null,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicatorPadding: EdgeInsets.symmetric(
+                horizontal: Dimension.width(10),
+              ),
+              tabs: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: Dimension.height(15)),
+                  child: Text('All Futsal'),
+                ),
+                Text('Trending'),
+                Text('Top Reviewed'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: Dimension.height(8)),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAllFutsalTab(),
+                  _buildTrendingFutsalTab(),
+                  _buildTopReviewedFutsalTab(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<dynamic> _filterFutsals(List<dynamic> futsals) {
+    if (_searchQuery.isEmpty) return futsals;
+    return futsals.where((futsal) {
+      final name = (futsal.name ?? '').toLowerCase();
+      final location = (futsal.location ?? '').toLowerCase();
+      return name.contains(_searchQuery) || location.contains(_searchQuery);
+    }).toList();
   }
 
   Widget _buildAllFutsalTab() {
@@ -238,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else if (state is AllFutsalLoaded) {
-          final futsals = state.futsals;
+          final futsals = _filterFutsals(state.futsals);
 
           if (futsals.isEmpty) {
             return RefreshIndicator(
@@ -285,16 +341,19 @@ class _HomeScreenState extends State<HomeScreen> {
           return RefreshIndicator(
             onRefresh: _onRefresh,
             color: const Color(0xFF00C853),
-            child: SingleChildScrollView(
+            child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              child: Wrap(
-                spacing: Dimension.width(12),
-                runSpacing: Dimension.height(12),
-                children: futsals.map((futsal) {
-                  return _CourtCard(court: futsal.toMap());
-                }).toList(),
+              padding: EdgeInsets.symmetric(
+                horizontal: Dimension.width(20),
+                vertical: Dimension.height(12),
               ),
+              itemCount: futsals.length,
+              separatorBuilder: (context, index) =>
+                  SizedBox(height: Dimension.height(12)),
+              itemBuilder: (context, index) {
+                final futsal = futsals[index];
+                return _CourtCard(court: futsal.toMap());
+              },
             ),
           );
         }
@@ -362,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else if (state is TrendingFutsalLoaded) {
-          final futsals = state.futsals;
+          final futsals = _filterFutsals(state.futsals);
 
           if (futsals.isEmpty) {
             return RefreshIndicator(
@@ -409,16 +468,19 @@ class _HomeScreenState extends State<HomeScreen> {
           return RefreshIndicator(
             onRefresh: _onRefresh,
             color: const Color(0xFF00C853),
-            child: SingleChildScrollView(
+            child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              child: Wrap(
-                spacing: Dimension.width(12),
-                runSpacing: Dimension.height(12),
-                children: futsals.map((futsal) {
-                  return _CourtCard(court: futsal.toMap());
-                }).toList(),
+              padding: EdgeInsets.symmetric(
+                horizontal: Dimension.width(20),
+                vertical: Dimension.height(12),
               ),
+              itemCount: futsals.length,
+              separatorBuilder: (context, index) =>
+                  SizedBox(height: Dimension.height(12)),
+              itemBuilder: (context, index) {
+                final futsal = futsals[index];
+                return _CourtCard(court: futsal.toMap());
+              },
             ),
           );
         }
@@ -486,7 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else if (state is TopReviewedFutsalLoaded) {
-          final futsals = state.futsals;
+          final futsals = _filterFutsals(state.futsals);
 
           if (futsals.isEmpty) {
             return RefreshIndicator(
@@ -533,16 +595,19 @@ class _HomeScreenState extends State<HomeScreen> {
           return RefreshIndicator(
             onRefresh: _onRefresh,
             color: const Color(0xFF00C853),
-            child: SingleChildScrollView(
+            child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              child: Wrap(
-                spacing: Dimension.width(12),
-                runSpacing: Dimension.height(12),
-                children: futsals.map((futsal) {
-                  return _CourtCard(court: futsal.toMap());
-                }).toList(),
+              padding: EdgeInsets.symmetric(
+                horizontal: Dimension.width(20),
+                vertical: Dimension.height(12),
               ),
+              itemCount: futsals.length,
+              separatorBuilder: (context, index) =>
+                  SizedBox(height: Dimension.height(12)),
+              itemBuilder: (context, index) {
+                final futsal = futsals[index];
+                return _CourtCard(court: futsal.toMap());
+              },
             ),
           );
         }
@@ -563,70 +628,7 @@ class _CategoryData {
   const _CategoryData({required this.label, required this.iconPath});
 }
 
-class _CategoryTab extends StatelessWidget {
-  final String label;
-  final String iconPath;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _CategoryTab({
-    required this.label,
-    required this.iconPath,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        padding: EdgeInsets.symmetric(
-          horizontal: Dimension.width(6),
-          vertical: 0,
-        ),
-        decoration: BoxDecoration(
-          gradient: selected
-              ? const LinearGradient(
-                  colors: [Color(0xFF00C853), Color(0xFF00A843)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: selected ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(Dimension.width(6)),
-          border: Border.all(
-            color: selected
-                ? const Color(0xFF00C853)
-                : Colors.black.withOpacity(0.06),
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              iconPath,
-              width: Dimension.width(28),
-              height: Dimension.width(28),
-              // color: selected ? Colors.black : Colors.black.withOpacity(0.6),
-            ),
-            SizedBox(width: Dimension.width(2)),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: Dimension.font(14),
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? Colors.white : Colors.black.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// legacy category tab widget removed
 
 class _CourtCard extends StatelessWidget {
   final Map<String, dynamic> court;
@@ -635,7 +637,7 @@ class _CourtCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardWidth = (Dimension.deviceWidth - Dimension.width(52)) / 2;
+    // full-width card in vertical list
 
     return GestureDetector(
       onTap: () {
@@ -646,189 +648,178 @@ class _CourtCard extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        width: cardWidth,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(Dimension.width(8)),
-          border: Border.all(color: Colors.black.withOpacity(0.08)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: Dimension.width(12),
-              offset: Offset(0, Dimension.height(4)),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Court Image
-            Container(
-              height: Dimension.height(120),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(Dimension.width(8)),
-                  topRight: Radius.circular(Dimension.width(8)),
-                ),
-                image: court['imageUrl'] != null
-                    ? DecorationImage(
-                        image: NetworkImage(court['imageUrl']),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: Dimension.height(12)),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(Dimension.width(8)),
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.08),
+                width: 1,
               ),
-              // child: Stack(
-              //   children: [
-              //     // Favorite Button
-              //     Positioned(
-              //       top: Dimension.height(8),
-              //       right: Dimension.width(8),
-              //       child: Container(
-              //         padding: EdgeInsets.all(Dimension.width(6)),
-              //         decoration: BoxDecoration(
-              //           color: Colors.white,
-              //           shape: BoxShape.circle,
-              //           boxShadow: [
-              //             BoxShadow(
-              //               color: Colors.black.withOpacity(0.1),
-              //               blurRadius: Dimension.width(8),
-              //             ),
-              //           ],
-              //         ),
-              //         child: Icon(
-              //           Icons.favorite_border,
-              //           size: Dimension.width(16),
-              //           color: Colors.black,
-              //         ),
-              //       ),
-              //     ),
-              //   ],
-              // ),
             ),
-
-            // Court Details
-            Padding(
-              padding: EdgeInsets.all(Dimension.width(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Court Name
-                  Text(
-                    court['name'] ?? 'Court Name',
-                    style: TextStyle(
-                      fontSize: Dimension.font(15),
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                blurRadius: Dimension.width(12),
+                offset: Offset(0, Dimension.height(4)),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Court Image (larger) with subtle border and price overlay
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(Dimension.width(8)),
+                    topRight: Radius.circular(Dimension.width(8)),
                   ),
-                  SizedBox(height: Dimension.height(6)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(Dimension.width(8)),
+                    topRight: Radius.circular(Dimension.width(8)),
+                  ),
+                  child: SizedBox(
+                    height: Dimension.height(160),
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (court['imageUrl'] != null)
+                          Image.network(court['imageUrl'], fit: BoxFit.cover)
+                        else
+                          Container(color: Colors.grey[200]),
 
-                  // Location
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: Dimension.width(14),
-                        color: Colors.grey[600],
+                        // Price badge at bottom-left of the image
+                        Positioned(
+                          left: Dimension.width(10),
+                          bottom: Dimension.height(10),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: Dimension.width(8),
+                              vertical: Dimension.height(6),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(
+                                Dimension.width(6),
+                              ),
+                            ),
+                            child: Text(
+                              'Rs ${court['pricePerHour']}/hr',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: Dimension.font(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Court Details
+              Padding(
+                padding: EdgeInsets.all(Dimension.width(12)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Court Name
+                    Text(
+                      court['name'] ?? 'Court Name',
+                      style: TextStyle(
+                        fontSize: Dimension.font(15),
+                        fontWeight: FontWeight.w400,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
-                      SizedBox(width: Dimension.width(4)),
-                      Expanded(
-                        child: Text(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: Dimension.height(6)),
+
+                    // Location
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: Dimension.width(14),
+                          color: Colors.grey[600],
+                        ),
+                        SizedBox(width: Dimension.width(4)),
+                        Text(
                           court['location'] ?? 'Location',
                           style: TextStyle(
                             fontSize: Dimension.font(12),
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        Text(
+                          court['distanceKm'] != null
+                              ? '  ${court['distanceKm']} km'
+                              : '  --- km',
+                          style: TextStyle(
+                            fontSize: Dimension.font(12),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimary.withValues(alpha: 0.5),
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: Dimension.height(8)),
-
-                  // Rating and Price
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Rating
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: Dimension.width(15),
-                            color: const Color(0xFFFFA500),
-                          ),
-                          SizedBox(width: Dimension.width(4)),
-                          Text(
-                            court['averageRating']?.toString() ?? '0.0',
-                            style: TextStyle(
-                              fontSize: Dimension.font(13),
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Price
-                      Text(
-                        'Rs ${court['pricePerHour']}/hr',
-                        style: TextStyle(
-                          fontSize: Dimension.font(13),
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF00C853),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: Dimension.height(10)),
-
-                  // Book Now Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: Dimension.height(32),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BookNow(futsalData: court),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00C853),
-                        foregroundColor: Colors.white,
-                        elevation: 2,
-                        shadowColor: const Color(0xFF00C853).withOpacity(0.4),
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            Dimension.width(8),
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        'Book Now',
-                        style: TextStyle(
-                          fontSize: Dimension.font(12),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
+                      ],
                     ),
-                  ),
-                ],
+                    SizedBox(height: Dimension.height(8)),
+
+                    // Rating
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: Dimension.width(15),
+                          color: const Color(0xFFFFA500),
+                        ),
+                        SizedBox(width: Dimension.width(4)),
+                        Text(
+                          court['averageRating']?.toString() ?? '0.0',
+                          style: TextStyle(
+                            fontSize: Dimension.font(12),
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                        Text(
+                          ' (${court['ratingCount']?.toString()} reviews)',
+                          style: TextStyle(
+                            fontSize: Dimension.font(10),
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimary.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: Dimension.height(10)),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

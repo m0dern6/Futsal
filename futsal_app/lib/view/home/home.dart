@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:ui/view/bookings/bookings.dart';
 import 'package:ui/view/favorite/favorite.dart';
 import 'package:ui/view/profile/profile.dart';
 import 'dart:ui';
 import 'home_screen.dart';
 import '../../core/dimension.dart';
+import 'package:flutter/widgets.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,36 +19,105 @@ class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
   final List<_NavData> _items = const [
-    _NavData(label: 'Home', assetPath: 'assets/icons/home.png'),
-    _NavData(label: 'Favorite', assetPath: 'assets/icons/favorite.png'),
-    _NavData(label: 'Profile', assetPath: 'assets/icons/profile.png'),
+    _NavData(
+      label: 'Home',
+      assetPath: 'assets/icons/home.png',
+      selectedAssetPath: 'assets/icons/selected_home.png',
+    ),
+    _NavData(
+      label: 'Favorite',
+      assetPath: 'assets/icons/favorite.png',
+      selectedAssetPath: 'assets/icons/selected_favorite.png',
+    ),
+    _NavData(
+      label: 'Booking',
+      assetPath: 'assets/icons/booking.png',
+      selectedAssetPath: 'assets/icons/selected_booking.png',
+    ),
+    _NavData(
+      label: 'Profile',
+      assetPath: 'assets/icons/profile.png',
+      selectedAssetPath: 'assets/icons/selected_profile.png',
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     Dimension.init(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: _currentIndex == 0
-          ? const HomeScreen()
-          : _currentIndex == 1
-          ? Favorite()
-          : _currentIndex == 2
-          ? Profile()
-          : Center(
-              child: Text(
-                _items[_currentIndex].label,
-                style: TextStyle(
-                  fontSize: Dimension.font(24),
-                  fontWeight: FontWeight.w700,
-                ),
+    return AnnotatedRegion(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: Theme.of(
+          context,
+        ).bottomNavigationBarTheme.backgroundColor,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: Scaffold(
+        body: _buildBody(),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+              border: Border(
+                top: BorderSide(color: Colors.black.withValues(alpha: 0.1)),
               ),
             ),
-      bottomNavigationBar: _BottomNavBar(
-        items: _items,
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+            child: BottomNavigationBar(
+              selectedFontSize: Dimension.font(12),
+              unselectedFontSize: Dimension.font(12),
+              backgroundColor: Theme.of(
+                context,
+              ).bottomNavigationBarTheme.backgroundColor,
+              currentIndex: _currentIndex,
+              onTap: (i) => setState(() => _currentIndex = i),
+              type: BottomNavigationBarType.fixed,
+              elevation: 0,
+              items: _items.map((e) {
+                return BottomNavigationBarItem(
+                  icon: Image.asset(
+                    e.assetPath,
+                    color: Theme.of(
+                      context,
+                    ).bottomNavigationBarTheme.unselectedItemColor,
+                    width: Dimension.width(16),
+                    height: Dimension.width(16),
+                  ),
+                  activeIcon: Image.asset(
+                    e.selectedAssetPath ?? e.assetPath,
+                    color: Theme.of(
+                      context,
+                    ).bottomNavigationBarTheme.selectedItemColor,
+                    width: Dimension.width(16),
+                    height: Dimension.width(16),
+                  ),
+                  label: e.label,
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    final screens = [HomeScreen(), Favorite(), BookingsScreen(), Profile()];
+
+    if (_currentIndex >= 0 && _currentIndex < screens.length) {
+      return screens[_currentIndex];
+    }
+
+    return Center(
+      child: Text(
+        _items[_currentIndex].label,
+        style: TextStyle(
+          fontSize: Dimension.font(16),
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -54,149 +126,10 @@ class _HomeState extends State<Home> {
 class _NavData {
   final String label;
   final String assetPath;
-  const _NavData({required this.label, required this.assetPath});
-}
-
-class _BottomNavBar extends StatelessWidget {
-  final List<_NavData> items;
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-
-  const _BottomNavBar({
-    required this.items,
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Stack(
-        children: [
-          // The bar itself
-          Container(
-            padding: EdgeInsets.symmetric(
-              vertical: Dimension.height(10),
-              horizontal: Dimension.width(10),
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Colors.black.withOpacity(0.06)),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(items.length, (index) {
-                final selected = index == currentIndex;
-                final item = items[index];
-                return _NavItem(
-                  label: item.label,
-                  assetPath: item.assetPath,
-                  selected: selected,
-                  onTap: () => onTap(index),
-                );
-              }),
-            ),
-          ),
-          // Top-only soft shadow as gradient
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: Container(
-                height: Dimension.height(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.06),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final String label;
-  final String assetPath;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _NavItem({
+  final String? selectedAssetPath;
+  const _NavData({
     required this.label,
     required this.assetPath,
-    required this.selected,
-    required this.onTap,
+    this.selectedAssetPath,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    final baseWidth = Dimension.width(56);
-    final expandedWidth = Dimension.width(140);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeInOut,
-      width: selected ? expandedWidth : baseWidth,
-      height: Dimension.height(56),
-      decoration: BoxDecoration(
-        color: selected ? Colors.black.withOpacity(0.06) : Colors.transparent,
-        borderRadius: BorderRadius.circular(Dimension.width(18)),
-        border: Border.all(
-          color: Colors.black.withOpacity(selected ? 0.10 : 0.05),
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(Dimension.width(18)),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: Dimension.width(14)),
-          child: Row(
-            mainAxisAlignment: selected
-                ? MainAxisAlignment.start
-                : MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                assetPath,
-                width: Dimension.width(22),
-                height: Dimension.width(22),
-                color: Colors.black,
-              ),
-
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                child: selected
-                    ? Padding(
-                        key: const ValueKey('label'),
-                        padding: EdgeInsets.only(left: Dimension.width(10)),
-                        child: Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: Dimension.font(14),
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(key: ValueKey('empty')),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
