@@ -1,26 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import '../../core/dimension.dart';
-import '../profile/bloc/profile_bloc.dart';
-import '../profile/bloc/profile_state.dart';
+import '../../core/simple_theme.dart';
 import 'change_password.dart';
 
-const Color kPrimaryGreenLight = Color(0xFF00C853);
-const Color kPrimaryGreenDark = Color(0xFF00A843);
-const Color kBgGrey = Color(0xFFF5F5F5);
-
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool pushNotifications = true;
+  bool emailNotifications = false;
+  bool smsNotifications = false;
+  bool promotionalOffers = false;
+  bool twoFactorAuth = false;
 
   @override
   Widget build(BuildContext context) {
     Dimension.init(context);
     return Scaffold(
-      backgroundColor: kBgGrey,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        leading: Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+            Text(
+              'Settings',
+              style: TextStyle(
+                fontSize: Dimension.font(18),
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ],
+        ),
+
+        backgroundColor: Theme.of(context).cardColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: 0,
       ),
       body: ListView(
@@ -29,70 +56,157 @@ class SettingsScreen extends StatelessWidget {
           vertical: Dimension.height(8),
         ),
         children: [
-          _SectionHeader('Security'),
-          _ListTile(
-            leading: Icons.shield_outlined,
-            title: 'Two-Factor Authentication',
-            subtitle: 'Protect your account with an extra step',
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: Navigate to 2FA management
-            },
-          ),
-          SizedBox(height: Dimension.height(8)),
-          BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, state) {
-              bool emailVerified = false;
-              if (state is ProfileLoaded) {
-                emailVerified = state.userInfo.isEmailConfirmed;
-              }
-              return _ListTile(
-                leading: Icons.email_outlined,
-                title: 'Email Verification',
-                subtitle: emailVerified ? 'Verified' : 'Not verified',
-                trailing: _Chip(emailVerified ? 'Verified' : 'Verify'),
-                onTap: emailVerified
-                    ? null
-                    : () {
-                        // TODO: Start email verification flow
-                      },
-              );
-            },
-          ),
-          BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, state) {
-              bool phoneVerified = false;
-              if (state is ProfileLoaded) {
-                phoneVerified = state.userInfo.isPhoneNumberConfirmed;
-              }
-              return _ListTile(
-                leading: Icons.phone_outlined,
-                title: 'Phone Verification',
-                subtitle: phoneVerified ? 'Verified' : 'Not verified',
-                trailing: _Chip(phoneVerified ? 'Verified' : 'Verify'),
-                onTap: phoneVerified
-                    ? null
-                    : () {
-                        // TODO: Start phone verification flow
-                      },
-              );
-            },
+          _SectionHeader('APPEARANCE'),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(Dimension.width(12)),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withOpacity(0.06),
+                  blurRadius: Dimension.width(10),
+                  offset: const Offset(0, 0),
+                  spreadRadius: Dimension.width(2),
+                ),
+              ],
+            ),
+            child: _SwitchTile(
+              leading: Icons.dark_mode_outlined,
+              title: 'Dark Mode',
+              subtitle: 'Switch between light and dark theme',
+              value: Theme.of(context).brightness == Brightness.dark,
+              onChanged: (value) {
+                final themeNotifier = Provider.of<ThemeNotifier>(
+                  context,
+                  listen: false,
+                );
+                themeNotifier.toggle();
+              },
+              showIcon: true,
+              iconImage: context.read<ThemeNotifier>().isDark
+                  ? 'assets/icons/sun.png'
+                  : 'assets/icons/moon.png',
+            ),
           ),
           SizedBox(height: Dimension.height(16)),
-          _SectionHeader('Account'),
-          _ListTile(
-            leading: Icons.lock_outline,
-            title: 'Change Password',
-            subtitle: 'Update your password regularly',
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ChangePasswordScreen(),
+          _SectionHeader('NOTIFICATIONS'),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(Dimension.width(12)),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withOpacity(0.06),
+                  blurRadius: Dimension.width(10),
+                  offset: const Offset(0, 0),
+                  spreadRadius: Dimension.width(2),
                 ),
-              );
-            },
+              ],
+            ),
+            child: Column(
+              children: [
+                _SwitchTile(
+                  leading: Icons.notifications_outlined,
+                  title: 'Push Notifications',
+                  subtitle: 'Get notified about bookings',
+                  value: pushNotifications,
+                  onChanged: (value) {
+                    setState(() {
+                      pushNotifications = value;
+                    });
+                  },
+                  showBorder: true,
+                ),
+                _SwitchTile(
+                  leading: Icons.email_outlined,
+                  title: 'Email Notifications',
+                  subtitle: 'Receive emails about updates',
+                  value: emailNotifications,
+                  onChanged: (value) {
+                    setState(() {
+                      emailNotifications = value;
+                    });
+                  },
+                  showBorder: true,
+                ),
+                _SwitchTile(
+                  leading: Icons.sms_outlined,
+                  title: 'SMS Notifications',
+                  subtitle: 'Get text messages',
+                  value: smsNotifications,
+                  onChanged: (value) {
+                    setState(() {
+                      smsNotifications = value;
+                    });
+                  },
+                  showBorder: true,
+                ),
+                _SwitchTile(
+                  leading: Icons.local_offer_outlined,
+                  title: 'Promotional Offers',
+                  subtitle: 'Receive special offers',
+                  value: promotionalOffers,
+                  onChanged: (value) {
+                    setState(() {
+                      promotionalOffers = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: Dimension.height(16)),
+          _SectionHeader('SECURITY'),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(Dimension.width(12)),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withOpacity(0.06),
+                  blurRadius: Dimension.width(10),
+                  offset: const Offset(0, 0),
+                  spreadRadius: Dimension.width(2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _SwitchTile(
+                  leading: Icons.security_outlined,
+                  title: 'Two-Factor Authentication',
+                  subtitle: 'Add extra security layer',
+                  value: twoFactorAuth,
+                  onChanged: (value) {
+                    setState(() {
+                      twoFactorAuth = value;
+                    });
+                  },
+                  showBorder: true,
+                ),
+                _ListTile(
+                  leading: Icons.lock_outline,
+                  title: 'Change Password',
+                  subtitle: 'Update your password',
+
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChangePasswordScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -115,8 +229,8 @@ class _SectionHeader extends StatelessWidget {
         title,
         style: TextStyle(
           fontSize: Dimension.font(12),
-          fontWeight: FontWeight.w700,
-          color: Colors.grey[600],
+          fontWeight: FontWeight.w400,
+          color: Theme.of(context).colorScheme.onPrimary,
           letterSpacing: 0.6,
         ),
       ),
@@ -143,29 +257,14 @@ class _ListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(Dimension.width(12)),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: Dimension.width(12),
-          vertical: Dimension.height(12),
+          horizontal: Dimension.width(15),
+          vertical: Dimension.height(15),
         ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(Dimension.width(12)),
-          border: Border.all(color: Colors.black.withOpacity(0.06)),
-        ),
+        decoration: BoxDecoration(color: Colors.transparent),
         child: Row(
           children: [
-            Container(
-              width: Dimension.width(36),
-              height: Dimension.width(36),
-              decoration: BoxDecoration(
-                color: kPrimaryGreenLight.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(leading, color: kPrimaryGreenDark),
-            ),
-            SizedBox(width: Dimension.width(12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +273,8 @@ class _ListTile extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: Dimension.font(14),
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -183,7 +283,9 @@ class _ListTile extends StatelessWidget {
                       subtitle!,
                       style: TextStyle(
                         fontSize: Dimension.font(12),
-                        color: Colors.grey[600],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -198,28 +300,106 @@ class _ListTile extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  final String label;
-  const _Chip(this.label);
+class _SwitchTile extends StatelessWidget {
+  final IconData leading;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool showIcon;
+  final bool showBorder;
+  final String? iconImage;
+
+  const _SwitchTile({
+    required this.leading,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.showIcon = false,
+    this.showBorder = false,
+    this.iconImage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: Dimension.width(10),
-        vertical: Dimension.height(6),
+        horizontal: Dimension.width(15),
+        vertical: Dimension.height(15),
       ),
       decoration: BoxDecoration(
-        color: kPrimaryGreenLight.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(Dimension.width(20)),
+        color: Colors.transparent,
+        border: showBorder
+            ? Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                  width: Dimension.height(1),
+                ),
+              )
+            : null,
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: Dimension.font(11),
-          fontWeight: FontWeight.w700,
-          color: kPrimaryGreenDark,
-        ),
+      child: Row(
+        children: [
+          if (showIcon) ...[
+            if (iconImage != null)
+              Image.asset(
+                iconImage!,
+                width: Dimension.width(20),
+                height: Dimension.width(20),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              )
+            else
+              Icon(
+                leading,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                size: Dimension.width(20),
+              ),
+            SizedBox(width: Dimension.width(12)),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: Dimension.font(14),
+                    fontWeight: FontWeight.w400,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(height: Dimension.height(2)),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: Dimension.font(12),
+                    fontWeight: FontWeight.w400,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+              if (states.contains(WidgetState.selected)) {
+                return Colors.white;
+              }
+              return Colors.white;
+            }),
+            activeColor: Theme.of(context).primaryColor,
+            activeTrackColor: Colors.grey.withOpacity(0.3),
+            inactiveThumbColor: Colors.white,
+            inactiveTrackColor: Colors.grey.withOpacity(0.3),
+            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
+          ),
+        ],
       ),
     );
   }

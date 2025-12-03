@@ -3,10 +3,6 @@ import '../../core/dimension.dart';
 import '../profile/data/repository/profile_repository.dart';
 import 'forgot_password.dart';
 
-const Color kPrimaryGreenLight = Color(0xFF00C853);
-const Color kPrimaryGreenDark = Color(0xFF00A843);
-const Color kBgGrey = Color(0xFFF5F5F5);
-
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -40,7 +36,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return score; // 0-3
   }
 
-  Color _strengthColor(int s) {
+  Color _strengthColor(int s, BuildContext context) {
     switch (s) {
       case 0:
         return Colors.red;
@@ -49,7 +45,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       case 2:
         return Colors.amber;
       case 3:
-        return kPrimaryGreenDark;
+        return Theme.of(context).primaryColor;
       default:
         return Colors.red;
     }
@@ -121,12 +117,32 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     Dimension.init(context);
     final strength = _passwordStrength(_newController.text);
     return Scaffold(
-      backgroundColor: kBgGrey,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        title: const Text('Change Password'),
+        backgroundColor: Theme.of(context).cardColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        leading: Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+            Text(
+              'Change Password',
+              style: TextStyle(
+                fontSize: Dimension.font(18),
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
       body: Stack(
         children: [
@@ -177,8 +193,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         'Forgot password?',
                         style: TextStyle(
                           fontSize: Dimension.font(12),
-                          fontWeight: FontWeight.w600,
-                          color: kPrimaryGreenDark,
+                          fontWeight: FontWeight.w400,
+                          color: Theme.of(context).primaryColor,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -208,9 +224,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 child: LinearProgressIndicator(
                                   minHeight: Dimension.height(8),
                                   value: strength / 3,
-                                  backgroundColor: Colors.grey[200],
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.outline.withOpacity(0.2),
                                   valueColor: AlwaysStoppedAnimation(
-                                    _strengthColor(strength),
+                                    _strengthColor(strength, context),
                                   ),
                                 ),
                               ),
@@ -220,8 +238,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               _strengthLabel(strength),
                               style: TextStyle(
                                 fontSize: Dimension.font(12),
-                                fontWeight: FontWeight.w600,
-                                color: _strengthColor(strength),
+                                fontWeight: FontWeight.w400,
+                                color: _strengthColor(strength, context),
                               ),
                             ),
                           ],
@@ -254,10 +272,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Container(
               padding: EdgeInsets.all(Dimension.width(16)),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.06),
                     blurRadius: 12,
                     offset: const Offset(0, -4),
                   ),
@@ -267,7 +287,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, Dimension.height(52)),
-                  backgroundColor: kPrimaryGreenDark,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -287,7 +307,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         'Change Password',
                         style: TextStyle(
                           fontSize: Dimension.font(16),
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w400,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -308,12 +328,14 @@ class _FieldCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(Dimension.width(16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(Dimension.width(16)),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.06),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -349,10 +371,10 @@ class _PasswordField extends StatelessWidget {
       obscureText: obscure,
       validator: validator,
       onChanged: onChanged,
-      style: TextStyle(fontWeight: FontWeight.w600),
+      style: const TextStyle(fontWeight: FontWeight.w400),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: kPrimaryGreenDark),
+        prefixIcon: Icon(icon, color: Theme.of(context).primaryColor),
         suffixIcon: IconButton(
           icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
           onPressed: toggle,
@@ -385,8 +407,8 @@ class _RuleChecklist extends StatelessWidget {
           'Requirements',
           style: TextStyle(
             fontSize: Dimension.font(12),
-            fontWeight: FontWeight.w700,
-            color: Colors.grey[600],
+            fontWeight: FontWeight.w400,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
         SizedBox(height: Dimension.height(8)),
@@ -400,7 +422,11 @@ class _RuleChecklist extends StatelessWidget {
                       ? Icons.check_circle
                       : Icons.radio_button_unchecked,
                   size: Dimension.width(16),
-                  color: r.satisfied ? kPrimaryGreenDark : Colors.grey[400],
+                  color: r.satisfied
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.4),
                 ),
                 SizedBox(width: Dimension.width(8)),
                 Expanded(
@@ -408,10 +434,12 @@ class _RuleChecklist extends StatelessWidget {
                     r.label,
                     style: TextStyle(
                       fontSize: Dimension.font(12),
-                      color: r.satisfied ? kPrimaryGreenDark : Colors.grey[600],
-                      fontWeight: r.satisfied
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                      color: r.satisfied
+                          ? Theme.of(context).primaryColor
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),
