@@ -205,15 +205,15 @@ class _BookNowState extends State<BookNow> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back,
-            color: Colors.black,
-            size: Dimension.width(24),
+            color: Theme.of(context).colorScheme.onPrimary,
+            size: Dimension.width(20),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -221,8 +221,8 @@ class _BookNowState extends State<BookNow> {
           'Book Court',
           style: TextStyle(
             fontSize: Dimension.font(20),
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
+            fontWeight: FontWeight.w400,
+            color: Theme.of(context).colorScheme.onPrimary,
           ),
         ),
       ),
@@ -232,9 +232,9 @@ class _BookNowState extends State<BookNow> {
           children: [
             // Futsal Name
             Container(
-              padding: EdgeInsets.all(Dimension.width(20)),
+              padding: EdgeInsets.all(Dimension.width(16)),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -248,62 +248,49 @@ class _BookNowState extends State<BookNow> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.sports_soccer,
-                    size: Dimension.width(24),
-                    color: Colors.black,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(Dimension.width(8)),
+                    child: Image.network(
+                      widget.futsalData['imageUrl'] ?? '',
+                      width: Dimension.width(80),
+                      height: Dimension.width(80),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   SizedBox(width: Dimension.width(12)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.futsalData['name'] ?? 'Futsal Court',
-                          style: TextStyle(
-                            fontSize: Dimension.font(18),
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                          ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.futsalData['name'] ?? 'Futsal Court',
+                        style: TextStyle(
+                          fontSize: Dimension.font(18),
+                          fontWeight: FontWeight.w400,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
-                        SizedBox(height: Dimension.height(2)),
-                        Text(
-                          widget.futsalData['location'] ?? '',
-                          style: TextStyle(
-                            fontSize: Dimension.font(13),
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Dimension.width(10),
-                      vertical: Dimension.height(6),
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF00C853), Color(0xFF00A843)],
                       ),
-                      borderRadius: BorderRadius.circular(Dimension.width(8)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF00C853).withOpacity(0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                      SizedBox(height: Dimension.height(8)),
+                      Text(
+                        widget.futsalData['location'] ?? '',
+                        style: TextStyle(
+                          fontSize: Dimension.font(12),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary.withOpacity(0.7),
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      'Rs ${widget.futsalData['pricePerHour']}/hr',
-                      style: TextStyle(
-                        fontSize: Dimension.font(12),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
                       ),
-                    ),
+                      SizedBox(height: Dimension.height(8)),
+                      Text(
+                        '\Rs.${widget.futsalData['pricePerHour'] ?? '0'}/hour',
+                        style: TextStyle(
+                          fontSize: Dimension.font(14),
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -313,7 +300,7 @@ class _BookNowState extends State<BookNow> {
 
             // Date Selection
             Container(
-              color: Colors.white,
+              color: Theme.of(context).scaffoldBackgroundColor,
               padding: EdgeInsets.all(Dimension.width(20)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,9 +308,9 @@ class _BookNowState extends State<BookNow> {
                   Text(
                     'Select Date',
                     style: TextStyle(
-                      fontSize: Dimension.font(18),
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      fontSize: Dimension.font(20),
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                   SizedBox(height: Dimension.height(14)),
@@ -350,37 +337,19 @@ class _BookNowState extends State<BookNow> {
                             width: Dimension.width(70),
                             margin: EdgeInsets.only(right: Dimension.width(12)),
                             decoration: BoxDecoration(
-                              gradient: isSelected
-                                  ? const LinearGradient(
-                                      colors: [
-                                        Color(0xFF00C853),
-                                        Color(0xFF00A843),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                  : null,
-                              color: isSelected ? null : Colors.grey[50],
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).cardColor,
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.transparent
+                                    : Theme.of(context).colorScheme.outline
+                                          .withValues(alpha: 0.3),
+                                width: isSelected ? 0 : Dimension.width(0.3),
+                              ),
                               borderRadius: BorderRadius.circular(
                                 Dimension.width(16),
                               ),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF00C853)
-                                    : Colors.black.withOpacity(0.08),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFF00C853,
-                                        ).withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ]
-                                  : null,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -392,7 +361,10 @@ class _BookNowState extends State<BookNow> {
                                     fontWeight: FontWeight.w600,
                                     color: isSelected
                                         ? Colors.white
-                                        : Colors.grey[600],
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary
+                                              .withOpacity(0.7),
                                     letterSpacing: 0.5,
                                   ),
                                 ),
@@ -401,10 +373,12 @@ class _BookNowState extends State<BookNow> {
                                   dayNumber,
                                   style: TextStyle(
                                     fontSize: Dimension.font(24),
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w400,
                                     color: isSelected
                                         ? Colors.white
-                                        : Colors.black,
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onPrimary,
                                   ),
                                 ),
                                 SizedBox(height: Dimension.height(2)),
@@ -415,7 +389,10 @@ class _BookNowState extends State<BookNow> {
                                     fontWeight: FontWeight.w600,
                                     color: isSelected
                                         ? Colors.white.withOpacity(0.8)
-                                        : Colors.grey[500],
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary
+                                              .withOpacity(0.5),
                                     letterSpacing: 0.5,
                                   ),
                                 ),
@@ -434,7 +411,7 @@ class _BookNowState extends State<BookNow> {
 
             // Time Slot Selection
             Container(
-              color: Colors.white,
+              color: Theme.of(context).scaffoldBackgroundColor,
               padding: EdgeInsets.all(Dimension.width(20)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,9 +421,9 @@ class _BookNowState extends State<BookNow> {
                       Text(
                         'Select Time Slot',
                         style: TextStyle(
-                          fontSize: Dimension.font(18),
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          fontSize: Dimension.font(20),
+                          fontWeight: FontWeight.w400,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
                       SizedBox(width: Dimension.width(8)),
@@ -494,45 +471,23 @@ class _BookNowState extends State<BookNow> {
                             vertical: Dimension.height(10),
                           ),
                           decoration: BoxDecoration(
-                            gradient: isBooked
-                                ? null
-                                : isSelected
-                                ? const LinearGradient(
-                                    colors: [
-                                      Color(0xFF00C853),
-                                      Color(0xFF00A843),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : null,
                             color: isBooked
                                 ? Colors.red[50]
                                 : isSelected
-                                ? null
-                                : Colors.grey[50],
-                            borderRadius: BorderRadius.circular(
-                              Dimension.width(10),
-                            ),
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).cardColor,
                             border: Border.all(
                               color: isBooked
                                   ? Colors.red[200]!
                                   : isSelected
-                                  ? const Color(0xFF00C853)
-                                  : Colors.black.withOpacity(0.08),
-                              width: isSelected ? 2 : 1,
+                                  ? Colors.transparent
+                                  : Theme.of(context).colorScheme.outline
+                                        .withValues(alpha: 0.3),
+                              width: isSelected ? 0 : Dimension.width(0.3),
                             ),
-                            boxShadow: isSelected && !isBooked
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF00C853,
-                                      ).withOpacity(0.3),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
+                            borderRadius: BorderRadius.circular(
+                              Dimension.width(10),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -554,7 +509,7 @@ class _BookNowState extends State<BookNow> {
                                       ? Colors.red[700]
                                       : isSelected
                                       ? Colors.white
-                                      : Colors.black,
+                                      : Theme.of(context).colorScheme.onPrimary,
                                 ),
                               ),
                             ],
@@ -578,7 +533,7 @@ class _BookNowState extends State<BookNow> {
               child: Container(
                 padding: EdgeInsets.all(Dimension.width(16)),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   border: Border(
                     top: BorderSide(color: Colors.black.withOpacity(0.06)),
                   ),
@@ -596,10 +551,10 @@ class _BookNowState extends State<BookNow> {
                   child: ElevatedButton(
                     onPressed: _showConfirmationDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00C853),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                       elevation: 3,
-                      shadowColor: const Color(0xFF00C853).withOpacity(0.4),
+
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
                           Dimension.width(14),
