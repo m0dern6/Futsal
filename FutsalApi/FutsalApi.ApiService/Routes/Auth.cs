@@ -762,7 +762,11 @@ public class AuthApiEndpointRouteBuilderExtensions
                 return CreateValidationProblem(setPhoneNumberResult);
             }
         }
-        await userManager.UpdateAsync(user);
+        var updateResult = await userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            return CreateValidationProblem(updateResult);
+        }
         return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager, dbContext));
     }
     internal async Task<Ok> SendRevalidateEmailEndpoint(
@@ -852,6 +856,8 @@ public class AuthApiEndpointRouteBuilderExtensions
             Username = await userManager.GetUserNameAsync(user), // username
             PhoneNumber = await userManager.GetPhoneNumberAsync(user), // phone number
             IsPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(user), // isphoneverified
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             TotalBookings = totalBookings,
             TotalReviews = totalReviews,
             TotalFavorites = totalFavorites
