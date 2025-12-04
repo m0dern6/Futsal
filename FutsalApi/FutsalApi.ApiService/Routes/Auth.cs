@@ -716,6 +716,14 @@ public class AuthApiEndpointRouteBuilderExtensions
         {
             return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(infoRequest.NewEmail)));
         }
+        if (!string.IsNullOrEmpty(infoRequest.FirstName))
+        {
+            user.FirstName = infoRequest.FirstName.Trim();
+        }
+        if (!string.IsNullOrEmpty(infoRequest.LastName))
+        {
+            user.LastName = infoRequest.LastName.Trim();
+        }
         if (!string.IsNullOrEmpty(infoRequest.NewPassword))
         {
             if (string.IsNullOrEmpty(infoRequest.OldPassword))
