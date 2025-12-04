@@ -741,12 +741,17 @@ public class AuthApiEndpointRouteBuilderExtensions
         {
             user.ProfileImageId = infoRequest.ProfileImageId.Value;
         }
-        if (!string.IsNullOrEmpty(infoRequest.Username) && user.UserName != infoRequest.Username)
+        // Only update username if it is provided and not empty/null, and is different from current
+        if (infoRequest.Username != null)
         {
-            var setUserNameResult = await userManager.SetUserNameAsync(user, infoRequest.Username);
-            if (!setUserNameResult.Succeeded)
+            var trimmedUsername = infoRequest.Username.Trim();
+            if (!string.IsNullOrEmpty(trimmedUsername) && user.UserName != trimmedUsername)
             {
-                return CreateValidationProblem(setUserNameResult);
+                var setUserNameResult = await userManager.SetUserNameAsync(user, trimmedUsername);
+                if (!setUserNameResult.Succeeded)
+                {
+                    return CreateValidationProblem(setUserNameResult);
+                }
             }
         }
         if (!string.IsNullOrEmpty(infoRequest.PhoneNumber) && user.PhoneNumber != infoRequest.PhoneNumber)
