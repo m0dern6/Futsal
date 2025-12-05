@@ -350,11 +350,11 @@ public class AuthApiEndpointRouteBuilderExtensions
                 user = new User
                 {
                     FirstName = payload.GivenName ?? "",
-                    LastName = payload.FamilyName ?? ""
+                    LastName = payload.FamilyName ?? "",
+                    UserName = payload.Email,
+                    Email = payload.Email,
+                    EmailConfirmed = true // Google emails are already verified
                 };
-                await userManager.SetUserNameAsync(user, payload.Email);
-                await userManager.SetEmailAsync(user, payload.Email);
-                await userManager.SetEmailConfirmedAsync(user, true); // Google emails are already verified
                 
                 var createResult = await userManager.CreateAsync(user);
                 if (!createResult.Succeeded)
