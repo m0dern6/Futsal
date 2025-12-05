@@ -30,7 +30,10 @@ public class SmtpService : ISmtpService
     }
     public async Task SendEmailAsync(string to, string subject, string body)
     {
-        var mailMessage = new MailMessage(_fromEmail, to, subject, body);
+        var mailMessage = new MailMessage(_fromEmail, to, subject, body)
+        {
+            IsBodyHtml = true
+        };
         await _smtpClient.SendMailAsync(mailMessage);
     }
 

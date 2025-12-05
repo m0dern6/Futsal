@@ -22,6 +22,8 @@ using Microsoft.Extensions.Options;
 using FutsalApi.Data.Models; 
 using Auth; 
 using FutsalApi.Data.DTO;
+using Google.Apis.Auth;
+using FutsalApi.ApiService.Services;
 
 
 
@@ -65,18 +67,13 @@ public class AuthApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        routeGroup.MapGet("/login/google", GoogleLogin)
-        .WithName("GoogleLogin")
-        .WithSummary("Redirects to Google for authentication.")
-        .WithDescription("Redirects the user to Google's OAuth 2.0 login page for authentication.")
-        .Produces<RedirectHttpResult>(StatusCodes.Status302Found)
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
-
-        routeGroup.MapGet("/auth/google/callback", GoogleCallback)
-        .WithName("GoogleCallback")
-        .WithSummary("Handles the Google login callback.")
-        .WithDescription("Processes the Google login callback and signs in the user.")
-        .Produces<RedirectHttpResult>(StatusCodes.Status302Found)
+        routeGroup.MapPost("/google", GoogleTokenLogin)
+        .WithName("GoogleTokenLogin")
+        .WithSummary("Authenticates user with Google ID token.")
+        .WithDescription("Verifies Google ID token from Flutter app and creates/logs in user.")
+        .Accepts<GoogleTokenRequest>("application/json")
+        .Produces<Ok<AccessTokenResponse>>(StatusCodes.Status200OK)
+        .Produces<EmptyHttpResult>(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -329,48 +326,56 @@ public class AuthApiEndpointRouteBuilderExtensions
         return TypedResults.Empty;
     }
 
-    internal async Task<Results<RedirectHttpResult, ProblemHttpResult>> GoogleLogin(
-        [FromQuery] string? returnUrl, [FromServices] IServiceProvider sp, HttpContext context)
+    internal async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> GoogleTokenLogin(
+        [FromBody] GoogleTokenRequest request, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
     {
-        var signInManager = sp.GetRequiredService<SignInManager<User>>();
-        var properties = signInManager.ConfigureExternalAuthenticationProperties("Google", returnUrl ?? "/auth/google/callback");
-        if (properties == null)
-        {
-            return TypedResults.Problem("Failed to configure Google login.", statusCode: StatusCodes.Status500InternalServerError);
-        }
-        await context.ChallengeAsync("Google", properties);
-        return TypedResults.Redirect(properties.RedirectUri ?? "/");
-    }
-
-    internal async Task<Results<RedirectHttpResult, ProblemHttpResult>> GoogleCallback(
-        [FromQuery] string? returnUrl, [FromServices] IServiceProvider sp, HttpContext context)
-    {
-        var signInManager = sp.GetRequiredService<SignInManager<User>>();
         var userManager = sp.GetRequiredService<UserManager<User>>();
-        var authenticateResult = await context.AuthenticateAsync("Google");
-        if (!authenticateResult.Succeeded)
+        var signInManager = sp.GetRequiredService<SignInManager<User>>();
+        
+        try
         {
-            return TypedResults.Problem("Google authentication failed.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-        var email = authenticateResult.Principal?.FindFirstValue(ClaimTypes.Email);
-        if (email == null)
-        {
-            return TypedResults.Problem("Google login did not return an email address.", statusCode: StatusCodes.Status400BadRequest);
-        }
-        var user = await userManager.FindByEmailAsync(email);
-        if (user == null)
-        {
-            user = new User();
-            await userManager.SetUserNameAsync(user, email);
-            await userManager.SetEmailAsync(user, email);
-            var createResult = await userManager.CreateAsync(user);
-            if (!createResult.Succeeded)
+            // Verify the Google ID token without audience validation
+            // The Flutter app manages its own Google Sign-In with its own client ID
+            var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+
+            if (payload == null || string.IsNullOrEmpty(payload.Email))
             {
-                return TypedResults.Problem("Failed to create a new user.", statusCode: StatusCodes.Status500InternalServerError);
+                return TypedResults.Problem("Invalid Google token.", statusCode: StatusCodes.Status401Unauthorized);
             }
+
+            // Find or create user
+            var user = await userManager.FindByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    FirstName = payload.GivenName ?? "",
+                    LastName = payload.FamilyName ?? ""
+                };
+                await userManager.SetUserNameAsync(user, payload.Email);
+                await userManager.SetEmailAsync(user, payload.Email);
+                await userManager.SetEmailConfirmedAsync(user, true); // Google emails are already verified
+                
+                var createResult = await userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    return TypedResults.Problem("Failed to create user account.", statusCode: StatusCodes.Status500InternalServerError);
+                }
+            }
+
+            // Sign in the user
+            var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
+            var isPersistent = (useCookies == true) && (useSessionCookies != true);
+            signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+            
+            await signInManager.SignInAsync(user, isPersistent);
+            
+            return TypedResults.Empty;
         }
-        await signInManager.SignInAsync(user, isPersistent: false);
-        return TypedResults.Redirect(returnUrl ?? "/");
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"Google authentication failed: {ex.Message}", statusCode: StatusCodes.Status401Unauthorized);
+        }
     }
 
     internal async Task<Results<Ok, ProblemHttpResult>> LogoutUser(
@@ -716,6 +721,14 @@ public class AuthApiEndpointRouteBuilderExtensions
         {
             return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(infoRequest.NewEmail)));
         }
+        if (!string.IsNullOrEmpty(infoRequest.FirstName))
+        {
+            user.FirstName = infoRequest.FirstName.Trim();
+        }
+        if (!string.IsNullOrEmpty(infoRequest.LastName))
+        {
+            user.LastName = infoRequest.LastName.Trim();
+        }
         if (!string.IsNullOrEmpty(infoRequest.NewPassword))
         {
             if (string.IsNullOrEmpty(infoRequest.OldPassword))
@@ -741,20 +754,17 @@ public class AuthApiEndpointRouteBuilderExtensions
         {
             user.ProfileImageId = infoRequest.ProfileImageId.Value;
         }
-        if (!string.IsNullOrEmpty(infoRequest.FirstName))
+        // Only update username if it is provided and not empty/null, and is different from current
+        if (infoRequest.Username != null)
         {
-            user.FirstName = infoRequest.FirstName;
-        }
-        if (!string.IsNullOrEmpty(infoRequest.LastName))
-        {
-            user.LastName = infoRequest.LastName;
-        }
-        if (!string.IsNullOrEmpty(infoRequest.Username) && user.UserName != infoRequest.Username)
-        {
-            var setUserNameResult = await userManager.SetUserNameAsync(user, infoRequest.Username);
-            if (!setUserNameResult.Succeeded)
+            var trimmedUsername = infoRequest.Username.Trim();
+            if (!string.IsNullOrEmpty(trimmedUsername) && user.UserName != trimmedUsername)
             {
-                return CreateValidationProblem(setUserNameResult);
+                var setUserNameResult = await userManager.SetUserNameAsync(user, trimmedUsername);
+                if (!setUserNameResult.Succeeded)
+                {
+                    return CreateValidationProblem(setUserNameResult);
+                }
             }
         }
         if (!string.IsNullOrEmpty(infoRequest.PhoneNumber) && user.PhoneNumber != infoRequest.PhoneNumber)
