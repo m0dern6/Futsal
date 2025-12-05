@@ -845,10 +845,10 @@ public class AuthApiEndpointRouteBuilderExtensions
 
     private async Task<InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, AppDbContext dbContext)
     {
-        var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
-        var totalBookings = await dbContext.Bookings.CountAsync(b => b.UserId == user.Id);
-        var totalReviews = await dbContext.Reviews.CountAsync(r => r.UserId == user.Id);
-        var totalFavorites = await dbContext.FavouriteFutsalGrounds.CountAsync(f => f.UserId == user.Id);
+        var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images!.FindAsync(user.ProfileImageId.Value) : null;
+        var totalBookings = await dbContext.Bookings!.CountAsync(b => b.UserId == user.Id);
+        var totalReviews = await dbContext.Reviews!.CountAsync(r => r.UserId == user.Id);
+        var totalFavorites = await dbContext.FavouriteFutsalGrounds!.CountAsync(f => f.UserId == user.Id);
 
         return new()
         {
