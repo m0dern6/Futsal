@@ -251,7 +251,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var confirmEmailUrl = linkGenerator.GetUriByName(context, confirmEmailEndpointName, routeValues)
             ?? throw new NotSupportedException($"Could not find endpoint named '{confirmEmailEndpointName}'.");
 
-        await emailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(confirmEmailUrl));
+        _ = emailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(confirmEmailUrl));
     }
 
     internal async Task<Results<Ok, ValidationProblem>> RegisterUser(
@@ -270,7 +270,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var userStore = sp.GetRequiredService<IUserStore<User>>();
         var emailStore = (IUserEmailStore<User>)userStore;
         var email = registration.Email;
-        var username = registration.UserName;
+        var username = string.IsNullOrWhiteSpace(registration.UserName) ? registration.Email : registration.UserName;
         if (string.IsNullOrEmpty(email) || !_emailAddressAttribute.IsValid(email))
         {
             return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(email)));
@@ -296,10 +296,18 @@ public class AuthApiEndpointRouteBuilderExtensions
         [FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
     {
         var signInManager = sp.GetRequiredService<SignInManager<User>>();
+        var userManager = sp.GetRequiredService<UserManager<User>>();
+        
+        var user = await userManager.FindByEmailAsync(login.Email);
+        if (user == null)
+        {
+            return TypedResults.Problem("Invalid email or password.", statusCode: StatusCodes.Status401Unauthorized);
+        }
+        
         var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
         var isPersistent = (useCookies == true) && (useSessionCookies != true);
         signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
-        var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
+        var result = await signInManager.PasswordSignInAsync(user.UserName!, login.Password, isPersistent, lockoutOnFailure: true);
         if (result.RequiresTwoFactor)
         {
             if (!string.IsNullOrEmpty(login.TwoFactorCode))
@@ -469,7 +477,7 @@ public class AuthApiEndpointRouteBuilderExtensions
             var code = await userManager.GeneratePasswordResetTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             var emailSender = sp.GetRequiredService<IEmailSender<User>>();
-            await emailSender.SendPasswordResetCodeAsync(user, resetRequest.Email, HtmlEncoder.Default.Encode(code));
+            _ = emailSender.SendPasswordResetCodeAsync(user, resetRequest.Email, HtmlEncoder.Default.Encode(code));
         }
         return TypedResults.Ok();
     }
@@ -819,7 +827,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var revalidateUrl = linkGenerator.GetUriByName(context, "RevalidateUser", routeValues)
             ?? throw new NotSupportedException("Could not find endpoint named 'RevalidateUser'.");
 
-        await emailSender.SendConfirmationLinkAsync(user, email, $"Revalidate your account: {HtmlEncoder.Default.Encode(revalidateUrl)}");
+        _ = emailSender.SendConfirmationLinkAsync(user, email, $"Revalidate your account: {HtmlEncoder.Default.Encode(revalidateUrl)}");
     }
 
     private ValidationProblem CreateValidationProblem(string errorCode, string errorDescription) =>

@@ -9,13 +9,15 @@ namespace FutsalApi.ApiService.Services;
 public class EmailSender : IEmailSender<User>
 {
     private readonly ISmtpService _smtpService;
+    private readonly ILogger<EmailSender> _logger;
     
-    public EmailSender(ISmtpService smtpService)
+    public EmailSender(ISmtpService smtpService, ILogger<EmailSender> logger)
     {
         _smtpService = smtpService;
+        _logger = logger;
     }
     
-    public async Task SendConfirmationLinkAsync(User user, string email, string confirmationLink)
+    public Task SendConfirmationLinkAsync(User user, string email, string confirmationLink)
     {
         var subject = "Confirm Your Email - Futsal Booking";
         var body = $@"
@@ -30,10 +32,11 @@ public class EmailSender : IEmailSender<User>
             </body>
             </html>
         ";
-        await _smtpService.SendEmailAsync(email, subject, body);
+        _ = SendEmailInBackgroundAsync(email, subject, body);
+        return Task.CompletedTask;
     }
 
-    public async Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
+    public Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
     {
         var subject = "Reset Your Password - Futsal Booking";
         var body = $@"
@@ -49,10 +52,11 @@ public class EmailSender : IEmailSender<User>
             </body>
             </html>
         ";
-        await _smtpService.SendEmailAsync(email, subject, body);
+        _ = SendEmailInBackgroundAsync(email, subject, body);
+        return Task.CompletedTask;
     }
 
-    public async Task SendPasswordResetCodeAsync(User user, string email, string resetCode)
+    public Task SendPasswordResetCodeAsync(User user, string email, string resetCode)
     {
         var subject = "Your Password Reset Code - Futsal Booking";
         var body = $@"
@@ -69,6 +73,30 @@ public class EmailSender : IEmailSender<User>
             </body>
             </html>
         ";
-        await _smtpService.SendEmailAsync(email, subject, body);
+        _ = SendEmailInBackgroundAsync(email, subject, body);
+        return Task.CompletedTask;
+    }
+
+    private async Task SendEmailInBackgroundAsync(string to, string subject, string body)
+    {
+        try
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    await _smtpService.SendEmailAsync(to, subject, body);
+                    _logger.LogInformation("Email sent successfully to {Email}", to);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send email to {Email}. Subject: {Subject}", to, subject);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error starting background email task for {Email}", to);
+        }
     }
 }
