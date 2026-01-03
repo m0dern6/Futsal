@@ -15,6 +15,8 @@ namespace FutsalApi.Data.Migrations
                 table: "Reviews",
                 newName: "ImageId");
 
+            migrationBuilder.Sql("UPDATE \"Reviews\" SET \"ImageId\" = NULL;");
+
             migrationBuilder.AlterColumn<int>(
                 name: "ImageId",
                 table: "Reviews",

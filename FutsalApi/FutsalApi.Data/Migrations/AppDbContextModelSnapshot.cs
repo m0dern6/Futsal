@@ -646,7 +646,7 @@ namespace FutsalApi.Data.Migrations
             modelBuilder.Entity("FutsalApi.Data.DTO.Review", b =>
                 {
                     b.HasOne("FutsalApi.Data.DTO.FutsalGround", "Ground")
-                        .WithMany("Reviews")
+                        .WithMany()
                         .HasForeignKey("GroundId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -656,7 +656,7 @@ namespace FutsalApi.Data.Migrations
                         .HasForeignKey("ImageId");
 
                     b.HasOne("FutsalApi.Data.DTO.User", "User")
-                        .WithMany("Reviews")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
