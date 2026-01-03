@@ -97,6 +97,9 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
     public async Task<bool> CancelBookingAsync(int bookingId, string userId)
     {
         var parameters = new { p_booking_id = bookingId, p_user_id = userId };
-        return await _dbConnection.ExecuteScalarAsync<bool>("cancel_booking", parameters, commandType: CommandType.StoredProcedure);
+        return await _dbConnection.ExecuteScalarAsync<bool>(
+            "SELECT * FROM cancel_booking(@p_booking_id, @p_user_id)", 
+            parameters, 
+            commandType: CommandType.Text);
     }
 }
