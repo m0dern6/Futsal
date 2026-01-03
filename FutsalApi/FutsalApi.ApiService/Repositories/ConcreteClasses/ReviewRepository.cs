@@ -54,6 +54,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
     public new async Task<ReviewResponse?> GetByIdAsync(Expression<Func<Review, bool>> predicate)
     {
         var review = await _dbContext.Reviews
+            .Include(r => r.Image)
             .Where(predicate)
             .Select(r => new ReviewResponse
             {
@@ -63,7 +64,8 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 Rating = r.Rating,
                 UserName = r.User.UserName ?? string.Empty,
                 UserImageId = r.User.ProfileImageId,
-                ReviewImageUrl = r.ImageUrl,
+                ReviewImageId = r.ImageId,
+                ReviewImageUrl = r.Image != null ? r.Image.FilePath : null,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })

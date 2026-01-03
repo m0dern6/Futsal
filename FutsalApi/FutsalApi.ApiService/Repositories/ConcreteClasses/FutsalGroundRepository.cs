@@ -90,6 +90,7 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
         {
             // Get the latest 10 reviews for this ground
             ground.Reviews = await _dbContext.Reviews
+                .Include(r => r.Image)
                 .Where(r => r.GroundId == ground.Id)
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(10)
@@ -102,7 +103,8 @@ public class FutsalGroundRepository : GenericRepository<FutsalGround>, IFutsalGr
                     Rating = r.Rating,
                     Comment = r.Comment,
                     CreatedAt = r.CreatedAt,
-                    ReviewImageUrl = r.ImageUrl
+                    ReviewImageId = r.ImageId,
+                    ReviewImageUrl = r.Image != null ? r.Image.FilePath : null
                 })
                 .ToListAsync();
 
