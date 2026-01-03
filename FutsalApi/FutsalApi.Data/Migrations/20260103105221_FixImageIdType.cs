@@ -1,21 +1,29 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace FutsalApi.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateReviewImage : Migration
+    public partial class FixImageIdType : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "ImageUrl",
-                table: "Reviews",
-                newName: "ImageId");
+            migrationBuilder.DropForeignKey(
+                name: "FK_Reviews_Images_ImageId",
+                table: "Reviews");
 
-            migrationBuilder.Sql("UPDATE \"Reviews\" SET \"ImageId\" = NULL;");
+            migrationBuilder.DropUniqueConstraint(
+                name: "AK_Images_TempId",
+                table: "Images");
+
+            migrationBuilder.DropColumn(
+                name: "TempId",
+                table: "Images");
+
+            // Set ImageId to NULL to avoid casting issues
+            migrationBuilder.Sql("UPDATE \"Reviews\" SET \"ImageId\" = NULL WHERE \"ImageId\" IS NOT NULL;");
 
             migrationBuilder.AlterColumn<int>(
                 name: "ImageId",
@@ -50,10 +58,24 @@ namespace FutsalApi.Data.Migrations
                 oldType: "integer",
                 oldNullable: true);
 
-            migrationBuilder.RenameColumn(
-                name: "ImageId",
+            migrationBuilder.AddColumn<string>(
+                name: "TempId",
+                table: "Images",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddUniqueConstraint(
+                name: "AK_Images_TempId",
+                table: "Images",
+                column: "TempId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Reviews_Images_ImageId",
                 table: "Reviews",
-                newName: "ImageUrl");
+                column: "ImageId",
+                principalTable: "Images",
+                principalColumn: "TempId");
         }
     }
 }
