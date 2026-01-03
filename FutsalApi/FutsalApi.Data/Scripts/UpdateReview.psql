@@ -1,4 +1,4 @@
-﻿CREATE OR REPLACE PROCEDURE update_review(p_review_id INT, p_user_id TEXT, p_rating INT, p_comment TEXT, p_image_url TEXT)
+﻿CREATE OR REPLACE PROCEDURE update_review(p_review_id INT, p_user_id TEXT, p_rating INT, p_comment TEXT, p_image_id INT)
 AS $$
 DECLARE
     v_ground_id INT;
@@ -8,7 +8,7 @@ BEGIN
     SET
         "Rating" = p_rating,
         "Comment" = p_comment,
-        "ImageUrl" = p_image_url,
+        "ImageId" = p_image_id,
         "UpdatedAt" = NOW()
     WHERE "Id" = p_review_id AND "UserId" = p_user_id
     RETURNING "GroundId" INTO v_ground_id;

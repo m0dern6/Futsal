@@ -102,4 +102,14 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
             parameters, 
             commandType: CommandType.Text);
     }
+
+    public async Task<Booking?> GetBookingByIdAndUserIdAsync(int id, string userId)
+    {
+        return await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId);
+    }
+
+    public async Task<bool> HasValidBookingForReviewAsync(int groundId, string userId)
+    {
+        return await _dbContext.Bookings.AnyAsync(b => b.GroundId == groundId && b.UserId == userId && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Cancelled));
+    }
 }

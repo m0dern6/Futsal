@@ -30,6 +30,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
             throw new ArgumentOutOfRangeException("Page and pageSize must be greater than 0.");
 
         return await _dbContext.Reviews
+            .Include(r => r.Image)
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -42,7 +43,8 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 Rating = r.Rating,
                 UserName = r.User.UserName ?? string.Empty,
                 UserImageId = r.User.ProfileImageId,
-                ReviewImageUrl = r.ImageUrl,
+                ReviewImageId = r.ImageId,
+                ReviewImageUrl = r.Image != null ? r.Image.FilePath : null,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })
@@ -78,6 +80,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
         }
 
         return await _dbContext.Reviews
+            .Include(r => r.Image)
             .Where(r => r.GroundId == groundId)
             .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -90,7 +93,8 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
                 Rating = r.Rating,
                 UserName = r.User.UserName ?? string.Empty,
                 UserImageId = r.User.ProfileImageId,
-                ReviewImageUrl = r.ImageUrl,
+                ReviewImageId = r.ImageId,
+                ReviewImageUrl = r.Image != null ? r.Image.FilePath : null,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             })
@@ -114,10 +118,10 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
             p_ground_id = review.GroundId,
             p_rating = review.Rating,
             p_comment = review.Comment,
-            p_image_url = review.ImageUrl
+            p_image_id = review.ImageId
         };
         return await _dbConnection.ExecuteScalarAsync<int>(
-            "SELECT create_review(@p_user_id, @p_ground_id, @p_rating, @p_comment, @p_image_url)",
+            "SELECT create_review(@p_user_id, @p_ground_id, @p_rating, @p_comment, @p_image_id)",
             parameters,
             commandType: CommandType.Text);
     }
@@ -130,7 +134,7 @@ public class ReviewRepository : GenericRepository<Review>, IReviewRepository
             p_user_id = review.UserId,
             p_rating = review.Rating,
             p_comment = review.Comment,
-            p_image_url = review.ImageUrl
+            p_image_id = review.ImageId
         };
 
         await _dbConnection.ExecuteAsync("update_review", parameters, commandType: CommandType.StoredProcedure);

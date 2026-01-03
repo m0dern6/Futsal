@@ -4,6 +4,7 @@ using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.Data.Models;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.Data.DTO;
+using FutsalApi.ApiService.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -147,8 +148,10 @@ public class ReviewApiEndpoints : IEndpoint
         }
     }
 
-    internal async Task<Results<Ok<int>, ProblemHttpResult>> CreateReview(
+    internal async Task<Results<Ok<string>, ProblemHttpResult>> CreateReview(
         [FromServices] IReviewRepository repository,
+        [FromServices] IBookingRepository bookingRepository,
+        [FromServices] AppDbContext dbContext,
         [FromServices] UserManager<User> userManager,
         ClaimsPrincipal claimsPrincipal,
         [FromBody] ReviewRequest reviewRequest)
@@ -158,6 +161,12 @@ public class ReviewApiEndpoints : IEndpoint
             if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
             {
                 return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+
+            var hasValidBooking = await bookingRepository.HasValidBookingForReviewAsync(reviewRequest.GroundId, user.Id);
+            if (!hasValidBooking)
+            {
+                return TypedResults.Problem("You can only review grounds for which you have an accepted or cancelled booking.", statusCode: StatusCodes.Status400BadRequest);
             }
 
             var existingReview = await repository.GetByIdAsync(e => e.GroundId == reviewRequest.GroundId && e.UserId == user.Id);
@@ -172,7 +181,7 @@ public class ReviewApiEndpoints : IEndpoint
                 GroundId = reviewRequest.GroundId,
                 Rating = reviewRequest.Rating,
                 Comment = reviewRequest.Comment,
-                ImageUrl = reviewRequest.ImageId.ToString()
+                ImageId = reviewRequest.ImageId
             };
 
             var reviewId = await repository.CreateReviewAsync(review);
@@ -182,7 +191,7 @@ public class ReviewApiEndpoints : IEndpoint
                 return TypedResults.Problem("Failed to create the review.", statusCode: StatusCodes.Status400BadRequest);
             }
 
-            return TypedResults.Ok(reviewId);
+            return TypedResults.Ok("Review created successfully.");
         }
         catch (Exception ex)
         {
@@ -217,7 +226,7 @@ public class ReviewApiEndpoints : IEndpoint
                 GroundId = updatedReviewRequest.GroundId,
                 Rating = updatedReviewRequest.Rating,
                 Comment = updatedReviewRequest.Comment,
-                ImageUrl = updatedReviewRequest.ImageId.ToString()
+                ImageId = updatedReviewRequest.ImageId
             };
 
             await repository.UpdateReviewAsync(updatedReview);
