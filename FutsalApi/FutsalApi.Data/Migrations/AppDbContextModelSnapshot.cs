@@ -327,8 +327,8 @@ namespace FutsalApi.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("GroundId")
-                        .HasColumnType("text");
+                    b.Property<int>("GroundId")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("ImageId")
                         .HasColumnType("integer");
