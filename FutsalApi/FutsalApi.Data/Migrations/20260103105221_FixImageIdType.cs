@@ -10,17 +10,11 @@ namespace FutsalApi.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Reviews_Images_ImageId",
-                table: "Reviews");
+            migrationBuilder.Sql("ALTER TABLE \"Reviews\" DROP CONSTRAINT IF EXISTS \"FK_Reviews_Images_ImageId\";");
 
-            migrationBuilder.DropUniqueConstraint(
-                name: "AK_Images_TempId",
-                table: "Images");
+            migrationBuilder.Sql("ALTER TABLE \"Images\" DROP CONSTRAINT IF EXISTS \"AK_Images_TempId\";");
 
-            migrationBuilder.DropColumn(
-                name: "TempId",
-                table: "Images");
+            migrationBuilder.Sql("ALTER TABLE \"Images\" DROP COLUMN IF EXISTS \"TempId\";");
 
             // Set ImageId to NULL to avoid casting issues
             migrationBuilder.Sql("UPDATE \"Reviews\" SET \"ImageId\" = NULL WHERE \"ImageId\" IS NOT NULL;");
