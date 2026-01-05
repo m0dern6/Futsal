@@ -29,6 +29,15 @@ public class ReviewApiEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
+        // GET: /Reviews/Remaining
+        routeGroup.MapGet("/Remaining/List", GetRemainingReviews)
+            .WithName("GetRemainingReviews")
+            .WithSummary("Retrieves bookings that need reviews.")
+            .WithDescription("Returns a paginated list of completed or cancelled bookings for which the user hasn't added a review yet.")
+            .Produces<IEnumerable<BookingResponse>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
+
         // GET: /Reviews/Ground/{groundId}
         routeGroup.MapGet("/Ground/{groundId:int}", GetReviewsByGroundId)
             .WithName("GetReviewsByGroundId")
@@ -128,6 +137,49 @@ public class ReviewApiEndpoints : IEndpoint
         }
     }
 
+    internal async Task<Results<Ok<IEnumerable<BookingResponse>>, ProblemHttpResult>> GetRemainingReviews(
+        [FromServices] IBookingRepository bookingRepository,
+        [FromServices] IReviewRepository reviewRepository,
+        [FromServices] UserManager<User> userManager,
+        ClaimsPrincipal claimsPrincipal,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            return TypedResults.Problem(detail: "Page and pageSize must be greater than 0.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        try
+        {
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+            if (user == null)
+            {
+                return TypedResults.Problem("User not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+
+            // Get all completed/cancelled bookings for the user
+            var allBookings = await bookingRepository.GetRemainingReviewsAsync(user.Id, page, pageSize);
+
+            // Filter out bookings where a review already exists
+            var remainingBookings = new List<BookingResponse>();
+            foreach (var booking in allBookings)
+            {
+                var existingReview = await reviewRepository.GetByIdAsync(e => e.GroundId == booking.GroundId && e.UserId == user.Id);
+                if (existingReview == null)
+                {
+                    remainingBookings.Add(booking);
+                }
+            }
+
+            return TypedResults.Ok(remainingBookings.AsEnumerable());
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"An error occurred while retrieving remaining reviews: {ex.Message}");
+        }
+    }
+
     internal async Task<Results<Ok<ReviewResponse>, NotFound, ProblemHttpResult>> GetReviewById(
         [FromServices] IReviewRepository repository,
         int id)
@@ -166,7 +218,7 @@ public class ReviewApiEndpoints : IEndpoint
             var hasValidBooking = await bookingRepository.HasValidBookingForReviewAsync(reviewRequest.GroundId, user.Id);
             if (!hasValidBooking)
             {
-                return TypedResults.Problem("You can only review grounds for which you have an accepted or cancelled booking.", statusCode: StatusCodes.Status400BadRequest);
+                return TypedResults.Problem("You can only review grounds for which you have a completed or cancelled booking.", statusCode: StatusCodes.Status400BadRequest);
             }
 
             var existingReview = await repository.GetByIdAsync(e => e.GroundId == reviewRequest.GroundId && e.UserId == user.Id);

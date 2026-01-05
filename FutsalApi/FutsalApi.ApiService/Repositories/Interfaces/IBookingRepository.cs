@@ -13,4 +13,5 @@ public interface IBookingRepository : IGenericRepository<Booking>
     Task<bool> CancelBookingAsync(int bookingId, string userId);
     Task<Booking?> GetBookingByIdAndUserIdAsync(int id, string userId);
     Task<bool> HasValidBookingForReviewAsync(int groundId, string userId);
+    Task<IEnumerable<BookingResponse>> GetRemainingReviewsAsync(string userId, int page = 1, int pageSize = 10);
 }

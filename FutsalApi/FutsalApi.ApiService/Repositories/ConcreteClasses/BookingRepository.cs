@@ -110,6 +110,34 @@ public class BookingRepository : GenericRepository<Booking>, IBookingRepository
 
     public async Task<bool> HasValidBookingForReviewAsync(int groundId, string userId)
     {
-        return await _dbContext.Bookings.AnyAsync(b => b.GroundId == groundId && b.UserId == userId && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Cancelled));
+        return await _dbContext.Bookings.AnyAsync(b => b.GroundId == groundId && b.UserId == userId && (b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled));
+    }
+
+    public async Task<IEnumerable<BookingResponse>> GetRemainingReviewsAsync(string userId, int page = 1, int pageSize = 10)
+    {
+        if (page <= 0 || pageSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException("Page and pageSize must be greater than 0.");
+        }
+
+        return await _dbContext.Bookings
+            .Where(b => b.UserId == userId && (b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled))
+            .OrderByDescending(b => b.BookingDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(b => new BookingResponse
+            {
+                Id = b.Id,
+                UserId = b.UserId,
+                GroundId = b.GroundId,
+                BookingDate = b.BookingDate,
+                StartTime = b.StartTime,
+                EndTime = b.EndTime,
+                Status = b.Status,
+                TotalAmount = b.TotalAmount,
+                CreatedAt = b.CreatedAt,
+                GroundName = b.Ground.Name
+            })
+            .ToListAsync();
     }
 }
