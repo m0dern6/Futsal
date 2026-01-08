@@ -82,6 +82,8 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<ISmtpService, SmtpService>();
 
+// Register background service for automatic booking status updates
+builder.Services.AddHostedService<BookingStatusUpdateService>();
 
 // Payment Gateway Services
 builder.Services.Configure<KhaltiConfig>(builder.Configuration.GetSection("Khalti"));

@@ -1,9 +1,9 @@
-﻿CREATE OR REPLACE FUNCTION create_review(p_user_id TEXT, p_ground_id INT, p_rating INT, p_comment TEXT, p_image_url TEXT)
+﻿CREATE OR REPLACE FUNCTION create_review(p_user_id TEXT, p_ground_id INT, p_rating INT, p_comment TEXT, p_image_id INT)
 RETURNS TABLE (review_id INT) AS $$
 BEGIN
     -- Insert the new review
-    INSERT INTO "Reviews" ("UserId", "GroundId", "Rating", "Comment", "ImageUrl", "CreatedAt")
-    VALUES (p_user_id, p_ground_id, p_rating, p_comment, p_image_url, NOW())
+    INSERT INTO "Reviews" ("UserId", "GroundId", "Rating", "Comment", "ImageId", "CreatedAt")
+    VALUES (p_user_id, p_ground_id, p_rating, p_comment, p_image_id, NOW())
     RETURNING "Id" INTO review_id;
 
     -- Update the futsal ground's rating

@@ -6,6 +6,7 @@ using System.Security.Claims;
 using FutsalApi.ApiService.Infrastructure;
 using FutsalApi.ApiService.Infrastructure.Auth;
 using FutsalApi.Data.Models;
+using FutsalApi.Data.DTO;
 using FutsalApi.ApiService.Repositories;
 using FutsalApi.ApiService.Repositories.Interfaces;
 using FutsalApi.Data.DTO;
@@ -244,6 +245,17 @@ public class BookingApiEndpoints : IEndpoint
             if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
             {
                 return TypedResults.NotFound();
+            }
+
+            var booking = await repository.GetBookingByIdAndUserIdAsync(id, user.Id);
+            if (booking == null)
+            {
+                return TypedResults.NotFound();
+            }
+
+            if (booking.Status == BookingStatus.Confirmed)
+            {
+                return TypedResults.Problem("Already accepted booking can't be cancelled.", statusCode: StatusCodes.Status400BadRequest);
             }
 
             var result = await repository.CancelBookingAsync(id, user.Id);

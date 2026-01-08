@@ -22,6 +22,8 @@ using Microsoft.Extensions.Options;
 using FutsalApi.Data.Models; 
 using Auth; 
 using FutsalApi.Data.DTO;
+using Google.Apis.Auth;
+using FutsalApi.ApiService.Services;
 
 
 
@@ -65,18 +67,13 @@ public class AuthApiEndpointRouteBuilderExtensions
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        routeGroup.MapGet("/login/google", GoogleLogin)
-        .WithName("GoogleLogin")
-        .WithSummary("Redirects to Google for authentication.")
-        .WithDescription("Redirects the user to Google's OAuth 2.0 login page for authentication.")
-        .Produces<RedirectHttpResult>(StatusCodes.Status302Found)
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
-
-        routeGroup.MapGet("/auth/google/callback", GoogleCallback)
-        .WithName("GoogleCallback")
-        .WithSummary("Handles the Google login callback.")
-        .WithDescription("Processes the Google login callback and signs in the user.")
-        .Produces<RedirectHttpResult>(StatusCodes.Status302Found)
+        routeGroup.MapPost("/google", GoogleTokenLogin)
+        .WithName("GoogleTokenLogin")
+        .WithSummary("Authenticates user with Google ID token.")
+        .WithDescription("Verifies Google ID token from Flutter app and creates/logs in user.")
+        .Accepts<GoogleTokenRequest>("application/json")
+        .Produces<Ok<AccessTokenResponse>>(StatusCodes.Status200OK)
+        .Produces<EmptyHttpResult>(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -254,7 +251,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var confirmEmailUrl = linkGenerator.GetUriByName(context, confirmEmailEndpointName, routeValues)
             ?? throw new NotSupportedException($"Could not find endpoint named '{confirmEmailEndpointName}'.");
 
-        await emailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(confirmEmailUrl));
+        _ = emailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(confirmEmailUrl));
     }
 
     internal async Task<Results<Ok, ValidationProblem>> RegisterUser(
@@ -273,7 +270,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var userStore = sp.GetRequiredService<IUserStore<User>>();
         var emailStore = (IUserEmailStore<User>)userStore;
         var email = registration.Email;
-        var username = registration.UserName;
+        var username = string.IsNullOrWhiteSpace(registration.UserName) ? registration.Email : registration.UserName;
         if (string.IsNullOrEmpty(email) || !_emailAddressAttribute.IsValid(email))
         {
             return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(email)));
@@ -299,10 +296,18 @@ public class AuthApiEndpointRouteBuilderExtensions
         [FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
     {
         var signInManager = sp.GetRequiredService<SignInManager<User>>();
+        var userManager = sp.GetRequiredService<UserManager<User>>();
+        
+        var user = await userManager.FindByEmailAsync(login.Email);
+        if (user == null)
+        {
+            return TypedResults.Problem("Invalid email or password.", statusCode: StatusCodes.Status401Unauthorized);
+        }
+        
         var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
         var isPersistent = (useCookies == true) && (useSessionCookies != true);
         signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
-        var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
+        var result = await signInManager.PasswordSignInAsync(user.UserName!, login.Password, isPersistent, lockoutOnFailure: true);
         if (result.RequiresTwoFactor)
         {
             if (!string.IsNullOrEmpty(login.TwoFactorCode))
@@ -329,48 +334,56 @@ public class AuthApiEndpointRouteBuilderExtensions
         return TypedResults.Empty;
     }
 
-    internal async Task<Results<RedirectHttpResult, ProblemHttpResult>> GoogleLogin(
-        [FromQuery] string? returnUrl, [FromServices] IServiceProvider sp, HttpContext context)
+    internal async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> GoogleTokenLogin(
+        [FromBody] GoogleTokenRequest request, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp)
     {
-        var signInManager = sp.GetRequiredService<SignInManager<User>>();
-        var properties = signInManager.ConfigureExternalAuthenticationProperties("Google", returnUrl ?? "/auth/google/callback");
-        if (properties == null)
-        {
-            return TypedResults.Problem("Failed to configure Google login.", statusCode: StatusCodes.Status500InternalServerError);
-        }
-        await context.ChallengeAsync("Google", properties);
-        return TypedResults.Redirect(properties.RedirectUri ?? "/");
-    }
-
-    internal async Task<Results<RedirectHttpResult, ProblemHttpResult>> GoogleCallback(
-        [FromQuery] string? returnUrl, [FromServices] IServiceProvider sp, HttpContext context)
-    {
-        var signInManager = sp.GetRequiredService<SignInManager<User>>();
         var userManager = sp.GetRequiredService<UserManager<User>>();
-        var authenticateResult = await context.AuthenticateAsync("Google");
-        if (!authenticateResult.Succeeded)
+        var signInManager = sp.GetRequiredService<SignInManager<User>>();
+        
+        try
         {
-            return TypedResults.Problem("Google authentication failed.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-        var email = authenticateResult.Principal?.FindFirstValue(ClaimTypes.Email);
-        if (email == null)
-        {
-            return TypedResults.Problem("Google login did not return an email address.", statusCode: StatusCodes.Status400BadRequest);
-        }
-        var user = await userManager.FindByEmailAsync(email);
-        if (user == null)
-        {
-            user = new User();
-            await userManager.SetUserNameAsync(user, email);
-            await userManager.SetEmailAsync(user, email);
-            var createResult = await userManager.CreateAsync(user);
-            if (!createResult.Succeeded)
+            // Verify the Google ID token without audience validation
+            // The Flutter app manages its own Google Sign-In with its own client ID
+            var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+
+            if (payload == null || string.IsNullOrEmpty(payload.Email))
             {
-                return TypedResults.Problem("Failed to create a new user.", statusCode: StatusCodes.Status500InternalServerError);
+                return TypedResults.Problem("Invalid Google token.", statusCode: StatusCodes.Status401Unauthorized);
             }
+
+            // Find or create user
+            var user = await userManager.FindByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    FirstName = payload.GivenName ?? "",
+                    LastName = payload.FamilyName ?? "",
+                    UserName = payload.Email,
+                    Email = payload.Email,
+                    EmailConfirmed = true // Google emails are already verified
+                };
+                
+                var createResult = await userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    return TypedResults.Problem("Failed to create user account.", statusCode: StatusCodes.Status500InternalServerError);
+                }
+            }
+
+            // Sign in the user
+            var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
+            var isPersistent = (useCookies == true) && (useSessionCookies != true);
+            signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+            
+            await signInManager.SignInAsync(user, isPersistent);
+            
+            return TypedResults.Empty;
         }
-        await signInManager.SignInAsync(user, isPersistent: false);
-        return TypedResults.Redirect(returnUrl ?? "/");
+        catch (Exception ex)
+        {
+            return TypedResults.Problem($"Google authentication failed: {ex.Message}", statusCode: StatusCodes.Status401Unauthorized);
+        }
     }
 
     internal async Task<Results<Ok, ProblemHttpResult>> LogoutUser(
@@ -464,7 +477,7 @@ public class AuthApiEndpointRouteBuilderExtensions
             var code = await userManager.GeneratePasswordResetTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             var emailSender = sp.GetRequiredService<IEmailSender<User>>();
-            await emailSender.SendPasswordResetCodeAsync(user, resetRequest.Email, HtmlEncoder.Default.Encode(code));
+            _ = emailSender.SendPasswordResetCodeAsync(user, resetRequest.Email, HtmlEncoder.Default.Encode(code));
         }
         return TypedResults.Ok();
     }
@@ -716,6 +729,14 @@ public class AuthApiEndpointRouteBuilderExtensions
         {
             return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(infoRequest.NewEmail)));
         }
+        if (!string.IsNullOrEmpty(infoRequest.FirstName))
+        {
+            user.FirstName = infoRequest.FirstName.Trim();
+        }
+        if (!string.IsNullOrEmpty(infoRequest.LastName))
+        {
+            user.LastName = infoRequest.LastName.Trim();
+        }
         if (!string.IsNullOrEmpty(infoRequest.NewPassword))
         {
             if (string.IsNullOrEmpty(infoRequest.OldPassword))
@@ -741,12 +762,17 @@ public class AuthApiEndpointRouteBuilderExtensions
         {
             user.ProfileImageId = infoRequest.ProfileImageId.Value;
         }
-        if (!string.IsNullOrEmpty(infoRequest.Username) && user.UserName != infoRequest.Username)
+        // Only update username if it is provided and not empty/null, and is different from current
+        if (infoRequest.Username != null)
         {
-            var setUserNameResult = await userManager.SetUserNameAsync(user, infoRequest.Username);
-            if (!setUserNameResult.Succeeded)
+            var trimmedUsername = infoRequest.Username.Trim();
+            if (!string.IsNullOrEmpty(trimmedUsername) && user.UserName != trimmedUsername)
             {
-                return CreateValidationProblem(setUserNameResult);
+                var setUserNameResult = await userManager.SetUserNameAsync(user, trimmedUsername);
+                if (!setUserNameResult.Succeeded)
+                {
+                    return CreateValidationProblem(setUserNameResult);
+                }
             }
         }
         if (!string.IsNullOrEmpty(infoRequest.PhoneNumber) && user.PhoneNumber != infoRequest.PhoneNumber)
@@ -757,7 +783,11 @@ public class AuthApiEndpointRouteBuilderExtensions
                 return CreateValidationProblem(setPhoneNumberResult);
             }
         }
-        await userManager.UpdateAsync(user);
+        var updateResult = await userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            return CreateValidationProblem(updateResult);
+        }
         return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager, dbContext));
     }
     internal async Task<Ok> SendRevalidateEmailEndpoint(
@@ -797,7 +827,7 @@ public class AuthApiEndpointRouteBuilderExtensions
         var revalidateUrl = linkGenerator.GetUriByName(context, "RevalidateUser", routeValues)
             ?? throw new NotSupportedException("Could not find endpoint named 'RevalidateUser'.");
 
-        await emailSender.SendConfirmationLinkAsync(user, email, $"Revalidate your account: {HtmlEncoder.Default.Encode(revalidateUrl)}");
+        _ = emailSender.SendConfirmationLinkAsync(user, email, $"Revalidate your account: {HtmlEncoder.Default.Encode(revalidateUrl)}");
     }
 
     private ValidationProblem CreateValidationProblem(string errorCode, string errorDescription) =>
@@ -833,10 +863,10 @@ public class AuthApiEndpointRouteBuilderExtensions
 
     private async Task<InfoResponse> CreateInfoResponseAsync(User user, UserManager<User> userManager, AppDbContext dbContext)
     {
-        var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images.FindAsync(user.ProfileImageId.Value) : null;
-        var totalBookings = await dbContext.Bookings.CountAsync(b => b.UserId == user.Id);
-        var totalReviews = await dbContext.Reviews.CountAsync(r => r.UserId == user.Id);
-        var totalFavorites = await dbContext.FavouriteFutsalGrounds.CountAsync(f => f.UserId == user.Id);
+        var profileImage = user.ProfileImageId.HasValue ? await dbContext.Images!.FindAsync(user.ProfileImageId.Value) : null;
+        var totalBookings = await dbContext.Bookings!.CountAsync(b => b.UserId == user.Id);
+        var totalReviews = await dbContext.Reviews!.CountAsync(r => r.UserId == user.Id);
+        var totalFavorites = await dbContext.FavouriteFutsalGrounds!.CountAsync(f => f.UserId == user.Id);
 
         return new()
         {
@@ -847,6 +877,8 @@ public class AuthApiEndpointRouteBuilderExtensions
             Username = await userManager.GetUserNameAsync(user), // username
             PhoneNumber = await userManager.GetPhoneNumberAsync(user), // phone number
             IsPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(user), // isphoneverified
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             TotalBookings = totalBookings,
             TotalReviews = totalReviews,
             TotalFavorites = totalFavorites

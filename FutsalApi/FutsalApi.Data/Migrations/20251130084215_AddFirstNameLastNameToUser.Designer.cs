@@ -3,6 +3,7 @@ using System;
 using FutsalApi.Data.DTO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FutsalApi.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251130084215_AddFirstNameLastNameToUser")]
+    partial class AddFirstNameLastNameToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -330,8 +333,8 @@ namespace FutsalApi.Data.Migrations
                     b.Property<int>("GroundId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ImageId")
-                        .HasColumnType("integer");
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
@@ -346,8 +349,6 @@ namespace FutsalApi.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GroundId");
-
-                    b.HasIndex("ImageId");
 
                     b.HasIndex("UserId");
 
@@ -651,10 +652,6 @@ namespace FutsalApi.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FutsalApi.Data.DTO.Image", "Image")
-                        .WithMany()
-                        .HasForeignKey("ImageId");
-
                     b.HasOne("FutsalApi.Data.DTO.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -662,8 +659,6 @@ namespace FutsalApi.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Ground");
-
-                    b.Navigation("Image");
 
                     b.Navigation("User");
                 });
