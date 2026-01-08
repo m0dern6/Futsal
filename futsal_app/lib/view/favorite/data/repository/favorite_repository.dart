@@ -8,7 +8,7 @@ class FavoriteRepository {
   // Get all favorite futsals
   Future<List<FutsalModel>> getFavoriteFutsals() async {
     try {
-      final response = await _apiService.get(ApiConst.favoritesFutsal);
+      final response = await _apiService.get(ApiConst.getFavoritesFutsal);
 
       final List<dynamic> data = response.data as List<dynamic>;
       return data.map((json) => FutsalModel.fromJson(json)).toList();
@@ -20,7 +20,7 @@ class FavoriteRepository {
   // Add futsal to favorites (if you have this endpoint)
   Future<void> addToFavorites(int futsalId) async {
     try {
-      await _apiService.post('${ApiConst.favoritesFutsal}/$futsalId');
+      await _apiService.post('${ApiConst.manageFavoriteFutsal}/$futsalId');
     } catch (e) {
       throw ApiException('Failed to add to favorites: ${e.toString()}');
     }
@@ -29,7 +29,7 @@ class FavoriteRepository {
   // Remove futsal from favorites (if you have this endpoint)
   Future<void> removeFromFavorites(int futsalId) async {
     try {
-      await _apiService.delete('${ApiConst.favoritesFutsal}/$futsalId');
+      await _apiService.delete('${ApiConst.manageFavoriteFutsal}/$futsalId');
     } catch (e) {
       throw ApiException('Failed to remove from favorites: ${e.toString()}');
     }

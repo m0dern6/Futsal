@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:ui/view/bookings/bookings.dart';
-import 'package:ui/view/favorite/favorite.dart';
+import 'package:ui/view/home/map_view.dart';
 import 'package:ui/view/profile/profile.dart';
 import 'dart:ui';
 import 'home_screen.dart';
@@ -18,6 +21,47 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _requestPermissions();
+  }
+
+  Future<void> _requestPermissions() async {
+    // Request location permission
+    await _requestLocationPermission();
+
+    // Request notification permission
+    await _requestNotificationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      await Geolocator.requestPermission();
+    }
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    // Request notification permission using permission_handler
+    // This properly handles Android 13+ runtime permission
+    final status = await Permission.notification.status;
+
+    if (status.isDenied || status.isLimited) {
+      // Request the permission - this will show the system dialog
+      await Permission.notification.request();
+    }
+
+    // Also request FCM permission for iOS
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      provisional: false,
+    );
+  }
+
   final List<_NavData> _items = const [
     _NavData(
       label: 'Home',
@@ -25,9 +69,9 @@ class _HomeState extends State<Home> {
       selectedAssetPath: 'assets/icons/selected_home.png',
     ),
     _NavData(
-      label: 'Favorite',
-      assetPath: 'assets/icons/favorite.png',
-      selectedAssetPath: 'assets/icons/selected_favorite.png',
+      label: 'Map',
+      assetPath: 'assets/icons/map.png',
+      selectedAssetPath: 'assets/icons/map.png',
     ),
     _NavData(
       label: 'Booking',
@@ -105,7 +149,12 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildBody() {
-    final screens = [HomeScreen(), Favorite(), BookingsScreen(), Profile()];
+    final screens = [
+      const HomeScreen(),
+      const MapView(),
+      const BookingsScreen(),
+      const Profile(),
+    ];
 
     if (_currentIndex >= 0 && _currentIndex < screens.length) {
       return screens[_currentIndex];
