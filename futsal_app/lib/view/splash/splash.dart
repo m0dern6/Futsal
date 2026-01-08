@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:lottie/lottie.dart';
 import 'package:ui/view/auth/bloc/auth_bloc.dart';
 import 'package:ui/view/auth/bloc/auth_event.dart';
@@ -29,7 +30,22 @@ class _SplashState extends State<Splash> {
   @override
   void initState() {
     super.initState();
-    _checkAuthAndNavigate();
+    _checkForUpdateAndNavigate();
+  }
+
+  Future<void> _checkForUpdateAndNavigate() async {
+    try {
+      final updateInfo = await InAppUpdate.checkForUpdate();
+      if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
+        await InAppUpdate.performImmediateUpdate();
+      }
+    } catch (e) {
+      debugPrint('Update check failed: $e');
+    }
+
+    if (mounted) {
+      _checkAuthAndNavigate();
+    }
   }
 
   void _checkAuthAndNavigate() {
