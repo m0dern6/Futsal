@@ -64,7 +64,7 @@ class FutsalRepository {
   // Get favorite futsal grounds
   Future<List<FutsalModel>> getFavoriteFutsals() async {
     try {
-      final response = await _apiService.get(ApiConst.favoritesFutsal);
+      final response = await _apiService.get(ApiConst.getFavoritesFutsal);
 
       if (response.data is List) {
         return (response.data as List)
