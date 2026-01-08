@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ui/view/bookings/bookings.dart';
 import '../../core/dimension.dart';
 import '../auth/bloc/auth_bloc.dart';
 import '../auth/bloc/auth_event.dart';
@@ -8,12 +7,14 @@ import '../auth/bloc/auth_state.dart';
 import '../auth/login.dart';
 import '../edit_profile/edit_profile.dart';
 import '../settings/settings.dart';
+import 'notifications_settings.dart';
+import 'privacy_policy.dart';
+import 'help_support.dart';
 import 'bloc/profile_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../core/simple_theme.dart';
 import 'bloc/profile_event.dart';
 import 'bloc/profile_state.dart';
-import 'data/model/user_info_model.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -150,283 +151,417 @@ class _ProfileState extends State<Profile> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: Dimension.width(20),
-            vertical: Dimension.height(20),
-          ),
-          child: Column(
-            children: [
-              BlocBuilder<ProfileBloc, ProfileState>(
-                builder: (context, state) {
-                  if (state is ProfileLoading) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).primaryColor,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          context.read<ProfileBloc>().add(const LoadUserInfo());
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: Dimension.width(20),
+              vertical: Dimension.height(20),
+            ),
+            child: Column(
+              children: [
+                BlocBuilder<ProfileBloc, ProfileState>(
+                  builder: (context, state) {
+                    if (state is ProfileLoading) {
+                      return Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(Dimension.width(10)),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(
+                            Dimension.width(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              children: [
+                                SizedBox(
+                                  width: Dimension.width(40),
+                                  height: Dimension.height(24),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: Dimension.height(4)),
+                                Text(
+                                  'Bookings',
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(13),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: Dimension.width(1),
+                              height: Dimension.height(40),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withOpacity(0.2),
+                            ),
+                            Column(
+                              children: [
+                                SizedBox(
+                                  width: Dimension.width(40),
+                                  height: Dimension.height(24),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: Dimension.height(4)),
+                                Text(
+                                  'Favorites',
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(13),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: Dimension.width(1),
+                              height: Dimension.height(40),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withOpacity(0.2),
+                            ),
+                            Column(
+                              children: [
+                                SizedBox(
+                                  width: Dimension.width(40),
+                                  height: Dimension.height(24),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: Dimension.height(4)),
+                                Text(
+                                  'Reviews',
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(13),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    if (state is ProfileError) {
+                      return Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(Dimension.width(20)),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(
+                            Dimension.width(8),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: Dimension.width(48),
+                              color: Colors.grey[400],
+                            ),
+                            SizedBox(height: Dimension.height(12)),
+                            Text(
+                              'Failed to load profile',
+                              style: TextStyle(
+                                fontSize: Dimension.font(16),
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: Dimension.height(8)),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: Dimension.width(16),
+                              ),
+                              child: Text(
+                                state.message,
+                                style: TextStyle(
+                                  fontSize: Dimension.font(13),
+                                  color: Colors.grey[500],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: Dimension.height(12)),
+                            ElevatedButton(
+                              onPressed: () => context.read<ProfileBloc>().add(
+                                const LoadUserInfo(),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    if (state is ProfileLoaded) {
+                      final userInfo = state.userInfo;
+                      return Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(Dimension.width(10)),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(
+                            Dimension.width(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  userInfo.totalBookings,
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(20),
+                                    fontWeight: FontWeight.w400,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                Text(
+                                  'Bookings',
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(13),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: Dimension.width(1),
+                              height: Dimension.height(40),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withOpacity(0.2),
+                            ),
+                            Column(
+                              children: [
+                                Text(
+                                  userInfo.totalFavorites,
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(20),
+                                    fontWeight: FontWeight.w400,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                Text(
+                                  'Favorites',
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(13),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: Dimension.width(1),
+                              height: Dimension.height(40),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withOpacity(0.2),
+                            ),
+                            Column(
+                              children: [
+                                Text(
+                                  userInfo.totalReviews,
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(20),
+                                    fontWeight: FontWeight.w400,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                Text(
+                                  'Reviews',
+                                  style: TextStyle(
+                                    fontSize: Dimension.font(13),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return const SizedBox.shrink();
+                  },
+                ),
+                SizedBox(height: Dimension.height(20)),
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: Dimension.height(10)),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(Dimension.width(14)),
+                    border: Border.all(color: Colors.black.withOpacity(0.05)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: Dimension.width(10),
+                        offset: Offset(0, Dimension.height(4)),
+                      ),
+                    ],
+                  ),
+                  child: SwitchListTile.adaptive(
+                    value: context.watch<ThemeNotifier>().isDark,
+                    onChanged: (v) => context.read<ThemeNotifier>().setDark(v),
+                    shape: Border.all(color: Colors.transparent),
+                    trackOutlineColor: WidgetStateProperty.all(
+                      Colors.transparent,
+                    ),
+                    activeTrackColor: Theme.of(context).colorScheme.primary,
+                    inactiveTrackColor: Colors.grey[400],
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    title: Center(
+                      child: Text(
+                        context.read<ThemeNotifier>().isDark
+                            ? 'Light Mode'
+                            : 'Dark Mode',
+                        style: TextStyle(
+                          fontSize: Dimension.font(16),
+                          fontWeight: FontWeight.w400,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
-                    );
-                  }
-
-                  if (state is ProfileError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: Dimension.width(64),
-                            color: Colors.grey[400],
-                          ),
-                          SizedBox(height: Dimension.height(16)),
-                          Text(
-                            'Failed to load profile',
-                            style: TextStyle(
-                              fontSize: Dimension.font(16),
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: Dimension.height(8)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: Dimension.width(32),
-                            ),
-                            child: Text(
-                              state.message,
-                              style: TextStyle(
-                                fontSize: Dimension.font(13),
-                                color: Colors.grey[500],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          SizedBox(height: Dimension.height(16)),
-                          ElevatedButton(
-                            onPressed: () => context.read<ProfileBloc>().add(
-                              const LoadUserInfo(),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).primaryColor,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+                    ),
+                    secondary: Container(
+                      width: Dimension.width(35),
+                      height: Dimension.width(35),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: Dimension.width(6),
+                        vertical: Dimension.width(6),
                       ),
-                    );
-                  }
-
-                  if (state is ProfileLoaded) {
-                    final userInfo = state.userInfo;
-                    return Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(Dimension.width(10)),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(
+                          Dimension.width(10),
+                        ),
+                        color: context.read<ThemeNotifier>().isDark
+                            ? Colors.deepPurpleAccent
+                            : Colors.deepPurpleAccent.withOpacity(0.2),
+                      ),
+                      child: Image.asset(
+                        context.read<ThemeNotifier>().isDark
+                            ? 'assets/icons/sun.png'
+                            : 'assets/icons/moon.png',
+                        width: Dimension.width(12),
+                        height: Dimension.width(12),
+                        color: context.read<ThemeNotifier>().isDark
+                            ? Colors.white
+                            : Colors.deepPurpleAccent,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: Dimension.height(20)),
+                _buildMenuItem(),
+                SizedBox(height: Dimension.height(20)),
+                ElevatedButton(
+                  onPressed: () {
+                    _showLogoutDialog(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      Colors.red.withOpacity(
+                        context.read<ThemeNotifier>().isDark ? 0.3 : 0.2,
+                      ),
+                    ),
+                    elevation: WidgetStateProperty.all(0),
+                    padding: WidgetStateProperty.all(
+                      EdgeInsets.symmetric(vertical: Dimension.height(12)),
+                    ),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(Dimension.width(8)),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Column(
-                            children: [
-                              Text(
-                                userInfo.totalBookings,
-                                style: TextStyle(
-                                  fontSize: Dimension.font(20),
-                                  fontWeight: FontWeight.w400,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                              Text(
-                                'Bookings',
-                                style: TextStyle(
-                                  fontSize: Dimension.font(13),
-                                  color: Theme.of(context).colorScheme.onPrimary
-                                      .withValues(alpha: 0.6),
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            width: Dimension.width(1),
-                            height: Dimension.height(40),
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withOpacity(0.2),
-                          ),
-                          Column(
-                            children: [
-                              Text(
-                                userInfo.totalFavorites,
-                                style: TextStyle(
-                                  fontSize: Dimension.font(20),
-                                  fontWeight: FontWeight.w400,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                              Text(
-                                'Favorites',
-                                style: TextStyle(
-                                  fontSize: Dimension.font(13),
-                                  color: Theme.of(context).colorScheme.onPrimary
-                                      .withValues(alpha: 0.6),
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            width: Dimension.width(1),
-                            height: Dimension.height(40),
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withOpacity(0.2),
-                          ),
-                          Column(
-                            children: [
-                              Text(
-                                userInfo.totalReviews,
-                                style: TextStyle(
-                                  fontSize: Dimension.font(20),
-                                  fontWeight: FontWeight.w400,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                              Text(
-                                'Reviews',
-                                style: TextStyle(
-                                  fontSize: Dimension.font(13),
-                                  color: Theme.of(context).colorScheme.onPrimary
-                                      .withValues(alpha: 0.6),
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
-              SizedBox(height: Dimension.height(20)),
-              Container(
-                padding: EdgeInsets.symmetric(vertical: Dimension.height(10)),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(Dimension.width(14)),
-                  border: Border.all(color: Colors.black.withOpacity(0.05)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: Dimension.width(10),
-                      offset: Offset(0, Dimension.height(4)),
-                    ),
-                  ],
-                ),
-                child: SwitchListTile.adaptive(
-                  value: context.watch<ThemeNotifier>().isDark,
-                  onChanged: (v) => context.read<ThemeNotifier>().setDark(v),
-                  shape: Border.all(color: Colors.transparent),
-                  trackOutlineColor: WidgetStateProperty.all(
-                    Colors.transparent,
-                  ),
-                  activeTrackColor: Theme.of(context).colorScheme.primary,
-                  inactiveTrackColor: Colors.grey[400],
-                  thumbColor: WidgetStateProperty.all(Colors.white),
-                  title: Center(
-                    child: Text(
-                      context.read<ThemeNotifier>().isDark
-                          ? 'Light Mode'
-                          : 'Dark Mode',
-                      style: TextStyle(
-                        fontSize: Dimension.font(16),
-                        fontWeight: FontWeight.w400,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
                     ),
                   ),
-                  secondary: Container(
-                    width: Dimension.width(35),
-                    height: Dimension.width(35),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Dimension.width(6),
-                      vertical: Dimension.width(6),
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimension.width(10)),
-                      color: context.read<ThemeNotifier>().isDark
-                          ? Colors.deepPurpleAccent
-                          : Colors.deepPurpleAccent.withOpacity(0.2),
-                    ),
-                    child: Image.asset(
-                      context.read<ThemeNotifier>().isDark
-                          ? 'assets/icons/sun.png'
-                          : 'assets/icons/moon.png',
-                      width: Dimension.width(12),
-                      height: Dimension.width(12),
-                      color: context.read<ThemeNotifier>().isDark
-                          ? Colors.white
-                          : Colors.deepPurpleAccent,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: Dimension.height(20)),
-              _buildMenuItem(),
-              SizedBox(height: Dimension.height(20)),
-              ElevatedButton(
-                onPressed: () {
-                  _showLogoutDialog(context);
-                },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                    Colors.red.withOpacity(
-                      context.read<ThemeNotifier>().isDark ? 0.3 : 0.2,
-                    ),
-                  ),
-                  elevation: WidgetStateProperty.all(0),
-                  padding: WidgetStateProperty.all(
-                    EdgeInsets.symmetric(vertical: Dimension.height(12)),
-                  ),
-                  shape: WidgetStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(Dimension.width(8)),
-                    ),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/icons/logout.png',
-                      width: Dimension.width(20),
-                      height: Dimension.width(20),
-                      color: Colors.red,
-                    ),
-                    SizedBox(width: Dimension.width(10)),
-                    Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontSize: Dimension.font(18),
-                        fontWeight: FontWeight.w400,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/icons/logout.png',
+                        width: Dimension.width(20),
+                        height: Dimension.width(20),
                         color: Colors.red,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: Dimension.width(10)),
+                      Text(
+                        'Logout',
+                        style: TextStyle(
+                          fontSize: Dimension.font(18),
+                          fontWeight: FontWeight.w400,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -528,44 +663,75 @@ class _ProfileState extends State<Profile> {
               ),
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                  width: Dimension.height(1),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsSettingsScreen(),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.1),
+                    width: Dimension.height(1),
+                  ),
                 ),
               ),
-            ),
-            child: menuItems(
-              Colors.deepPurpleAccent,
-              'assets/icons/notification.png',
-              'Notifications',
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                  width: Dimension.height(1),
-                ),
+              child: menuItems(
+                Colors.deepPurpleAccent,
+                'assets/icons/notification.png',
+                'Notifications',
               ),
             ),
-            child: menuItems(
-              Colors.orangeAccent,
-              'assets/icons/privacyPolicy.png',
-              'Privacy & Security',
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyScreen(),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.1),
+                    width: Dimension.height(1),
+                  ),
+                ),
+              ),
+              child: menuItems(
+                Colors.orangeAccent,
+                'assets/icons/privacyPolicy.png',
+                'Privacy & Security',
+              ),
             ),
           ),
-          Container(
-            decoration: BoxDecoration(color: Colors.transparent),
-            child: menuItems(
-              Colors.redAccent,
-              'assets/icons/helpSupport.png',
-              'Help & Support',
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const HelpSupportScreen(),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(color: Colors.transparent),
+              child: menuItems(
+                Colors.redAccent,
+                'assets/icons/helpSupport.png',
+                'Help & Support',
+              ),
             ),
           ),
         ],
@@ -714,57 +880,6 @@ class _ProfileState extends State<Profile> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final VoidCallback? onViewTap;
-  const _StatItem({required this.label, required this.value, this.onViewTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: Dimension.font(20),
-            fontWeight: FontWeight.w800,
-            color: Theme.of(context).primaryColor,
-          ),
-        ),
-        SizedBox(height: Dimension.height(4)),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: Dimension.font(13),
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (onViewTap != null) ...[
-          SizedBox(height: Dimension.height(4)),
-          TextButton(
-            onPressed: onViewTap,
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size(Dimension.width(40), Dimension.height(20)),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              'View',
-              style: TextStyle(
-                fontSize: Dimension.font(11),
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-          ),
-        ],
-      ],
     );
   }
 }

@@ -13,10 +13,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool pushNotifications = true;
-  bool emailNotifications = false;
-  bool smsNotifications = false;
-  bool promotionalOffers = false;
-  bool twoFactorAuth = false;
 
   @override
   Widget build(BuildContext context) {
@@ -107,56 +103,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                _SwitchTile(
-                  leading: Icons.notifications_outlined,
-                  title: 'Push Notifications',
-                  subtitle: 'Get notified about bookings',
-                  value: pushNotifications,
-                  onChanged: (value) {
-                    setState(() {
-                      pushNotifications = value;
-                    });
-                  },
-                  showBorder: true,
-                ),
-                _SwitchTile(
-                  leading: Icons.email_outlined,
-                  title: 'Email Notifications',
-                  subtitle: 'Receive emails about updates',
-                  value: emailNotifications,
-                  onChanged: (value) {
-                    setState(() {
-                      emailNotifications = value;
-                    });
-                  },
-                  showBorder: true,
-                ),
-                _SwitchTile(
-                  leading: Icons.sms_outlined,
-                  title: 'SMS Notifications',
-                  subtitle: 'Get text messages',
-                  value: smsNotifications,
-                  onChanged: (value) {
-                    setState(() {
-                      smsNotifications = value;
-                    });
-                  },
-                  showBorder: true,
-                ),
-                _SwitchTile(
-                  leading: Icons.local_offer_outlined,
-                  title: 'Promotional Offers',
-                  subtitle: 'Receive special offers',
-                  value: promotionalOffers,
-                  onChanged: (value) {
-                    setState(() {
-                      promotionalOffers = value;
-                    });
-                  },
-                ),
-              ],
+            child: _SwitchTile(
+              leading: Icons.notifications_outlined,
+              title: 'Push Notifications',
+              subtitle: 'Get notified about bookings',
+              value: pushNotifications,
+              onChanged: (value) {
+                setState(() {
+                  pushNotifications = value;
+                });
+              },
             ),
           ),
           SizedBox(height: Dimension.height(16)),
@@ -176,36 +132,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                _SwitchTile(
-                  leading: Icons.security_outlined,
-                  title: 'Two-Factor Authentication',
-                  subtitle: 'Add extra security layer',
-                  value: twoFactorAuth,
-                  onChanged: (value) {
-                    setState(() {
-                      twoFactorAuth = value;
-                    });
-                  },
-                  showBorder: true,
-                ),
-                _ListTile(
-                  leading: Icons.lock_outline,
-                  title: 'Change Password',
-                  subtitle: 'Update your password',
-
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ChangePasswordScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
+            child: _ListTile(
+              leading: Icons.lock_outline,
+              title: 'Change Password',
+              subtitle: 'Update your password',
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChangePasswordScreen(),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -307,7 +246,6 @@ class _SwitchTile extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
   final bool showIcon;
-  final bool showBorder;
   final String? iconImage;
 
   const _SwitchTile({
@@ -317,7 +255,6 @@ class _SwitchTile extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.showIcon = false,
-    this.showBorder = false,
     this.iconImage,
   });
 
@@ -328,17 +265,7 @@ class _SwitchTile extends StatelessWidget {
         horizontal: Dimension.width(15),
         vertical: Dimension.height(15),
       ),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: showBorder
-            ? Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                  width: Dimension.height(1),
-                ),
-              )
-            : null,
-      ),
+      decoration: BoxDecoration(color: Colors.transparent),
       child: Row(
         children: [
           if (showIcon) ...[
@@ -393,7 +320,7 @@ class _SwitchTile extends StatelessWidget {
               return Colors.white;
             }),
             activeColor: Theme.of(context).primaryColor,
-            activeTrackColor: Colors.grey.withOpacity(0.3),
+            activeTrackColor: Theme.of(context).primaryColor.withOpacity(0.5),
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.grey.withOpacity(0.3),
             trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
