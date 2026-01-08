@@ -47,6 +47,18 @@ dependencies:
   in_app_update: ^4.2.5
   image_picker: ^1.2.1
   dio: ^5.9.0
+  flutter_inappwebview: ^6.1.5
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  url_launcher: ^6.3.2
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  firebase_messaging: ^16.0.4
+  flutter_local_notifications: ^18.0.1
+  google_sign_in: ^6.1.5
+  geolocator: ^14.0.2
+  screenshot: ^3.0.0
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
