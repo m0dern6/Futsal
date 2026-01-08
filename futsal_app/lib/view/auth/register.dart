@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ui/core/app_theme.dart';
 import 'package:ui/view/auth/login.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'bloc/auth_bloc.dart';
+import 'bloc/auth_event.dart';
 import '../../core/dimension.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -224,6 +227,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             SizedBox(height: Dimension.height(16)),
+            // Google Sign-In Button
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: Dimension.width(16)),
+              child: SizedBox(
+                width: double.infinity,
+                height: Dimension.height(52),
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    // Dispatch Google login event via Bloc
+                    // You may need to wrap RegisterScreen with BlocProvider if not already done
+                    // (Assuming AuthBloc is available in context)
+                    context.read<AuthBloc>().add(
+                      const LoginWithGoogleRequested(),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: Colors.grey[300]!,
+                      width: Dimension.width(1.5),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(Dimension.width(14)),
+                    ),
+                    backgroundColor: Colors.white,
+                  ),
+                  icon: Icon(
+                    Icons.g_mobiledata,
+                    color: Colors.grey[800],
+                    size: Dimension.width(28),
+                  ),
+                  label: Text(
+                    'Continue with Google',
+                    style: TextStyle(
+                      fontSize: Dimension.font(15),
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

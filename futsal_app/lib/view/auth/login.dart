@@ -502,7 +502,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: Dimension.height(52),
                               child: OutlinedButton.icon(
                                 onPressed: () {
-                                  // Handle Google sign in
+                                  context.read<AuthBloc>().add(
+                                    const LoginWithGoogleRequested(),
+                                  );
                                 },
                                 style: OutlinedButton.styleFrom(
                                   side: BorderSide(

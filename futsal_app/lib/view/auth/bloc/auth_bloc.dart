@@ -16,6 +16,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutRequested>(_onLogoutRequested);
     on<RefreshTokenRequested>(_onRefreshTokenRequested);
     on<CheckAuthStatus>(_onCheckAuthStatus);
+    on<LoginWithGoogleRequested>(_onLoginWithGoogleRequested);
+  }
+
+  // Handle Google login
+  Future<void> _onLoginWithGoogleRequested(
+    LoginWithGoogleRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final authResponse = await _authRepository.loginWithGoogle();
+      emit(Authenticated(authResponse));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 
   // Handle login

@@ -3,9 +3,14 @@ import 'package:ui/core/service/api_service.dart';
 import 'package:ui/core/service/api_const.dart';
 import 'package:ui/view/auth/data/model/auth_model.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 class AuthRepository {
   final ApiService _apiService = ApiService();
 
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
   // SharedPreferences keys
   static const String _refreshTokenKey = 'refresh_token';
   static const String _expiryTimeKey = 'expiry_time';
@@ -26,6 +31,101 @@ class AuthRepository {
       // Save tokens and expiry time
       await _saveAuthData(authResponse);
 
+      return authResponse;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Login with Google
+  Future<AuthResponseModel> loginWithGoogle() async {
+    try {
+      // Trigger Google Sign-In
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Google sign-in aborted');
+      }
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Print Google tokens
+      print('*********************************************');
+      print('**        GOOGLE SIGN-IN TOKENS          **');
+      print('*********************************************');
+      print('Google ID Token: ${googleAuth.idToken}');
+      print('---------------------------------------------');
+      print('Google Access Token: ${googleAuth.accessToken}');
+      print('*********************************************');
+
+      // Print user details
+      print('*********************************************');
+      print('**        GOOGLE USER DETAILS            **');
+      print('*********************************************');
+      print('Full Name: ${googleUser.displayName}');
+      print('Email: ${googleUser.email}');
+      print('Profile Picture URL: ${googleUser.photoUrl}');
+      print('Google User ID: ${googleUser.id}');
+      print('*********************************************');
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      // Sign in to Firebase
+      final UserCredential userCredential = await _firebaseAuth
+          .signInWithCredential(credential);
+      final User? user = userCredential.user;
+      if (user == null) {
+        throw Exception('Firebase user is null');
+      }
+
+      // Print Firebase user details
+      print('*********************************************');
+      print('**         FIREBASE USER DETAILS         **');
+      print('*********************************************');
+      print('UID: ${user.uid}');
+      print('Display Name: ${user.displayName}');
+      print('Email: ${user.email}');
+      print('Email Verified: ${user.emailVerified}');
+      print('Is Anonymous: ${user.isAnonymous}');
+      print('Phone Number: ${user.phoneNumber}');
+      print('Photo URL: ${user.photoURL}');
+      print('Tenant ID: ${user.tenantId}');
+      if (user.metadata != null) {
+        print('Creation Time: ${user.metadata.creationTime}');
+        print('Last Sign-In Time: ${user.metadata.lastSignInTime}');
+      }
+      print('Provider Data:');
+      for (var info in user.providerData) {
+        print('  - Provider ID: ${info.providerId}');
+        print('    UID: ${info.uid}');
+        print('    Display Name: ${info.displayName}');
+        print('    Email: ${info.email}');
+        print('    Phone Number: ${info.phoneNumber}');
+        print('    Photo URL: ${info.photoURL}');
+      }
+      print('*********************************************');
+
+      // Get Firebase ID token
+      final String? firebaseIdToken = await user.getIdToken();
+      if (firebaseIdToken == null) {
+        throw Exception('Failed to get Firebase ID token');
+      }
+
+      // Print the token with design
+      print('*********************************************');
+      print('**          FIREBASE ID TOKEN            **');
+      print('*********************************************');
+      print(firebaseIdToken);
+      print('*********************************************');
+
+      // Send Google ID token to backend API
+      final response = await _apiService.post(
+        ApiConst.google,
+        data: {'idToken': googleAuth.idToken},
+      );
+      final authResponse = AuthResponseModel.fromJson(response.data);
+      await _saveAuthData(authResponse);
       return authResponse;
     } catch (e) {
       rethrow;
