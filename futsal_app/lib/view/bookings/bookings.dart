@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ui/core/simple_theme.dart';
 import '../../core/dimension.dart';
+import '../../core/service/notification_service.dart';
 import 'data/repository/booking_repository.dart';
 import 'data/model/booking.dart';
-import '../futsal/futsal_details.dart';
+import 'widgets/review_dialog.dart';
+import '../reviews/data/repository/reviews_repository.dart';
+import '../reviews/data/model/review_request.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -148,9 +151,12 @@ class _BookingsScreenState extends State<BookingsScreen>
                     (b.status == 0 || b.status == 1),
               )
               .toList();
+        } else if (statusFilter == 1) {
+          // Completed tab: show bookings with status 3 (Completed)
+          filtered = data.where((b) => b.status == 3).toList();
         } else {
-          // Completed (1) or Cancelled (2): filter by exact status match
-          filtered = data.where((b) => b.status == statusFilter).toList();
+          // Cancelled tab: show bookings with status 2 (Cancelled)
+          filtered = data.where((b) => b.status == 2).toList();
         }
 
         filtered.sort((a, b) => b.bookingDate.compareTo(a.bookingDate));
@@ -186,38 +192,18 @@ class _BookingsScreenState extends State<BookingsScreen>
       a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
-class _BookingCard extends StatelessWidget {
+class _BookingCard extends StatefulWidget {
   final Booking booking;
   final bool isUpcoming;
   const _BookingCard({required this.booking, this.isUpcoming = false});
 
-  Color _statusColor(int s) {
-    switch (s) {
-      case 0:
-        return Colors.amber;
-      case 1:
-        return const Color(0xFF00A843);
-      case 2:
-        return Colors.redAccent;
-      default:
-        return Colors.grey;
-    }
-  }
+  @override
+  State<_BookingCard> createState() => _BookingCardState();
+}
 
-  String _statusLabel(int s) {
-    switch (s) {
-      case 0:
-        return 'Pending';
-      case 1:
-        return 'Completed';
-      case 2:
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
-  }
+class _BookingCardState extends State<_BookingCard> {
+  final _reviewRepo = ReviewsRepository();
 
-  // Removed unused old date format (YYYY-MM-DD)
   String _prettyDate(DateTime d) {
     const months = [
       'Jan',
@@ -241,8 +227,8 @@ class _BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String _formatRange() {
-      String start = _friendlyTime(booking.startTime);
-      String end = _friendlyTime(booking.endTime);
+      String start = _friendlyTime(widget.booking.startTime);
+      String end = _friendlyTime(widget.booking.endTime);
       return '$start - $end';
     }
 
@@ -271,9 +257,9 @@ class _BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.groundName.isEmpty
+                      widget.booking.groundName.isEmpty
                           ? 'Ground'
-                          : booking.groundName,
+                          : widget.booking.groundName,
                       style: TextStyle(
                         fontSize: Dimension.font(18),
                         fontWeight: FontWeight.w400,
@@ -293,7 +279,7 @@ class _BookingCard extends StatelessWidget {
                         ),
                         SizedBox(width: Dimension.width(6)),
                         Text(
-                          _prettyDate(booking.bookingDate),
+                          _prettyDate(widget.booking.bookingDate),
                           style: TextStyle(
                             fontSize: Dimension.font(12),
                             color: Theme.of(
@@ -348,7 +334,7 @@ class _BookingCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    ' Rs.${booking.totalAmount.truncate()}',
+                    ' Rs.${widget.booking.totalAmount.truncate()}',
                     style: TextStyle(
                       fontSize: Dimension.font(12),
                       fontWeight: FontWeight.w400,
@@ -357,10 +343,10 @@ class _BookingCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (isUpcoming) ...[
+              if (widget.isUpcoming) ...[
                 Spacer(),
                 ElevatedButton(
-                  onPressed: () => _showCancelDialog(context),
+                  onPressed: () => _showCancelDialog(context, widget.booking),
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.all(
                       context.read<ThemeNotifier>().isDark
@@ -432,6 +418,51 @@ class _BookingCard extends StatelessWidget {
                 //   ),
                 // ),
               ],
+              // Show review button for completed (status 3) or cancelled (status 2) bookings only
+              if (!widget.isUpcoming &&
+                  (widget.booking.status == 3 ||
+                      widget.booking.status == 2)) ...[
+                Spacer(),
+                ElevatedButton(
+                  onPressed: () => _showReviewDialog(context),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                    shadowColor: WidgetStateProperty.all(Colors.transparent),
+                    padding: WidgetStateProperty.all(
+                      EdgeInsets.symmetric(
+                        horizontal: Dimension.width(12),
+                        vertical: Dimension.height(0),
+                      ),
+                    ),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(Dimension.width(8)),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.rate_review_outlined,
+                        size: Dimension.width(16),
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: Dimension.width(4)),
+                      Text(
+                        'Review',
+                        style: TextStyle(
+                          fontSize: Dimension.font(14),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ],
@@ -439,7 +470,25 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  void _showCancelDialog(BuildContext context) {
+  void _showReviewDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => ReviewDialog(
+        groundId: widget.booking.groundId,
+        groundName: widget.booking.groundName,
+        onSubmit: (rating, comment) async {
+          final reviewRequest = ReviewRequest(
+            groundId: widget.booking.groundId,
+            rating: rating,
+            comment: comment,
+          );
+          await _reviewRepo.createReview(reviewRequest);
+        },
+      ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext context, Booking booking) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -475,6 +524,13 @@ class _BookingCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
+
+              // Show cancellation notification
+              NotificationService().showBookingCancelled(
+                groundName: booking.groundName,
+                bookingDate: _prettyDate(booking.bookingDate),
+              );
+
               // TODO: Implement cancel booking logic
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

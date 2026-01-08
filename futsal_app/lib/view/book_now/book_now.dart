@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/dimension.dart';
+import '../../core/service/notification_service.dart';
 import '../bookings/data/repository/booking_repository.dart';
 import '../bookings/bookings.dart';
 import '../profile/bloc/profile_bloc.dart';
@@ -32,7 +33,6 @@ class _BookNowState extends State<BookNow> {
     final openTime = widget.futsalData['openTime'] ?? '06:00 AM';
     final closeTime = widget.futsalData['closeTime'] ?? '10:00 PM';
 
-    // Parse times (assuming format like "06:00 AM")
     final openHour = _parseTime(openTime);
     final closeHour = _parseTime(closeTime);
 
@@ -54,7 +54,7 @@ class _BookNowState extends State<BookNow> {
       if (!isPM && hour == 12) hour = 0;
       return hour;
     } catch (e) {
-      return 6; // Default to 6 AM
+      return 6;
     }
   }
 
@@ -62,27 +62,6 @@ class _BookNowState extends State<BookNow> {
     final period = hour >= 12 ? 'PM' : 'AM';
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
     return '${displayHour.toString().padLeft(2, '0')}:00 $period';
-  }
-
-  String _convertTo24HourFormat(String time12h) {
-    // Convert "02:00 PM" to "14:00:00"
-    final parts = time12h.split(':');
-    if (parts.length < 2) return '00:00:00';
-
-    int hour = int.tryParse(parts[0].trim()) ?? 0;
-    final minutePart = parts[1].split(' ');
-    final minute = minutePart[0].trim();
-    final period = minutePart.length > 1
-        ? minutePart[1].trim().toUpperCase()
-        : 'AM';
-
-    if (period == 'PM' && hour != 12) {
-      hour += 12;
-    } else if (period == 'AM' && hour == 12) {
-      hour = 0;
-    }
-
-    return '${hour.toString().padLeft(2, '0')}:$minute:00';
   }
 
   bool _isTimeSlotBooked(DateTime selectedDate, String timeSlot) {
@@ -100,75 +79,91 @@ class _BookNowState extends State<BookNow> {
             return true;
           }
         }
-      } catch (e) {
-        continue;
-      }
+      } catch (_) {}
     }
     return false;
   }
 
+  bool _isTimeSlotPassed(DateTime selectedDate, String timeSlot) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+
+    // Only check for today's date
+    if (selectedDay != today) {
+      return false;
+    }
+
+    // Extract start time from time slot (e.g., "11:00 AM - 12:00 PM" -> "11:00 AM")
+    final startTimeStr = timeSlot.split(' - ')[0];
+    final startHour = _parseTime(startTimeStr);
+
+    // Compare with current hour
+    return startHour <= now.hour;
+  }
+
   void _showConfirmationDialog() {
+    if (_selectedTimeSlot == null) return;
     setState(() {
       _showConfirmation = true;
     });
   }
 
-  Future<void> _confirmBooking() async {
+  void _confirmBooking() async {
     if (_isBooking) return;
-
     setState(() => _isBooking = true);
 
     try {
-      // Get user ID from ProfileBloc
       final profileState = context.read<ProfileBloc>().state;
       if (profileState is! ProfileLoaded) {
-        throw Exception('User not logged in');
+        throw Exception('User profile not loaded');
       }
 
       final userId = profileState.userInfo.id;
-      final groundId = widget.futsalData['id'] as int;
-      final dates = _generateNext7Days();
-      final selectedDate = dates[_selectedDateIndex];
+      final groundId = widget.futsalData['_id'] ?? widget.futsalData['id'];
+      final selectedDate = _generateNext7Days()[_selectedDateIndex];
 
-      // Parse time slot (format: "HH:MM AM/PM - HH:MM AM/PM")
-      final times = _selectedTimeSlot!.split(' - ');
-      final startTimeStr = times[0].trim();
-      final endTimeStr = times[1].trim();
-
-      // Convert "02:00 PM" to "14:00:00" format
-      final startTime = _convertTo24HourFormat(startTimeStr);
-      final endTime = _convertTo24HourFormat(endTimeStr);
-
-      // Format booking date to start of day in UTC (midnight)
-      final bookingDateUtc = DateTime.utc(
+      final bookingDate = DateTime.utc(
         selectedDate.year,
         selectedDate.month,
         selectedDate.day,
-        0,
-        0,
-        0,
       );
 
-      // Create booking
+      final times = _selectedTimeSlot!.split(' - ');
+      final startTime = _convertTo24HourFormat(times[0]);
+      final endTime = _convertTo24HourFormat(times[1]);
+
       await _bookingRepo.createBooking(
         userId: userId,
-        groundId: groundId,
-        bookingDate: bookingDateUtc,
+        groundId: groundId is int
+            ? groundId
+            : int.tryParse(groundId.toString()) ?? 0,
+        bookingDate: bookingDate,
         startTime: startTime,
         endTime: endTime,
       );
 
       if (!mounted) return;
 
+      // Show notification
+      NotificationService().showBookingConfirmed(
+        groundName: widget.futsalData['name'] ?? 'Futsal Ground',
+        bookingDate: DateFormat('MMM dd, yyyy').format(selectedDate),
+        timeSlot: _selectedTimeSlot!,
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Booking confirmed successfully!'),
-          backgroundColor: Colors.green[700],
+        const SnackBar(
+          content: Text('Booking confirmed successfully!'),
+          backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ),
       );
 
-      // Navigate to bookings screen
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const BookingsScreen()),
@@ -176,692 +171,613 @@ class _BookNowState extends State<BookNow> {
       );
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Failed to book: ${e.toString().replaceAll('Exception: ', '')}',
-          ),
-          backgroundColor: Colors.red[700],
+          content: Text('Failed to book: ${e.toString()}'),
+          backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isBooking = false);
+      if (mounted) setState(() => _isBooking = false);
+    }
+  }
+
+  String _convertTo24HourFormat(String time12h) {
+    final parts = time12h.split(':');
+    int hour = int.tryParse(parts[0].trim()) ?? 0;
+    final minutePart = parts[1].split(' ');
+    final minute = minutePart[0].trim();
+    final period = minutePart.length > 1
+        ? minutePart[1].trim().toUpperCase()
+        : 'AM';
+
+    if (period == 'PM' && hour != 12) hour += 12;
+    if (period == 'AM' && hour == 12) hour = 0;
+
+    return '${hour.toString().padLeft(2, '0')}:$minute:00';
+  }
+
+  void _showCustomBookingDialog(BuildContext context) {
+    int selectedDuration = 1;
+    String? selectedStartTime;
+    final openTime = widget.futsalData['openTime'] ?? '06:00 AM';
+    final closeTime = widget.futsalData['closeTime'] ?? '10:00 PM';
+    final openHour = _parseTime(openTime);
+    final closeHour = _parseTime(closeTime);
+
+    // Get current hour if booking for today
+    final selectedDate = _generateNext7Days()[_selectedDateIndex];
+    final now = DateTime.now();
+    final isToday =
+        selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+    final currentHour = isToday ? now.hour : -1;
+
+    List<int> availableHours = [];
+    for (int i = openHour; i < closeHour; i++) {
+      // Only add hours that haven't passed if booking for today
+      if (!isToday || i > currentHour) {
+        availableHours.add(i);
       }
     }
+
+    // Show message if no hours available
+    if (availableHours.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No available time slots for today. All hours have passed.',
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text("Custom Booking"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isToday)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.orange[700],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Only future time slots are available',
+                          style: TextStyle(
+                            color: Colors.orange[900],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const Text("Duration (Max 2 hours)"),
+              Row(
+                children: [
+                  Radio<int>(
+                    value: 1,
+                    groupValue: selectedDuration,
+                    onChanged: (val) =>
+                        setStateDialog(() => selectedDuration = val!),
+                  ),
+                  const Text("1 Hour"),
+                  const SizedBox(width: 15),
+                  Radio<int>(
+                    value: 2,
+                    groupValue: selectedDuration,
+                    onChanged: (val) =>
+                        setStateDialog(() => selectedDuration = val!),
+                  ),
+                  const Text("2 Hours"),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text("Start Time"),
+              DropdownButtonFormField<String>(
+                value: selectedStartTime,
+                items: availableHours.map((hour) {
+                  return DropdownMenuItem(
+                    value: hour.toString(),
+                    child: Text(_formatTimeSlot(hour)),
+                  );
+                }).toList(),
+                onChanged: (val) =>
+                    setStateDialog(() => selectedStartTime = val),
+                decoration: const InputDecoration(
+                  hintText: 'Select start time',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedStartTime == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a start time'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
+                int startH = int.parse(selectedStartTime!);
+                if (selectedDuration == 2 && (startH + 2) > closeHour) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Not enough time for 2-hour booking before closing',
+                      ),
+                      backgroundColor: Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
+
+                String startStr = _formatTimeSlot(startH);
+                String endStr = _formatTimeSlot(startH + selectedDuration);
+                String customSlot = "$startStr - $endStr";
+
+                setState(() => _selectedTimeSlot = customSlot);
+                Navigator.pop(context);
+              },
+              child: const Text("Set Time"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     Dimension.init(context);
-    final dates = _generateNext7Days();
-    final timeSlots = _generateTimeSlots();
-    final selectedDate = dates[_selectedDateIndex];
-
-    if (_showConfirmation) {
-      return _buildConfirmationScreen(selectedDate);
-    }
+    if (_showConfirmation)
+      return _buildConfirmationScreen(_generateNext7Days()[_selectedDateIndex]);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Theme.of(context).colorScheme.onPrimary,
-            size: Dimension.width(20),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Book Court',
-          style: TextStyle(
-            fontSize: Dimension.font(20),
-            fontWeight: FontWeight.w400,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Futsal Name
-            Container(
-              padding: EdgeInsets.all(Dimension.width(16)),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-                border: Border(
-                  bottom: BorderSide(color: Colors.black.withOpacity(0.06)),
+        title: const Text('Book Futsal'),
+        leading: Padding(
+          padding: EdgeInsets.all(Dimension.width(8)),
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: Dimension.width(8),
                 ),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(Dimension.width(8)),
-                    child: Image.network(
-                      widget.futsalData['imageUrl'] ?? '',
-                      width: Dimension.width(80),
-                      height: Dimension.width(80),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  SizedBox(width: Dimension.width(12)),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.futsalData['name'] ?? 'Futsal Court',
-                        style: TextStyle(
-                          fontSize: Dimension.font(18),
-                          fontWeight: FontWeight.w400,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                      SizedBox(height: Dimension.height(8)),
-                      Text(
-                        widget.futsalData['location'] ?? '',
-                        style: TextStyle(
-                          fontSize: Dimension.font(12),
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onPrimary.withOpacity(0.7),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: Dimension.height(8)),
-                      Text(
-                        '\Rs.${widget.futsalData['pricePerHour'] ?? '0'}/hour',
-                        style: TextStyle(
-                          fontSize: Dimension.font(14),
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              ],
             ),
-
-            SizedBox(height: Dimension.height(12)),
-
-            // Date Selection
-            Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              padding: EdgeInsets.all(Dimension.width(20)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Select Date',
-                    style: TextStyle(
-                      fontSize: Dimension.font(20),
-                      fontWeight: FontWeight.w400,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                  SizedBox(height: Dimension.height(14)),
-                  SizedBox(
-                    height: Dimension.height(85),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: dates.length,
-                      itemBuilder: (context, index) {
-                        final date = dates[index];
-                        final isSelected = index == _selectedDateIndex;
-                        final dayName = DateFormat('EEE').format(date);
-                        final dayNumber = DateFormat('dd').format(date);
-                        final monthName = DateFormat('MMM').format(date);
-
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedDateIndex = index;
-                              _selectedTimeSlot = null; // Reset time selection
-                            });
-                          },
-                          child: Container(
-                            width: Dimension.width(70),
-                            margin: EdgeInsets.only(right: Dimension.width(12)),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).cardColor,
-                              border: Border.all(
-                                color: isSelected
-                                    ? Colors.transparent
-                                    : Theme.of(context).colorScheme.outline
-                                          .withValues(alpha: 0.3),
-                                width: isSelected ? 0 : Dimension.width(0.3),
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                Dimension.width(16),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  dayName.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: Dimension.font(11),
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary
-                                              .withOpacity(0.7),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                SizedBox(height: Dimension.height(6)),
-                                Text(
-                                  dayNumber,
-                                  style: TextStyle(
-                                    fontSize: Dimension.font(24),
-                                    fontWeight: FontWeight.w400,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimary,
-                                  ),
-                                ),
-                                SizedBox(height: Dimension.height(2)),
-                                Text(
-                                  monthName.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: Dimension.font(10),
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected
-                                        ? Colors.white.withOpacity(0.8)
-                                        : Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary
-                                              .withOpacity(0.5),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: Dimension.width(18),
               ),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
-
-            SizedBox(height: Dimension.height(12)),
-
-            // Time Slot Selection
-            Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              padding: EdgeInsets.all(Dimension.width(20)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Select Time Slot',
-                        style: TextStyle(
-                          fontSize: Dimension.font(20),
-                          fontWeight: FontWeight.w400,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                      SizedBox(width: Dimension.width(8)),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: Dimension.width(8),
-                          vertical: Dimension.height(4),
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(
-                            Dimension.width(6),
-                          ),
-                        ),
-                        child: Text(
-                          '1 hour',
-                          style: TextStyle(
-                            fontSize: Dimension.font(11),
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: Dimension.height(14)),
-                  Wrap(
-                    spacing: Dimension.width(10),
-                    runSpacing: Dimension.height(10),
-                    children: timeSlots.map((slot) {
-                      final isBooked = _isTimeSlotBooked(selectedDate, slot);
-                      final isSelected = slot == _selectedTimeSlot;
-
-                      return GestureDetector(
-                        onTap: isBooked
-                            ? null
-                            : () {
-                                setState(() {
-                                  _selectedTimeSlot = slot;
-                                });
-                              },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: Dimension.width(12),
-                            vertical: Dimension.height(10),
-                          ),
-                          decoration: BoxDecoration(
-                            color: isBooked
-                                ? Colors.red[50]
-                                : isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).cardColor,
-                            border: Border.all(
-                              color: isBooked
-                                  ? Colors.red[200]!
-                                  : isSelected
-                                  ? Colors.transparent
-                                  : Theme.of(context).colorScheme.outline
-                                        .withValues(alpha: 0.3),
-                              width: isSelected ? 0 : Dimension.width(0.3),
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              Dimension.width(10),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isBooked) ...[
-                                Icon(
-                                  Icons.block,
-                                  size: Dimension.width(12),
-                                  color: Colors.red[700],
-                                ),
-                                SizedBox(width: Dimension.width(4)),
-                              ],
-                              Text(
-                                slot,
-                                style: TextStyle(
-                                  fontSize: Dimension.font(11.5),
-                                  fontWeight: FontWeight.w600,
-                                  color: isBooked
-                                      ? Colors.red[700]
-                                      : isSelected
-                                      ? Colors.white
-                                      : Theme.of(context).colorScheme.onPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: Dimension.height(100)),
-          ],
+          ),
         ),
       ),
-
-      // Continue Button
-      bottomNavigationBar: _selectedTimeSlot != null
-          ? SafeArea(
-              child: Container(
-                padding: EdgeInsets.all(Dimension.width(16)),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  border: Border(
-                    top: BorderSide(color: Colors.black.withOpacity(0.06)),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: Dimension.width(10),
-                      offset: Offset(0, -Dimension.height(2)),
-                    ),
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Dimension.isTablet ? 700 : double.infinity,
+              ),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    _buildDateSelection(),
+                    _buildTimeSlotSelection(),
+                    SizedBox(height: Dimension.height(100)),
                   ],
                 ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: Dimension.height(54),
-                  child: ElevatedButton(
-                    onPressed: _showConfirmationDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 3,
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: _selectedTimeSlot != null ? _buildBottomBar() : null,
+    );
+  }
 
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          Dimension.width(14),
-                        ),
-                      ),
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.all(Dimension.width(16)),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              widget.futsalData['imageUrl'] ?? '',
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 80,
+                height: 80,
+                color: Colors.grey[200],
+                child: const Icon(Icons.sports_soccer),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.futsalData['name'] ?? '',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  widget.futsalData['location'] ?? '',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                Text(
+                  'Rs.${widget.futsalData['pricePerHour'] ?? 0}/hour',
+                  style: TextStyle(color: Theme.of(context).primaryColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateSelection() {
+    final dates = _generateNext7Days();
+    return Container(
+      padding: EdgeInsets.all(Dimension.width(20)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select Date',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 90,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: dates.length,
+              itemBuilder: (context, index) {
+                final date = dates[index];
+                final isSelected = index == _selectedDateIndex;
+                return GestureDetector(
+                  onTap: () => setState(() {
+                    _selectedDateIndex = index;
+                    _selectedTimeSlot = null;
+                  }),
+                  child: Container(
+                    width: 70,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
                     ),
-                    child: Row(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Continue',
+                          DateFormat('EEE').format(date).toUpperCase(),
                           style: TextStyle(
-                            fontSize: Dimension.font(16),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
+                            color: isSelected ? Colors.white : Colors.grey,
                           ),
                         ),
-                        SizedBox(width: Dimension.width(8)),
-                        Icon(Icons.arrow_forward, size: Dimension.width(20)),
+                        Text(
+                          DateFormat('dd').format(date),
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeSlotSelection() {
+    final timeSlots = _generateTimeSlots();
+    final selectedDate = _generateNext7Days()[_selectedDateIndex];
+    return Container(
+      padding: EdgeInsets.all(Dimension.width(20)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Select Time Slot',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () => _showCustomBookingDialog(context),
+                child: const Text("Custom"),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: timeSlots.map((slot) {
+              final isBooked = _isTimeSlotBooked(selectedDate, slot);
+              final isPassed = _isTimeSlotPassed(selectedDate, slot);
+              final isSelected = slot == _selectedTimeSlot;
+              final isDisabled = isBooked || isPassed;
+
+              return GestureDetector(
+                onTap: isDisabled
+                    ? () {
+                        // Show snackbar for disabled slots
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isPassed
+                                  ? 'This time slot has already passed and cannot be booked'
+                                  : 'This time slot is already booked',
+                            ),
+                            backgroundColor: isPassed
+                                ? Colors.orange
+                                : Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    : () => setState(() => _selectedTimeSlot = slot),
+                child: Opacity(
+                  opacity: isDisabled ? 0.5 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isBooked
+                          ? Colors.red[50]
+                          : isPassed
+                          ? Colors.grey[200]
+                          : isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.white,
+                      border: Border.all(
+                        color: isBooked
+                            ? Colors.red
+                            : isPassed
+                            ? Colors.grey
+                            : Colors.grey.withOpacity(0.3),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      slot,
+                      style: TextStyle(
+                        color: isBooked
+                            ? Colors.red
+                            : isPassed
+                            ? Colors.grey[600]
+                            : isSelected
+                            ? Colors.white
+                            : Colors.black,
+                        decoration: isPassed
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return SafeArea(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: Dimension.isTablet ? 700 : double.infinity,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: Dimension.isTablet
+                    ? Dimension.width(700 - 32)
+                    : Dimension.deviceWidth - 32,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: _showConfirmationDialog,
+                  child: const Text('Continue'),
                 ),
               ),
-            )
-          : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildConfirmationScreen(DateTime selectedDate) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-            size: Dimension.width(24),
-          ),
-          onPressed: () {
-            setState(() {
-              _showConfirmation = false;
-            });
-          },
-        ),
-        title: Text(
-          'Confirm Booking',
-          style: TextStyle(
-            fontSize: Dimension.font(20),
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
+        title: const Text('Confirm Booking'),
+        leading: Padding(
+          padding: EdgeInsets.all(Dimension.width(8)),
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: Dimension.width(8),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: Dimension.width(18),
+              ),
+              onPressed: () => setState(() => _showConfirmation = false),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: Dimension.height(20)),
-
-            // Success Icon
-            Container(
-              width: Dimension.width(80),
-              height: Dimension.width(80),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.green[200]!, width: 2),
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Dimension.isTablet ? 600 : double.infinity,
               ),
-              child: Icon(
-                Icons.check_circle_outline,
-                size: Dimension.width(48),
-                color: Colors.green[700],
-              ),
-            ),
-
-            SizedBox(height: Dimension.height(24)),
-
-            Text(
-              'Review Your Booking',
-              style: TextStyle(
-                fontSize: Dimension.font(24),
-                fontWeight: FontWeight.w800,
-                color: Colors.black,
-              ),
-            ),
-
-            SizedBox(height: Dimension.height(8)),
-
-            Text(
-              'Please review the details before confirming',
-              style: TextStyle(
-                fontSize: Dimension.font(14),
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-
-            SizedBox(height: Dimension.height(32)),
-
-            // Booking Details Card
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              padding: EdgeInsets.all(Dimension.width(20)),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(Dimension.width(20)),
-                border: Border.all(color: Colors.black.withOpacity(0.08)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: Dimension.width(20),
-                    offset: Offset(0, Dimension.height(4)),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  _buildDetailRow(
-                    Icons.sports_soccer,
-                    'Futsal Court',
-                    widget.futsalData['name'] ?? '',
-                  ),
-                  Divider(
-                    height: Dimension.height(32),
-                    color: Colors.grey[200],
-                  ),
-                  _buildDetailRow(
-                    Icons.location_on_outlined,
-                    'Location',
-                    widget.futsalData['location'] ?? '',
-                  ),
-                  Divider(
-                    height: Dimension.height(32),
-                    color: Colors.grey[200],
-                  ),
-                  _buildDetailRow(
-                    Icons.calendar_today,
-                    'Date',
-                    DateFormat('EEEE, MMMM dd, yyyy').format(selectedDate),
-                  ),
-                  Divider(
-                    height: Dimension.height(32),
-                    color: Colors.grey[200],
-                  ),
-                  _buildDetailRow(
-                    Icons.access_time,
-                    'Time Slot',
-                    _selectedTimeSlot ?? '',
-                  ),
-                  Divider(
-                    height: Dimension.height(32),
-                    color: Colors.grey[200],
-                  ),
-                  _buildDetailRow(
-                    Icons.monetization_on_outlined,
-                    'Total Amount',
-                    'Rs ${widget.futsalData['pricePerHour'] ?? 0}',
-                    isHighlighted: true,
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: Dimension.height(32)),
-
-            // Terms Notice
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: Dimension.width(20)),
-              padding: EdgeInsets.all(Dimension.width(16)),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(Dimension.width(12)),
-                border: Border.all(color: Colors.black.withOpacity(0.06)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: Dimension.width(20),
-                    color: Colors.grey[700],
-                  ),
-                  SizedBox(width: Dimension.width(12)),
-                  Expanded(
-                    child: Text(
-                      'Cancellation allowed up to 2 hours before booking time',
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 80,
+                      color: Colors.green,
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Review Your Booking',
                       style: TextStyle(
-                        fontSize: Dimension.font(12),
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: Dimension.height(100)),
-          ],
-        ),
-      ),
-
-      // Confirm Button
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: EdgeInsets.all(Dimension.width(16)),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(color: Colors.black.withOpacity(0.06)),
-            ),
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            height: Dimension.height(54),
-            child: ElevatedButton(
-              onPressed: _isBooking ? null : _confirmBooking,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00C853),
-                foregroundColor: Colors.white,
-                elevation: 3,
-                shadowColor: const Color(0xFF00C853).withOpacity(0.4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(Dimension.width(14)),
+                    const SizedBox(height: 32),
+                    _buildInfoRow('Court', widget.futsalData['name'] ?? ''),
+                    _buildInfoRow(
+                      'Date',
+                      DateFormat('EEEE, MMM dd').format(selectedDate),
+                    ),
+                    _buildInfoRow('Time', _selectedTimeSlot ?? ''),
+                    _buildInfoRow(
+                      'Total',
+                      'Rs.${widget.futsalData['pricePerHour'] ?? 0}',
+                    ),
+                    const SizedBox(height: 100),
+                  ],
                 ),
               ),
-              child: _isBooking
-                  ? SizedBox(
-                      width: Dimension.width(22),
-                      height: Dimension.width(22),
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle, size: Dimension.width(22)),
-                        SizedBox(width: Dimension.width(10)),
-                        Text(
-                          'Confirm Booking',
-                          style: TextStyle(
-                            fontSize: Dimension.font(16),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
             ),
           ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Dimension.isTablet ? 600 : double.infinity,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: Dimension.isTablet
+                      ? Dimension.width(600 - 32)
+                      : Dimension.deviceWidth - 32,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _isBooking ? null : _confirmBooking,
+                    child: _isBooking
+                        ? const CircularProgressIndicator()
+                        : const Text('Confirm Booking'),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(
-    IconData icon,
-    String label,
-    String value, {
-    bool isHighlighted = false,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: Dimension.width(40),
-          height: Dimension.width(40),
-          decoration: BoxDecoration(
-            color: isHighlighted ? Colors.green[50] : Colors.grey[100],
-            borderRadius: BorderRadius.circular(Dimension.width(10)),
-          ),
-          child: Icon(
-            icon,
-            size: Dimension.width(20),
-            color: isHighlighted ? Colors.green[700] : Colors.grey[700],
-          ),
-        ),
-        SizedBox(width: Dimension.width(14)),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: Dimension.font(12),
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: Dimension.height(2)),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: Dimension.font(15),
-                  fontWeight: isHighlighted ? FontWeight.w800 : FontWeight.w600,
-                  color: isHighlighted ? Colors.green[700] : Colors.black,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 }
